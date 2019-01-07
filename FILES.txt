@@ -1,5 +1,5 @@
 ===============================================================================
-Paraphrase ver.0.9.0　同梱ファイル情報　by Koji Iigura
+Paraphrase ver.0.9.1　同梱ファイル情報　by Koji Iigura
 ===============================================================================
 
 -------------------------------------------------------------------------------
@@ -29,6 +29,7 @@ paraphrase
   +- samples <---------------------- サンプルプログラム格納用ディレクトリ
        +- SAMPLES.txt <------------- サンプルプログラムの概要説明
        +- FizzBuzz.pp <------------- いわゆる FizzBuzz 問題用ワード
+       +- PE21-shot.pp <------------ test_PE21mt60k{.bat} の本体
        +- check-scriptFile-args.pp   コマンドライン引数の確認用
        +- countPrimeMT-short.pp <--- 1 から 100 万までの素数を数えます
        +- dumpMPmt.pp <------------- 1 から 1000 までのメルセンヌ素数を表示します
@@ -98,6 +99,9 @@ paraphrase
             |    +- extLP <--------- extLP プロジェクトディレクトリ
             |         +- dllmain.cpp extLP.dll 用 dllmain
             |         +- extLP.vcxproj  extLP.dll 用プロジェクトファイル
+            +- libPP <-------------- Paraphrase インタプリタの実体格納ディレクトリ
+            |    +- dllmain.cpp <--- libPP.dll 用 dllmain
+            |    +- libPP.vcxproj <- libPP.dll 用プロジェクトファイル
             +- paraphrase.sln <----- Paraphrase 用ソリューションファイル
             +- paraphrase.vcxproj <- para.exe 用プロジェクトファイル
 

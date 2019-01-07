@@ -1,4 +1,4 @@
-# Paraphrase ver.0.9.0
+# Paraphrase ver.0.9.1
 Copyright (c) 2019 Koji Iigura  
 Released under the MIT license  
 [https://opensource.org/licenses/mit-license.php](
@@ -42,12 +42,12 @@ Windows, Linux, MacOS に対応しています。
 ダウンロードして解凍（展開）するだけです。  
 インストール不要で、すぐに実行できます。
 
-* Windows 版 [para-0-9-0-win.zip](
-http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-win.zip)
-* Linux 版 [para-0-9-0-linux.tar.gz](
-http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-linux.tar.gz)
-* MacOS 版 [para-0-9-0-mac.tar.gz](
-http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-mac.tar.gz)
+* Windows 版 [para-0-9-1-win.zip](
+http://github.com/iigura/paraphrase/releases/download/v.0.9.1/para-0-9-1-win.zip)
+* Linux 版 [para-0-9-1-linux.tar.gz](
+http://github.com/iigura/paraphrase/releases/download/v.0.9.1/para-0-9-1-linux.tar.gz)
+* MacOS 版 [para-0-9-1-mac.tar.gz](
+http://github.com/iigura/paraphrase/releases/download/v.0.9.1/para-0-9-1-mac.tar.gz)
 
 展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、
@@ -56,7 +56,7 @@ http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-mac.tar
 
 
 ## ソースコードからビルドする場合
-git clone https://github.com/iigura/paraphrase.git でクローン。  
+git clone https://github.com/iigura/Paraphrase.git でクローン。  
 ビルド方法の詳細は、
 [BUILD.txt](http://github.com/iigura/paraphrase/blob/master/BUILD.txt) を
 見て下さい。

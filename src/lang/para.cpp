@@ -45,7 +45,7 @@
 	#include <Windows.h>
 #endif
 
-const char *kVersion="0.9.0";
+const char *kVersion="0.9.1";
 
 TypedValue G_InvalidTV=TypedValue();
 unsigned int G_NumOfCores=std::thread::hardware_concurrency();
@@ -88,7 +88,7 @@ void InitDict_Parallel();
 void InitDict_Optimize();
 
 int main(int argc,char *argv[]) {
-#if DEBUG
+#if DEBUG || _DEBUG
 	printf("!!! THIS IS DEBUG VERSION !!!\n");
 	#ifdef _MSVC_LANG
 		TCHAR cdir[255];

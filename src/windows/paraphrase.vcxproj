@@ -121,8 +121,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /D $(TargetPath) $(SolutionDir)..\..
-xcopy /D $(OutDir)libPP.dll $(SolutionDir)..\..</Command>
+      <Command>xcopy /D /Y $(TargetPath) $(SolutionDir)..\..
+xcopy /D /Y $(OutDir)libPP.dll $(SolutionDir)..\..</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

@@ -1,0 +1,9 @@
+body { width: 600px; }
+pre {
+	text-indent: 0em;
+	padding-left: 1em;
+	border-radius: 15px;
+	border: solid 2px;
+	border-color: #888888;
+}
+

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="ext.css">
+	<style type="text/css"> <!-- .VERSION:before{content:"0.9.0";} --> </style>
+	<title>extLP ver. 0.9.0</title>
+</head>
+<body>
+<div id=main>
+<h1>extLP ver. <span class="VERSION"></span></h1>
+<div id=author>2019.MM.DD 飯倉宏治</div>
+<p>
+拡張辞書 extLP は、
+簡易的な文芸的プログラミング（Literate Programming）を実現するための拡張辞書です。
+</p>
+<p>
+この拡張辞書では、ワード &lt;!DOCTYPE と &lt;/code&gt; を /* の別名とし、
+ワード &lt;/html&gt; と &lt;code&gt; を */ の別名とします。
+これにより、次に示すような HTML ファイルそのものを Paraphrase のプログラムとして
+読み込むことが可能となります。
+もちろん、この HTML ファイルをブラウザで閲覧することにより、
+通常の HTML 文書としても使用することが可能となります。
+もちろん、css を用いたスタイルの指定もできます。
+</p>
+<p class=noindent>
+注："ext/extLP.so" import （Windows の場合は extLP.dll）とすれば、
+以下の HTML ファイルは Paraphrase の正しいプログラムリストとして解釈されます。
+</p>
+<div class=example>
+	<code>
+		<span class=rem>↓ DOCTYPE タグでコメント開始</span><br>
+		&lt;!DOCTYPE html&gt;<br>
+		&lt;html lang="ja"&gt;<br>
+		&nbsp; &lt;head&gt;<br>
+		&nbsp; &nbsp; &lt;meta charset="utf-8"&gt;<br>
+		&nbsp; &nbsp; &lt;link rel="stylesheet" href="sample.css"&gt;<br>
+		&nbsp; &nbsp; &lt;title&gt;switch - dispatch の使い方&lt;/title&gt;<br>
+		&nbsp; &lt;/head&gt;<br>
+		&nbsp; &lt;body&gt;<br>
+		&nbsp; &nbsp; &lt;h1&gt;switch - dispatch の使い方&lt;/h1&gt;<br>
+		&nbsp; &nbsp; C などのプログラミング言語同様、<br>
+		&nbsp; &nbsp; Paraphrase でも switch ワードにより複数の条件分岐が可能です。<br>
+		&nbsp; &nbsp; &nbsp; （中略）<br>
+		&nbsp; &nbsp; 使用方法を以下に示します。<br>
+		&nbsp; &nbsp; &lt;code&gt; <span class=rem>←ここでコメント終了</span><br>
+		&nbsp; &nbsp; &nbsp; <span class=rem>
+			↓ 以下、有効な（＝コメントではない）コード </span><br>
+		&nbsp; &nbsp; &nbsp; "FizzBuzz" : <br>
+		&nbsp; &nbsp; &nbsp; &nbsp; switch <br>
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; case 15 % 0? -&gt; "FizzBuzz" break<br>
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; case 5 % 0?  -&gt; "Buzz"     break<br>
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; case 3 % 0?  -&gt; "Fizz"     break<br>
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; dup<br>
+		&nbsp; &nbsp; &nbsp; &nbsp; dispatch<br>
+		&nbsp; &nbsp; &nbsp; &nbsp; swap drop<br>
+		&nbsp; &nbsp; &nbsp; ;<br>
+		&nbsp; &nbsp; &lt;/code&gt; <span class=rem>← 再びコメント開始</span><br>
+		&nbsp; &nbsp; 上記のコードで定義している FizzBuzz ワードは、<br>
+		&nbsp; &nbsp; &nbsp; （中略）<br>
+		&nbsp; &lt;/body&gt;<br>
+		&lt;/html&gt; <span class=rem>← /html タグでコメント終了</span><br>
+	</code>
+</div>
+<p>
+上記の HTML ファイルを FizzBuzz.html とすると、
+<div class=example>
+	<code>
+		&gt; <u> "ext/extLP.so" import </u><br>
+		&nbsp; ok. <br>
+		&gt; <u> "FizzBuzz.html" load </u><br>
+		&nbsp; ok. <br>
+		&gt; <u> 10 20 do i FizzBuzz . loop </u><br>
+		&nbsp; Buzz 11 Fizz 13 14 FizzBuzz 16 17 Fizz 19 Buzz ok.<br>
+	</code>
+</div>
+という結果を得ます。
+</p>
+<p>
+本格帳辞書は、以下のコードと同等です。
+<div class=example>
+	<code>
+		"&lt;!DOCTYPE" "/*" alias<br>
+		"&lt;!doctype" "/*" alias<br>
+		"&lt;/html&gt; "*/" alias<br>
+		<br>
+		"&lt;code" "*/" alias<br>
+		"&lt;code&gt;" "*/" alias<br>
+		"&lt;/code&gt;" "/*" alias<br>
+	</code>
+</div>
+</p>
+<p>
+Forth や Factor では入力バッファにアクセスすることで
+（ワードからスキャナを操作することで）
+コメントを実現していますが、
+Paraphrase では新たな実行モード（シンボルモード）を導入しているため、
+スキャナを操作することなくワードとしてコメントの終了機能を実現しています。
+加えて、Forth 系ということもあり、
+HTML タグと同名のワードも定義・使用できます。
+Paraphrase は、このような特徴を有しているため、
+タグ名と同じワードをコメントの開始・終了ワードの別名として定義するだけで、
+簡易的文芸的プログラミングが実現できます。
+</p>
+
+</div>
+</body>
+</html>
+

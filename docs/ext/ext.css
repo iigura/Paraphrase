@@ -1,0 +1,48 @@
+body { text-align: center; }
+.chunk {
+	page-break-inside: avoid;
+}
+h1 { font-size: 180%; }
+h3.wordHeader { border-bottom: 1px solid; }
+
+p.noindent { text-indent: 0em; }
+p:not(.noindent) { text-indent: 1em; }
+
+div.example {
+	text-indent: 0em;
+	padding-left: 1em;
+	border-radius: 15px;
+	border: solid 2px;
+	border-color: #888888;
+}
+
+div.one-line-example {
+	text-indent: 0em;
+	padding-left: 1em;
+	background-color: lightgray;
+}
+
+span.rem {
+	background: #FFFFAA;
+}
+
+th.boldLabel {
+	width: 8em;
+	vertical-align: top;
+	padding-bottom: 1.5em;
+}
+
+td.note {
+	vertical-align: top;
+	text-indent: 1em;
+	padding-bottom: 1.5em;
+}
+
+#main {
+	max-width: 40em;
+	text-align: left;
+	margin: 0 auto;
+}
+
+#author { text-align: right; }
+

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="readme.css">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="paraphrase-ver.0.9.0">Paraphrase ver.0.9.0</h1>
+<p>Copyright (c) 2019 Koji Iigura<br />
+Released under the MIT license<br />
+<a href="https://opensource.org/licenses/mit-license.php" class="uri">https://opensource.org/licenses/mit-license.php</a></p>
+<h2 id="マルチコア対応-forth-系言語">マルチコア対応 Forth 系言語</h2>
+<p>Paraphrase はマルチコアに対応した Forth 系言語です。<br />
+スレッド間通信もサポートしており、 並列処理も簡単に記述できます。</p>
+<pre><code>// サンプルプログラム： 1 から 100 万までの素数を数える
+reset-pipes
+// 奇数については並列処理で調べる
+[ /* scatter */  3 10000000 do i &gt;pipe 2 step loop ]
+[[  // 複数スレッドで検証作業（=woker thrread)
+    while-pipe
+        dup prime? if &gt;pipe else drop then
+    repeat
+]]
+// gather
+() 2 dup prime? if append then // 2 については、ここで調査
+while-pipe append repeat
+( &quot;numOfPrimes=%d (%d ... %d)\n&quot; ${ size } ${ car } ${ last } ) printf
+drop</code></pre>
+<p>上のプログラムの出力</p>
+<pre><code>numOfPrimes=664579 (2 ... 9999991)</code></pre>
+<p>※ ワード prime? については、<a href="http://github.com/iigura/paraphrase/blob/master/samples/countPrimeMT-short.pp">countPrimeMT-short.pp</a> を 見て下さい。</p>
+<h2 id="マルチプラットフォーム対応">マルチプラットフォーム対応</h2>
+<p>Windows, Linux, MacOS に対応しています。</p>
+<h2 id="すぐ使えるビルド済みパッケージを使う場合">すぐ使えるビルド済みパッケージを使う場合</h2>
+<p>ダウンロードして解凍（展開）するだけです。<br />
+インストール不要で、すぐに実行できます。</p>
+<ul>
+<li>Windows 版 <a href="http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-win.zip">para-0-9-0-win.zip</a></li>
+<li>Linux 版 <a href="http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-linux.tar.gz">para-0-9-0-linux.tar.gz</a></li>
+<li>MacOS 版 <a href="http://github.com/iigura/paraphrase/releases/download/v.0.9.0/para-0-9-0-mac.tar.gz">para-0-9-0-mac.tar.gz</a></li>
+</ul>
+<p>展開して para （Windows 版は para.exe）を実行して下さい （同梱されるファイルについては、 <a href="http://github.com/iigura/paraphrase/blob/master/FILES.txt">FILES.txt</a> を 見て下さい）。</p>
+<h2 id="ソースコードからビルドする場合">ソースコードからビルドする場合</h2>
+<p>git clone https://github.com/iigura/paraphrase.git でクローン。<br />
+ビルド方法の詳細は、 <a href="http://github.com/iigura/paraphrase/blob/master/BUILD.txt">BUILD.txt</a> を 見て下さい。</p>
+<h2 id="その他">その他</h2>
+<p>サンプルプログラムの概要は samples ディレクトリの中の <a href="http://github.com/iigura/paraphrase/blob/master/samples/SAMPLES.txt">SAMPLES.txt</a> を 見て下さい。</p>
+<p>開発者が日本人なので、質問などは日本語で OK。 Paraphrase に関する情報は Twitter ( @<a href="https://twitter.com/paraphrase_lang">paraphrase_lang</a> ) や Facebook ( <a href="https://www.facebook.com/groups/219684655627070/">Paraphrase ユーザー会</a> ) にて発信中です。</p>
+<p>バグレポートや要望・質問などは Facebook の方に書いて頂ければ助かります。</p>
+</body>
+</html>

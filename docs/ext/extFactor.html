@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="ext.css">
+	<style type="text/css"> <!-- .VERSION:before{content:"0.9.0";} --> </style>
+	<title>extFactor ver. 0.9.0</title>
+</head>
+<body>
+<div id=main>
+<h1>extFactor ver. <span class="VERSION"></span></h1>
+<div id=author>2019.MM.DD 飯倉宏治</div>
+<p>
+拡張辞書 extFactor は、
+<a href="http://factorcode.org/">Factor</a>
+の if 文を Paraphrase でも実現するものです。<br>
+※参考実装ですが、ソースコードは src/dict/ext/extFactor.cpp にあります。
+</p>
+<p>
+Factor における if 文は、Paraphrase とは異なり、以下のように記述されます。<br>
+<div class=one-line-example>
+	<code>
+		<br>
+		[ true-part ] [ false-part ] if <br>
+		<br>
+	</code>
+</div>
+</p>
+<p>
+少し補足説明をすると、Factor における大括弧 [ ] は、
+Paraphrase で言うところの無名ワードブロックを構成するものであり、
+Paraphrase 的に書くと、<br>
+<br>
+&nbsp; &nbsp; { true-part } { false-part } if <br>
+<br>
+となります。 
+</p>
+<p>
+話を Factor に戻しましょう。
+例えば、TOS が奇数のときには odd を、偶数の時には even と表示するコードを
+Factor で書く場合、以下のように記述できます。
+<div class=one-line-example>
+	<code>
+			<br>
+			2 mod 1 = [ "odd" ] [ "even" ] if . <br>
+			<br>
+	</code>
+</div>
+</p>
+<p>
+この方法はワード if に即時実行属性を与えることなく、
+条件判断を実装できるという特徴があります
+（が、この方法はプログラミングしづらいのでは？と判断したため
+Paraphrase では採用しませんでした）。
+</p>
+<p>
+本拡張辞書は Factor 方式の if 文を実現する factor:if を提供します。
+使用方法は以下の通りです（って、そのままですね…）。
+<div class=one-line-example>
+	<code>
+		<br>
+		{ true-part } { false-part } factor:if <br>
+		<br>
+	</code>
+</div>
+</p>
+<p>
+実際の使用例については以下のワードリファレンスを参照して下さい。
+</p>
+<br>
+<br>
+<div class=chunk> 
+<!-- ============================== factor:if ============================== -->
+<h3 class=wordHeader id=factor_if>factor:if</h3>
+<table>
+<tr>
+    <th class=boldLabel>実行レベル</th>
+    <td class=note>標準実行レベル</td>
+</tr>
+<tr>
+    <th class=boldLabel>スタックの変化</th>
+    <td class=note>
+		<a href="../words/index.html#_Bool">B</a>
+		<a href="../words/index.html#_Word">W</a>
+		<a href="../words/index.html#_Word">W</a> ---
+	</td>
+</tr>
+<tr>
+    <th class=boldLabel>機能</th>
+    <td class=note>
+		スタックの上から 3 番目の真偽値に応じて、
+		真ならばセカンドにある無名ワードを、
+		偽ならば TOS にある無名ワードを実行します。
+    </td>
+</tr>
+<tr>
+    <th class=boldLabel>使用例</th>
+    <td class=note>
+		TOS の値に応じて奇数ならば odd を、
+		偶数ならば even を表示するコードを以下に示します。
+        <div class=example>
+            <code>
+				<span class=rem>
+					↓ Windows の場合は "ext/extFactor.dll"
+				</span><br>
+				&gt; <u> "ext/extFactor.so" import </u><br>
+                &nbsp; ok.<br>
+				&gt; <u> 120 </u>
+					<span class=rem>
+						← チェックする値として 120 をプッシュ
+					</span><br>
+                &nbsp; ok.<br>
+				&gt; <u> 2 % 1 == { "odd" } { "even" } factor:if . </u><br>
+                &nbsp; even ok.<br>
+            </code>
+        </div>
+    </td>
+</tr>
+<tr>
+    <th class=boldLabel>エラー</th>
+    <td class=note>
+		スタック上に、
+		想定された値がプッシュされていないとエラーとなります。
+    </td>
+</tr>
+</table>
+
+<p>
+ちなみに、factor:if と同じ動作をする factor-like-if は、
+以下のように定義することもできます。
+<div class=example>
+	<code>
+		"factor-like-if" : <br>
+		&nbsp; &nbsp; rot if <br>
+		&nbsp; &nbsp; &nbsp; &nbsp; drop exec <br>
+		&nbsp; &nbsp; else <br>
+		&nbsp; &nbsp; &nbsp; &nbsp; swap drop exec <br>
+		&nbsp; &nbsp; then <br>
+		;
+	</code>
+</div>
+<br>
+<div class=example>
+	&gt; <u> true { "T" } { "F" } factor-like-if . </u><br>
+	&nbsp; T ok. <br>
+	&gt; <u> false { "T" } { "F" } factor-like-if . </u><br>
+	&nbsp; F ok. <br>
+</div>
+</p>
+
+</div>
+</body>
+</html>
+

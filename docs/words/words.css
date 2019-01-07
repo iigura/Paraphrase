@@ -1,0 +1,126 @@
+@page { size: A4 } 
+
+@media print {
+	body {
+		font-size: 10pt;
+	}
+	a:link	  { color: #0000FF; }
+	a:visited { color: #0000FF; }
+}
+
+body {
+	text-align: center;
+}
+
+h1 {
+	font-size: 180%;
+}
+
+#main {
+	max-width: 40em;
+	text-align: left;
+	margin: 0 auto;
+}
+
+#author {
+	text-align: right;
+}
+
+p.noindent {
+	text-indent: 0em;
+}
+
+p:not(.noindent) {
+	text-indent: 1em;
+}
+
+#context {
+	margin-left: 2em;
+}
+
+h2.chapt {
+	border-top: 1px solid;
+	border-bottom: 1px solid;
+}
+
+.context_L2 {
+	margin-left: 2.5em;
+}
+
+.context_L3 {
+	margin-left: 2.5em;
+}
+
+div.example {
+	text-indent: 0em;
+	padding-left: 1em;
+	border-radius: 15px;
+	border: solid 2px;
+	border-color: #888888;
+}
+
+table.outframe {
+	border: 1px black solid;
+}
+
+.indexGroup {
+	font-weight: bold;
+	text-align: left;
+}
+
+.categGroup {
+	font-weight: bold;
+	text-align: left;
+}
+
+th.termLabel {
+	vertical-align: top;
+	padding-bottom: 1.5em;
+}
+
+th.termLabel-symbol {
+	width: 3em;
+	text-align: center;
+	vertical-align: top;
+	padding-bottom: 1.5em;
+}
+
+th.termLabel_wide {
+	width: 6em;
+	vertical-align: top;
+	padding-bottom: 1.5em;
+}
+
+th.boldLabel {
+	width: 8em;
+	vertical-align: top;
+	padding-bottom: 1.5em;
+}
+
+td.note {
+	vertical-align: top;
+	text-indent: 1em;
+	padding-bottom: 1.5em;
+}
+
+h3.wordHeader {
+	border-bottom: 1px solid;
+}
+
+span.rem {
+	background: #FFFFAA;
+}
+
+h2.chapt {
+	border-top: 1px solid;
+	border-bottom: 1px solid;
+}
+
+.chunk {
+	page-break-inside: avoid;
+}
+
+.newPage {
+	page-break-after: always;
+}
+

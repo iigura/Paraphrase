@@ -1,0 +1,61 @@
+Paraphrase sample programs' README (ver.0.9.0)  by K.Iigura
+
+===========================================================
+単体で実行できる系
+===========================================================
+test_PE21mt60k (Windows の場合は test_PE21mt60k.bat)
+	PE21mt-short.pp を使用し、Project Euler の No.21 の問題（友愛数を求める問題）
+	を処理します。オリジナルの問題は 10,000 までの友愛数を求めるものですが、すぐ
+	に計算が終わってしまうので、60,000 までの友愛数を求めるように変更してあります。
+	samples ディレクトリにて本ファイルを実行して下さい。
+
+test_countPrimeMT (Windows の場合は test_countPrimeMT.bat)
+	countPrimeMT-short.pp を用いて、1 から 100 万までに存在する素数を数え上げるプロ
+	グラムです。samples ディレクトリにて本ファイルは実行して下さい。
+
+===========================================================
+インタプリタで読み込んで実行する系
+===========================================================
+FizzBuzz.pp
+	samples ディレクトリにて "FizzBuzz.pp" load とすると、いわゆる FizzBuzz 問題を処
+	理する FizzBuzz ワードが定義されます。この状態で、 1 10 do i FizzBuzz loop とす
+	ると、
+		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz ok.
+	という出力が得られます。
+
+PE21mt-short.pp
+	test_PE21mt60k{.bat} から読み込まれるファイルですが、その役割は 2 から TOS に
+	積まれた N までの友愛数を求める printAmicableNubers/mt というワードを定義する
+	ところにあります。samples ディレクトリにて "PE21mt-short.pp" load として、
+		1000 printAmicableNumbers/mt
+	とすれば、220 と 284 という 1000 以下の友愛数が表示されると共に、その合計であ
+	る 504 という値が表示されます。
+
+countPrimeMT-short.pp
+	1 から 100 万までの素数を並列処理を用いて数えるプログラムです。samples ディレク
+	トリにて、
+	"countPrimeMT-short.pp" load とすると、計算か開始されます。終了すると、
+		numOfPrime=664579 (2 ... 9999991)
+	という出力が得られます。
+
+dumpMPmt.pp
+	samples ディレクトリにて、"dumpMPmt.pp" load とすると、1 から 1000 までのメルセン
+	ヌ数のうち素数であるものを求めます。printf などの使い方の参考にして下さい。
+
+zdk.pp
+	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディレ
+	クトリにて "zdk.pp2 load とし、ワード zdk を実行すると、ズンドコキヨシ問題が処理
+	される様子が表示されます。
+
+===========================================================
+コマンドラインのパラメータとしてファイルを指定する系
+===========================================================
+check-scriptFile-args.pp
+	samples ディレクトリにて
+		../para check-scriptFile-args.pp 1 2.3 '"-456"' string-value '"( a ( b c ) )"'
+	とすると、check-scrptFile-args.pp が読み込まれて実行されます。
+	Paraphrase インタプリタ para では、最初の引数はスクリプトファイルとして認識され、
+	指定されたファイルを読み込み、そして実行します。2 番目以降の引数はスタックに積ま
+	れます。check-scriptFile-args.pp は、スタックの様子を show するスクリプトですので、
+	上記のように入力すると、引数がスタックに積まれている様子を見ることができます。
+

@@ -31,6 +31,7 @@ struct Word;
 
 PP_API bool Install(Word *ioWord,const bool inUseShortendForm=true);
 PP_API void Uninstall(const Word *inTargetWord);
+PP_API void Alias(const char *inNewName,const char *inSrcName);
 
 PP_API const std::string& GetCurrentVocName();
 PP_API void SetCurrentVocName(const std::string& inStr);

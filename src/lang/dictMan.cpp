@@ -103,6 +103,16 @@ PP_API void Uninstall(const Word *inTargetWord) {
 	}
 }
 
+PP_API void Alias(const char *inNewName,const char *inSrcName) {
+	auto dictIter=Dict.find(std::string(inSrcName));
+	if(dictIter==Dict.end()) {
+		fprintf(stderr,
+			"SYSTEM ERROR at Alias(): can not find the name (%s)..\n",inSrcName);
+		exit(-1);
+	}
+	Install(new Word(inNewName,Dict[inSrcName]->level,Dict[inSrcName]->code));
+}
+
 static bool ambigous(Context& inContext) NOEXCEPT {
 	const Word *self=(*inContext.ip);
 	inContext.Error(E_AMBIGOUS_WORD_NAME,self->shortName);

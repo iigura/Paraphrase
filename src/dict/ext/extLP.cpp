@@ -11,14 +11,18 @@
 
 static std::string gVocabulary("lp");
 
-extern "C" void InitDict() {
-	Dict["<!DOCTYPE"]=Dict["/*"];
-	Dict["<!doctype"]=Dict["/*"];
-	Dict["</html>"]=Dict["*/"];
+extern "C" PP_API void InitDict() {
+	std::string vocBackup=GetCurrentVocName();
+	SetCurrentVocName(gVocabulary);
 
-	Dict["<code"] =Dict["*/"];
-	Dict["<code>"]=Dict["*/"];
+	Alias("<!DOCTYPE","/*");
+	Alias("<!doctype","/*");
+	Alias("</html>","*/");
 
-	Dict["</code>"]=Dict["/*"];
+	Alias("<code","*/");
+	Alias("<code>","*/");
+
+	Alias("</code>","/*");
+
+	SetCurrentVocName(vocBackup);
 }
-

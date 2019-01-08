@@ -1,4 +1,4 @@
-# Paraphrase ver. 0.9.2
+# Paraphrase ver. 0.9.2a
 Copyright (c) 2019 Koji Iigura  
 Released under the MIT license  
 [https://opensource.org/licenses/mit-license.php](
@@ -42,12 +42,12 @@ Windows, Linux, MacOS に対応しています。
 ダウンロードして解凍（展開）するだけです。  
 インストール不要で、すぐに実行できます。
 
-* Windows 版 [__PACK_FOR_WIN__](
-http://github.com/iigura/paraphrase/releases/download/v0.9.2/__PACK_FOR_WIN__)
-* Linux 版 [__PACK_FOR_LINUX__](
-http://github.com/iigura/paraphrase/releases/download/v0.9.2/__PACK_FOR_LINUX__)
-* MacOS 版 [__PACK_FOR_MAC__](
-http://github.com/iigura/paraphrase/releases/download/v0.9.2/__PACK_FOR_MAC__)
+* Windows 版 [para-0-9-2a-win.zip](
+http://github.com/iigura/paraphrase/releases/download/v0.9.2a/para-0-9-2a-win.zip)
+* Linux 版 [para-0-9-2a-linux.tar.gz](
+http://github.com/iigura/paraphrase/releases/download/v0.9.2a/para-0-9-2a-linux.tar.gz)
+* MacOS 版 [para-0-9-2a-mac.tar.gz](
+http://github.com/iigura/paraphrase/releases/download/v0.9.2a/para-0-9-2a-mac.tar.gz)
 
 展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、

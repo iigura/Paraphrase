@@ -1,6 +1,8 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
+#define VERSION "0.9.2"
+
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
 #endif
@@ -45,7 +47,7 @@
 	#include <Windows.h>
 #endif
 
-const char *kVersion="0.9.1";
+const char *kVersion=VERSION;
 
 TypedValue G_InvalidTV=TypedValue();
 unsigned int G_NumOfCores=std::thread::hardware_concurrency();

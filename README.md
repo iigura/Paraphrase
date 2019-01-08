@@ -1,4 +1,4 @@
-# Paraphrase ver.0.9.1
+# Paraphrase ver. 0.9.2
 Copyright (c) 2019 Koji Iigura  
 Released under the MIT license  
 [https://opensource.org/licenses/mit-license.php](
@@ -38,21 +38,24 @@ http://github.com/iigura/paraphrase/blob/master/samples/countPrimeMT-short.pp) �
 Windows, Linux, MacOS に対応しています。
 
 
-## すぐ使えるビルド済みパッケージを使う場合
+## すぐ使える：ビルド済みパッケージを使う場合
 ダウンロードして解凍（展開）するだけです。  
 インストール不要で、すぐに実行できます。
 
-* Windows 版 [para-0-9-1-win.zip](
-http://github.com/iigura/paraphrase/releases/download/v.0.9.1/para-0-9-1-win.zip)
-* Linux 版 [para-0-9-1-linux.tar.gz](
-http://github.com/iigura/paraphrase/releases/download/v.0.9.1/para-0-9-1-linux.tar.gz)
-* MacOS 版 [para-0-9-1-mac.tar.gz](
-http://github.com/iigura/paraphrase/releases/download/v.0.9.1/para-0-9-1-mac.tar.gz)
+* Windows 版 [__PACK_FOR_WIN__](
+http://github.com/iigura/paraphrase/releases/download/v0.9.2/__PACK_FOR_WIN__)
+* Linux 版 [__PACK_FOR_LINUX__](
+http://github.com/iigura/paraphrase/releases/download/v0.9.2/__PACK_FOR_LINUX__)
+* MacOS 版 [__PACK_FOR_MAC__](
+http://github.com/iigura/paraphrase/releases/download/v0.9.2/__PACK_FOR_MAC__)
 
 展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、
 [FILES.txt](http://github.com/iigura/paraphrase/blob/master/FILES.txt) を
 見て下さい）。
+
+終了方法は、Linux や Mac の場合 Ctrl-D または Ctrl-C です。  
+Windows では Ctrl-Z を入力後リターンキーを押すか、Ctrl-C で終了します。
 
 
 ## ソースコードからビルドする場合

@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.9.2a"
+#define VERSION "0.9.3"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")

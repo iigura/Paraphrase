@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.9.2a)  by K.Iigura
+Paraphrase sample programs' README (ver.0.9.3)  by K.Iigura
 
 ===========================================================
 単体で実行できる系
@@ -10,16 +10,16 @@ test_PE21mt60k (Windows の場合は test_PE21mt60k.bat)
 	samples ディレクトリにて本ファイルを実行して下さい。
 
 test_countPrimeMT (Windows の場合は test_countPrimeMT.bat)
-	countPrimeMT-short.pp を用いて、1 から 100 万までに存在する素数を数え上げるプロ
-	グラムです。samples ディレクトリにて本ファイルは実行して下さい。
+	countPrimeMT-short.pp を用いて、1 から 1,000 万までに存在する素数を数え上げる
+    プログラムです。samples ディレクトリにて本ファイルは実行して下さい。
 
 ===========================================================
 インタプリタで読み込んで実行する系
 ===========================================================
 FizzBuzz.pp
-	samples ディレクトリにて "FizzBuzz.pp" load とすると、いわゆる FizzBuzz 問題を処
-	理する FizzBuzz ワードが定義されます。この状態で、 1 10 do i FizzBuzz loop とす
-	ると、
+	samples ディレクトリにて "FizzBuzz.pp" load とすると、いわゆる FizzBuzz 問題を
+    処理する FizzBuzz ワードが定義されます。この状態で、 1 10 do i FizzBuzz loop 
+    とすると、
 		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz ok.
 	という出力が得られます。
 
@@ -32,9 +32,9 @@ PE21mt-short.pp
 	る 504 という値が表示されます。
 
 countPrimeMT-short.pp
-	1 から 100 万までの素数を並列処理を用いて数えるプログラムです。samples ディレク
-	トリにて、
-	"countPrimeMT-short.pp" load とすると、計算か開始されます。終了すると、
+	1 から 1,000 万までの素数を並列処理を用いて数えるプログラムです。samples ディ
+    レクトリにて、"countPrimeMT-short.pp" load とすると、計算か開始されます。計算
+    が終了すると、
 		numOfPrime=664579 (2 ... 9999991)
 	という出力が得られます。
 

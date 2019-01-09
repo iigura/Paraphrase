@@ -1,4 +1,4 @@
-// 1〜100 万までに存在する素数の個数を調べる。
+// 1〜1000 万までに存在する素数の個数を調べる。
 
 "prime?" :
 	switch
@@ -22,7 +22,7 @@ reset-pipes
 ]]
 
 () 2 dup prime? if append else drop then // 2 については、ここで調査
-while-pipe append repeat
+while-pipe append repeat { < } sort
 ( "numOfPrimes=%d (%d ... %d)\n" ${ size } ${ car } ${ last } ) printf
 drop
 

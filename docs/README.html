@@ -17,14 +17,14 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="paraphrase-ver.-0.9.2a">Paraphrase ver. 0.9.2a</h1>
+<h1 id="paraphrase-ver.-0.9.3">Paraphrase ver. 0.9.3</h1>
 <p>Copyright (c) 2019 Koji Iigura<br />
 Released under the MIT license<br />
 <a href="https://opensource.org/licenses/mit-license.php" class="uri">https://opensource.org/licenses/mit-license.php</a></p>
 <h2 id="マルチコア対応-forth-系言語">マルチコア対応 Forth 系言語</h2>
 <p>Paraphrase はマルチコアに対応した Forth 系言語です。<br />
 スレッド間通信もサポートしており、 並列処理も簡単に記述できます。</p>
-<pre><code>// サンプルプログラム： 1 から 100 万までの素数を数える
+<pre><code>// サンプルプログラム： 1 から 1,000 万までの素数を数える
 reset-pipes
 // 奇数については並列処理で調べる
 [ /* scatter */  3 10000000 do i &gt;pipe 2 step loop ]
@@ -47,9 +47,9 @@ drop</code></pre>
 <p>ダウンロードして解凍（展開）するだけです。<br />
 インストール不要で、すぐに実行できます。</p>
 <ul>
-<li>Windows 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.9.2a/para-0-9-2a-win.zip">para-0-9-2a-win.zip</a></li>
-<li>Linux 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.9.2a/para-0-9-2a-linux.tar.gz">para-0-9-2a-linux.tar.gz</a></li>
-<li>MacOS 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.9.2a/para-0-9-2a-mac.tar.gz">para-0-9-2a-mac.tar.gz</a></li>
+<li>Windows 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.9.3/para-0-9-3-win.zip">para-0-9-3-win.zip</a></li>
+<li>Linux 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.9.3/para-0-9-3-linux.tar.gz">para-0-9-3-linux.tar.gz</a></li>
+<li>MacOS 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.9.3/para-0-9-3-mac.tar.gz">para-0-9-3-mac.tar.gz</a></li>
 </ul>
 <p>展開して para （Windows 版は para.exe）を実行して下さい （同梱されるファイルについては、 <a href="http://github.com/iigura/paraphrase/blob/master/FILES.txt">FILES.txt</a> を 見て下さい）。</p>
 <p>終了方法は、Linux や Mac の場合 Ctrl-D または Ctrl-C です。<br />

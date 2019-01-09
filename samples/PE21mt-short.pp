@@ -56,7 +56,7 @@
 
 "printAmicableNumbers/mt" :
 	dup make-d-array/mt	 swap 2 swap	/* array 2 n */
-	getAmicableNumbersFromArray/mt
+	getAmicableNumbersFromArray/mt { < } sort
 	dup . cr
 	0 swap dup not-empty-list? while
 		pop-front rot + swap dup not-empty-list?

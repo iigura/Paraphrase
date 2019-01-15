@@ -2,9 +2,9 @@
 
 "prime?" :
 	switch
-		case 1 ==    -> drop false break
-		case 2 ==    -> drop true  break
-		case 2 % 0?  -> drop false break
+		case 1 ==    -> false break
+		case 2 ==    -> true  break
+		case 2 % 0?  -> false break
 		// otherwise
 		true swap dup sqrt ceil >int 3 swap
 		for dup i % 0? if swap drop false swap leave then 2 step next drop

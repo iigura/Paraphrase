@@ -192,6 +192,10 @@ static TypedValue getTypedValue(Context& inContext,std::string inToken) {
 		// 	0x100f は 0x100F と同じだから float にはならない
 		// 	0x100d も同様（0x100D)
 
+		bool hexString=len>2
+					   && inToken[0]=='0' && (inToken[1]=='x' || inToken[1]=='X');
+
+		// 123LL or 123ll is big-int.
 		if(len>2
 		  && (inToken[len-2]=='l' || inToken[len-2]=='L')
 		  && (inToken[len-1]=='l' || inToken[len-1]=='L')) {
@@ -203,21 +207,41 @@ static TypedValue getTypedValue(Context& inContext,std::string inToken) {
 			goto checkLong;
 		}
 		// int?
-		try {
-			int n=boost::lexical_cast<int>(inToken);
-			TypedValue ret(n);
-			return ret;
-		} catch(const boost::bad_lexical_cast& /* inExcpt */) {
-			goto checkLong;
+		if( hexString ) {
+			try {
+				int n=std::stoi(inToken,NULL,16);
+				TypedValue ret(n);
+				return ret;
+			} catch(...) {
+				goto checkLong;
+			}
+		} else {
+			try {
+				int n=boost::lexical_cast<int>(inToken);
+				TypedValue ret(n);
+				return ret;
+			} catch(const boost::bad_lexical_cast& /* inExcpt */) {
+				goto checkLong;
+			}
 		}
 
 checkLong:
-		try {
-			long n=boost::lexical_cast<long>(inToken);
-			TypedValue ret(n);
-			return ret;
-		} catch(const boost::bad_lexical_cast& /* inExcpt */) {
-			goto bigInt;
+		if( hexString ) {
+			try {
+				long n=std::stol(inToken,NULL,16);
+				TypedValue ret(n);
+				return ret;
+			} catch(...) {
+				goto bigInt;
+			}
+	} else {
+			try {
+				long n=boost::lexical_cast<long>(inToken);
+				TypedValue ret(n);
+				return ret;
+			} catch(const boost::bad_lexical_cast& /* inExcpt */) {
+				goto bigInt;
+			}
 		}
 
 bigInt:

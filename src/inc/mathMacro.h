@@ -438,6 +438,60 @@ onError: \
 	NEXT; \
 } while(0)
 
+// result=tv1 OP tv2
+// ex: GetIntegerCmpOpResult_AndConvert(a,second,<,tos)
+// 	   equivalent to: a=second<tos;
+#define GetIntegerCmpOpResult_AndConvert(result,tv1,OP,tv2) do { \
+	if(tv1.dataType==kTypeInt && tv2.dataType==kTypeInt) { \
+		result=tv1.intValue OP tv2.intValue; \
+	} else if(tv1.dataType==kTypeLong && tv2.dataType==kTypeLong) { \
+		result=tv1.longValue OP tv2.longValue; \
+	} else if(tv1.dataType==kTypeBigInt && tv2.dataType==kTypeBigInt) { \
+		result=(*tv1.bigIntPtr) OP (*tv2.bigIntPtr); \
+	} else { \
+		switch(tv1.dataType) { \
+			case kTypeInt: \
+				if(tv2.dataType==kTypeLong) { \
+					tv1.dataType=kTypeLong; \
+					tv1.longValue=(long)tv1.intValue; \
+					result=tv1.longValue OP tv2.longValue; \
+				} else { \
+					assert(tv2.dataType==kTypeBigInt); \
+					tv1.dataType=kTypeBigInt; \
+					tv1.bigIntPtr=new BigInt(tv1.intValue); \
+					result=(*tv1.bigIntPtr) OP (*tv2.bigIntPtr); \
+				} \
+				break; \
+			case kTypeLong: \
+				if(tv2.dataType==kTypeInt) { \
+					tv2.dataType=kTypeLong; \
+					tv2.longValue=(long)tv2.intValue; \
+					result=tv1.longValue OP tv2.longValue; \
+				} else { \
+					assert(rsSecond.dataType==kTypeBigInt); \
+					tv1.dataType=kTypeBigInt; \
+					tv1.bigIntPtr=new BigInt(tv1.longValue); \
+					result=(*tv1.bigIntPtr) OP (*tv2.bigIntPtr); \
+				} \
+				break; \
+			case kTypeBigInt: \
+				if(tv2.dataType==kTypeInt) { \
+					tv2.dataType=kTypeBigInt; \
+					tv2.bigIntPtr=new BigInt(tv2.intValue); \
+					result=(*tv1.bigIntPtr) OP (*tv2.bigIntPtr); \
+				} else { \
+					assert(tv2.dataType==kTypeLong); \
+					tv2.dataType=kTypeBigInt; \
+					tv2.bigIntPtr=new BigInt(tv2.longValue); \
+					result=(*tv1.bigIntPtr) OP (*tv2.bigIntPtr); \
+				} \
+				break; \
+			default: \
+				return inContext.Error(E_SYSTEM_ERROR); \
+		} \
+	} \
+} while(0)
+
 #define BitOp(OP) do { \
 	if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); } \
 	TypedValue tos=Pop(inContext.DS); \

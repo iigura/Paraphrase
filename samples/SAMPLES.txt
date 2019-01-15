@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.9.3)  by K.Iigura
+Paraphrase sample programs' README (ver.0.91.0)  by K.Iigura
 
 ===========================================================
 単体で実行できる系
@@ -30,6 +30,14 @@ PE21mt-short.pp
 		1000 printAmicableNumbers/mt
 	とすれば、220 と 284 という 1000 以下の友愛数が表示されると共に、その合計であ
 	る 504 という値が表示されます。
+
+PE25.pp
+	Project Euler No.25 を解く、PE25 というワードが定義されています。このワードは、
+	1 1 から始まるフィボナッチ数列に対し、TOS に有る桁数を超える最初のフィボナッ
+	チ数列の項数を表示するものです。Project Euler No.25 では、1000 桁を超える最初
+	の項数を表示せよ、というのが問題ですので、
+		1000 PE25
+	にて、解くことができます（4782 と表示されるはずです）。
 
 countPrimeMT-short.pp
 	1 から 1,000 万までの素数を並列処理を用いて数えるプログラムです。samples ディ

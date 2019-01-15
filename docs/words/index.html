@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="words.css">
 
-<style type="text/css"> <!-- .VERSION:before{content:"0.9.3";} --> </style>
+<style type="text/css"> <!-- .VERSION:before{content:"0.91.0";} --> </style>
 <style type="text/css"> <!-- .NUM_OF_WORDS:before{content:"203";} --> </style>
-<style type="text/css"> <!-- .DATE:before{content:"2019.01.09";} --> </style>
-<title>Paraphrase ワードリファレンス ver. 0.9.3</title>
+<style type="text/css"> <!-- .DATE:before{content:"2019.01.15";} --> </style>
+<title>Paraphrase ワードリファレンス ver. 0.91.0</title>
 
 </head>
 <body>
@@ -5038,9 +5038,7 @@ DS:-----------------------
 				&nbsp; &nbsp; &nbsp; &nbsp; case 15 % 0? -&gt; "FizzBuzz" break <br>
 				&nbsp; &nbsp; &nbsp; &nbsp;	case 5 % 0?  -&gt; "Buzz"    break <br>
 				&nbsp; &nbsp; &nbsp; &nbsp;	case 3 % 0?  -&gt; "Fizz"    break <br>
-				&nbsp; &nbsp; &nbsp; &nbsp;	dup <br>
 				&nbsp; &nbsp; dispatch <br>
-				&nbsp; &nbsp; swap drop <br>
 				; <br>
 			</code>
 		</div>
@@ -10245,12 +10243,10 @@ DS:-----------------
 			<code>
 				"FizzBuzz" :<br>
 				&nbsp; &nbsp; switch<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; dup 15 % 0? -> "FizzBuzz" break<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; dup 5 % 0?  -> "Buzz"     break<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; dup 3 % 0?  -> "Fizz"     break<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; dup<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; case 15 % 0? -> "FizzBuzz" break<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; case 5 % 0?  -> "Buzz"     break<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; case 3 % 0?  -> "Fizz"     break<br>
 				&nbsp; &nbsp; dispatch<br>
-				&nbsp; &nbsp; swap drop<br>
 				;<br>
 			</code>
 		</div>

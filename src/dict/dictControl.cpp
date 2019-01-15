@@ -210,58 +210,10 @@ void InitDict_Control(bool inOnlyUseCore) {
 											   rsSecond);
 		}
 
-		if(rsTos.dataType==kTypeInt && rsSecond.dataType==kTypeInt) {
-			inContext.DS.emplace_back(rsTos.intValue<=rsSecond.intValue);
-		} else if(rsTos.dataType==kTypeLong && rsSecond.dataType==kTypeLong) {
-			inContext.DS.emplace_back(rsTos.longValue<=rsSecond.longValue);
-		} else if(rsTos.dataType==kTypeBigInt && rsSecond.dataType==kTypeBigInt) {
-			inContext.DS.emplace_back(*rsTos.bigIntPtr<=*rsSecond.bigIntPtr);
-		} else {
-			switch(rsTos.dataType) {
-				case kTypeInt:
-					if(rsSecond.dataType==kTypeLong) {
-						rsTos.dataType=kTypeLong;
-						rsTos.longValue=(long)rsTos.intValue;
-						inContext.DS.emplace_back(rsTos.longValue<=rsSecond.longValue);
-					} else {
-						assert(rsSecond.dataType==kTypeBigInt);
-						rsTos.dataType=kTypeBigInt;
-						rsTos.bigIntPtr=new BigInt(rsTos.intValue);
-						inContext.DS.emplace_back(
-							*rsTos.bigIntPtr<=*rsSecond.bigIntPtr);
-					}
-					break;
-				case kTypeLong:
-					if(rsSecond.dataType==kTypeInt) {
-						rsSecond.dataType=kTypeLong;
-						rsSecond.longValue=(long)rsSecond.intValue;
-						inContext.DS.emplace_back(rsTos.longValue<=rsSecond.longValue);
-					} else {
-						assert(rsSecond.dataType==kTypeBigInt);
-						rsTos.dataType=kTypeBigInt;
-						rsTos.bigIntPtr=new BigInt(rsTos.longValue);
-						inContext.DS.emplace_back(
-							*rsTos.bigIntPtr<=*rsSecond.bigIntPtr);
-					}
-					break;
-				case kTypeBigInt:
-					if(rsSecond.dataType==kTypeInt) {
-						rsSecond.dataType=kTypeBigInt;
-						rsSecond.bigIntPtr=new BigInt(rsSecond.intValue);
-						inContext.DS.emplace_back(
-							*rsTos.bigIntPtr<=*rsSecond.bigIntPtr);
-					} else {
-						assert(rsSecond.dataType==kTypeLong);
-						rsSecond.dataType=kTypeBigInt;
-						rsSecond.bigIntPtr=new BigInt(rsSecond.longValue);
-						inContext.DS.emplace_back(
-							*rsTos.bigIntPtr<=*rsSecond.bigIntPtr);
-					}
-					break;
-				default:
-					return inContext.Error(E_SYSTEM_ERROR);
-			}
-		}
+		bool result;
+		GetIntegerCmpOpResult_AndConvert(result,rsTos,<=,rsSecond);
+		inContext.DS.emplace_back(result);
+
 		NEXT;
 	}));
 
@@ -547,20 +499,12 @@ void InitDict_Control(bool inOnlyUseCore) {
 		const size_t n=inContext.RS.size();
 		if(n<2) { return inContext.Error(E_RS_BROKEN); } 
 
-		// equivalent: _r> +second/r> <
-		const TypedValue& rsTos=inContext.RS.back();
-		if(rsTos.dataType!=kTypeInt) {
-			return inContext.Error(E_RS_BROKEN_TOS_SHOULD_BE_INT);
-		}
+		TypedValue& rsTos=inContext.RS.back();
+		TypedValue& rsSecond=inContext.RS[n-2];
 
-		const int current=rsTos.intValue;
-		const TypedValue& rsSecond=inContext.RS[n-2];
-		if(rsSecond.dataType!=kTypeInt) {
-			return inContext.Error(E_RS_BROKEN_SECOND_SHOULD_BE_INT);
-		}
-
-		const int target=rsSecond.intValue;
-		if( current<=target ) {
+		bool result;
+		GetIntegerCmpOpResult_AndConvert(result,rsTos,<=,rsSecond);
+		if( result ) {
 			inContext.ip+=2;	// Next
 		} else {
 			inContext.ip=(const Word**)(*(inContext.ip+1));
@@ -579,7 +523,12 @@ void InitDict_Control(bool inOnlyUseCore) {
 		}));
 
 		/*---
-			"->" : check-compile-mode "branch-if-false" compile new-slot ; immediate
+			"->" :
+				check-compile-mode
+				"branch-if-false" compile
+				new-slot
+				"drop" compile
+			; immediate
 		---*/
 		Install(new Word("->",WordLevel::Immediate,WORD_FUNC {
 			if(inContext.CheckCompileMode()==false) {
@@ -587,6 +536,7 @@ void InitDict_Control(bool inOnlyUseCore) {
 			}
 			inContext.Compile(std::string("branch-if-false"));
 			inContext.MarkAndCreateEmptySlot();
+			inContext.Compile(std::string("drop"));
 			NEXT;
 		}));
 	}

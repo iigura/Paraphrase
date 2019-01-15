@@ -1,4 +1,4 @@
-# Paraphrase ver. 0.9.3
+# Paraphrase ver. 0.91.0
 Copyright (c) 2019 Koji Iigura  
 Released under the MIT license  
 [https://opensource.org/licenses/mit-license.php](
@@ -21,7 +21,7 @@ Paraphrase はマルチコアに対応した Forth 系言語です。
     ]]
     // gather
     () 2 dup prime? if append then // 2 については、ここで調査
-    while-pipe append repeat
+    while-pipe append repeat { < } sort
     ( "numOfPrimes=%d (%d ... %d)\n" ${ size } ${ car } ${ last } ) printf
     drop
 
@@ -42,12 +42,12 @@ Windows, Linux, MacOS に対応しています。
 ダウンロードして解凍（展開）するだけです。  
 インストール不要で、すぐに実行できます。
 
-* Windows 版 [para-0-9-3-win.zip](
-http://github.com/iigura/paraphrase/releases/download/v0.9.3/para-0-9-3-win.zip)
-* Linux 版 [para-0-9-3-linux.tar.gz](
-http://github.com/iigura/paraphrase/releases/download/v0.9.3/para-0-9-3-linux.tar.gz)
-* MacOS 版 [para-0-9-3-mac.tar.gz](
-http://github.com/iigura/paraphrase/releases/download/v0.9.3/para-0-9-3-mac.tar.gz)
+* Windows 版 [para-0-91-0-win.zip](
+http://github.com/iigura/paraphrase/releases/download/v0.91.0/para-0-91-0-win.zip)
+* Linux 版 [para-0-91-0-linux.tar.gz](
+http://github.com/iigura/paraphrase/releases/download/v0.91.0/para-0-91-0-linux.tar.gz)
+* MacOS 版 [para-0-91-0-mac.tar.gz](
+http://github.com/iigura/paraphrase/releases/download/v0.91.0/para-0-91-0-mac.tar.gz)
 
 展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、

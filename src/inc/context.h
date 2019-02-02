@@ -19,7 +19,7 @@ struct Context {
 
 	Context *parent;
 
-	Stack DS,RS,ES;
+	Stack DS,RS,SS,ES;	// SS = Syntax Stack
 	std::vector<const Word**> IS;	// IP Stack
 
 	int ExecutionThreshold;
@@ -54,6 +54,7 @@ struct Context {
 	PP_API bool Exec(const std::string inWordName);
 	PP_API bool Compile(const std::string& inWordName);
 	PP_API void Compile(const TypedValue& inTypedValue);
+	PP_API bool Compile(int inAddress,const TypedValue& inTypedValue);
 
 	void SetInterpretMode() {
 		newWord=NULL;
@@ -77,7 +78,7 @@ struct Context {
 
 	PP_API void RemoveDefiningWord();
 
-	PP_API bool BeginControlBlock();
+	PP_API bool BeginControlBlock(ControlBlockType inControlBlockType);
 	PP_API bool EndControlBlock();
 
 	PP_API void BeginNoNameWordBlock();

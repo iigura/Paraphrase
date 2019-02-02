@@ -30,8 +30,8 @@ $(OBJ)/%.o: %.cpp
 $(PPDIR)/libPP.so: $(LIB_OBJS)
 	$(CC) -shared $(CPPFLAGS) $(LIB_OBJS) $(SO_OPT) -o $(PPDIR)/$(LIB_NAME) 
 
-$(OBJ)/libPP.a: $(LIB_OBJS)
-	ar rcs $(OBJ)/libPP.a $(LIB_OBJS)
+$(PPDIR)/libPP.a: $(LIB_OBJS)
+	ar rcs $(PPDIR)/libPP.a $(LIB_OBJS)
 
 $(OBJ)/para.o: 			$(COMMON_HEADER) \
 						$(INC)/stack.h $(INC)/context.h $(INC)/chan.h \

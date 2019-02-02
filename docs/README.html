@@ -17,7 +17,7 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="paraphrase-ver.-0.91.0">Paraphrase ver. 0.91.0</h1>
+<h1 id="paraphrase-ver.-0.92.0">Paraphrase ver. 0.92.0</h1>
 <p>Copyright (c) 2019 Koji Iigura<br />
 Released under the MIT license<br />
 <a href="https://opensource.org/licenses/mit-license.php" class="uri">https://opensource.org/licenses/mit-license.php</a></p>
@@ -27,7 +27,7 @@ Released under the MIT license<br />
 <pre><code>// サンプルプログラム： 1 から 1,000 万までの素数を数える
 reset-pipes
 // 奇数については並列処理で調べる
-[ /* scatter */  3 10000000 do i &gt;pipe 2 step loop ]
+[ /* scatter */  3 10000000 for+ i &gt;pipe 2 step next ]
 [[  // 複数スレッドで検証作業（=woker thrread)
     while-pipe
         dup prime? if &gt;pipe else drop then
@@ -46,11 +46,9 @@ drop</code></pre>
 <h2 id="すぐ使えるビルド済みパッケージを使う場合">すぐ使える：ビルド済みパッケージを使う場合</h2>
 <p>ダウンロードして解凍（展開）するだけです。<br />
 インストール不要で、すぐに実行できます。</p>
-<ul>
-<li>Windows 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.91.0/para-0-91-0-win.zip">para-0-91-0-win.zip</a></li>
-<li>Linux 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.91.0/para-0-91-0-linux.tar.gz">para-0-91-0-linux.tar.gz</a></li>
-<li>MacOS 版 <a href="http://github.com/iigura/paraphrase/releases/download/v0.91.0/para-0-91-0-mac.tar.gz">para-0-91-0-mac.tar.gz</a></li>
-</ul>
+<p>以下のリンク（Google Drive）をクリックし、それぞれのプラットフォーム用のパッケージを入手して下さい。</p>
+<p><a href="https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ" class="uri">https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ</a></p>
+<p>Windows 版 para-0-91-0-win.zip Linux 版 para-0-91-0-linux.tar.gz MacOS 版 para-0-91-0-mac.tar.gz</p>
 <p>展開して para （Windows 版は para.exe）を実行して下さい （同梱されるファイルについては、 <a href="http://github.com/iigura/paraphrase/blob/master/FILES.txt">FILES.txt</a> を 見て下さい）。</p>
 <p>終了方法は、Linux や Mac の場合 Ctrl-D または Ctrl-C です。<br />
 Windows では Ctrl-Z を入力後リターンキーを押すか、Ctrl-C で終了します。</p>

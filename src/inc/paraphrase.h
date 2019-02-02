@@ -19,11 +19,6 @@
 	#define PP_API
 #endif
 
-enum {
-	kOPEN_C_STYLE_COMMENT			=-1000,
-	kOPEN_CPP_STYLE_ONE_LINE_COMMENT=-1001,
-};
-
 #define EOL_WORD "__EOL__"
 
 struct Context;

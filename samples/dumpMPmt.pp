@@ -2,29 +2,29 @@
 
 "lucas-lehmer-test-fast" :
 	dup 1 over mersenne	rot	2 - rot swap 4LL inv-rot
-	do
+	for+
 		dup * dup 4 pick >>	swap 3 pick	& +	dup	3 pick	
 		>= if over - then
 		2 -	
-	loop
+	next
 	0 == inv-rot drop drop
 ;
 
 "prime?" :
 	switch
-		dup 1 ==	-> drop false break
-		dup 2 ==	-> drop true  break
-		dup 2 % 0?	-> drop false break 
+		case 1 ==	-> false break
+		case 2 ==	-> true  break
+		case 2 % 0?	-> false break 
 		// otherwise
 	    true swap dup sqrt ceil >int 3 swap
-		for dup i % 0? if swap drop false swap leave then 2 step next
+		for+ dup i % 0? if swap drop false swap leave then 2 step next
     	drop
 	dispatch
 ;
 
 "num-of-digit" :
 	dup log10 floor >int 1+ dup 3 +
-	do dup 10 >INT i >int pow < if drop i 1- leave then loop
+	for+ dup 10 >INT i >int pow < if drop i 1- leave then next
 	1+
 ;
 
@@ -41,15 +41,15 @@
 ;
 
 // check 1...4 by single-thread
-() 1 4 do
+() 1 4 for+
 	i prime? if
 		i mersenne prime? if i append then
 	then
-loop
+next
 
-// check 4...1000 by multi-thread
+// check 4...5000 by multi-thread
 reset-pipes
-[ 5 1000 do i >pipe 2 step loop ]
+[ 5 5000 for+ i >pipe 2 step next ]
 [[
 	while-pipe
 		dup prime? if
@@ -62,4 +62,3 @@ while-pipe append repeat { < } sort
 	r> 1+ dup "No=%2d, " putf >r
 	calc-and-print-mersenne cr
 } apply
-

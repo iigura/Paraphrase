@@ -13,6 +13,7 @@ void InitDict_Optimize() {
 		inContext.DS.emplace_back(inContext.RS.back());
 		NEXT;
 	}));
+	
 	// equivalent to "@r> %".
 	Install(new Word("_r>%",WORD_FUNC {
 		if(inContext.RS.size()<1) { return inContext.Error(E_RS_IS_EMPTY); }
@@ -30,6 +31,30 @@ void InitDict_Optimize() {
 		  && dsTos.dataType!=kTypeBigInt) {
 			return inContext.Error_InvalidType(E_TOS_INT_OR_LONG_OR_BIGINT,dsTos);
 		}
+		ModAssign(dsTos,rsTos);
+		NEXT;
+	}));
+
+	// equivalent to "dup i %".
+	Install(new Word("_dup_@r>%",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		inContext.DS.emplace_back(inContext.DS.back()); // dup
+
+		TypedValue& dsTos=ReadTOS(inContext.DS);
+		if(dsTos.dataType!=kTypeInt
+		  && dsTos.dataType!=kTypeLong
+		  && dsTos.dataType!=kTypeBigInt) {
+			return inContext.Error_InvalidType(E_TOS_INT_OR_LONG_OR_BIGINT,dsTos);
+		}
+
+		if(inContext.RS.size()<1) { return inContext.Error(E_RS_IS_EMPTY); }
+		TypedValue& rsTos=ReadTOS(inContext.RS);
+		if(rsTos.dataType!=kTypeInt
+		  && rsTos.dataType!=kTypeLong
+		  && rsTos.dataType!=kTypeBigInt) {
+			return inContext.Error_InvalidType(E_RS_TOS_INT_OR_LONG_OR_BIGINT,rsTos);
+		}
+		
 		ModAssign(dsTos,rsTos);
 		NEXT;
 	}));
@@ -52,6 +77,18 @@ void InitDict_Optimize() {
 		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
 		TypedValue& dsSecond=inContext.DS[inContext.DS.size()-2];
 		AssignOp(dsSecond,+,rsTos);
+		NEXT;
+	}));
+
+	// equivalent to "_lit 1"
+	Install(new Word("_1",WORD_FUNC {
+		inContext.DS.emplace_back(1);
+		NEXT;
+	}));
+	
+	// equivalent to "_lit 2"
+	Install(new Word("_2",WORD_FUNC {
+		inContext.DS.emplace_back(2);
 		NEXT;
 	}));
 }

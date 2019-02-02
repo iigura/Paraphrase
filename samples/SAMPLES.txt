@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.91.0)  by K.Iigura
+Paraphrase sample programs' README (ver.0.92.0)  by K.Iigura
 
 ===========================================================
 単体で実行できる系
@@ -16,9 +16,12 @@ test_countPrimeMT (Windows の場合は test_countPrimeMT.bat)
 ===========================================================
 インタプリタで読み込んで実行する系
 ===========================================================
+99.pp
+    いわゆる九九を表示します。
+
 FizzBuzz.pp
 	samples ディレクトリにて "FizzBuzz.pp" load とすると、いわゆる FizzBuzz 問題を
-    処理する FizzBuzz ワードが定義されます。この状態で、 1 10 do i FizzBuzz loop 
+    処理する FizzBuzz ワードが定義されます。この状態で、 1 10 for+ i FizzBuzz next
     とすると、
 		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz ok.
 	という出力が得られます。
@@ -47,7 +50,7 @@ countPrimeMT-short.pp
 	という出力が得られます。
 
 dumpMPmt.pp
-	samples ディレクトリにて、"dumpMPmt.pp" load とすると、1 から 1000 までのメルセン
+	samples ディレクトリにて、"dumpMPmt.pp" load とすると、1 から 5000 までのメルセン
 	ヌ数のうち素数であるものを求めます。printf などの使い方の参考にして下さい。
 
 zdk.pp

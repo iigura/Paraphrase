@@ -25,32 +25,42 @@ struct OptPattern {
 
 static TypedValue getWord(const char *inWordName);
 static bool optimize(CodeThread *ioThread,const OptPattern& inPattern);
+static bool canGrouping(const CodeThread *inThread,
+						const int inStartAddress,const int inBlockLength);
 
 static OptPattern *gOptDB;
 
 PP_API void InitOptPattern() {
 	static OptPattern optDB[]={
 		OptPattern({getWord("std:>r"),getWord("std:>r")},{getWord("std:>r>r")}),
-		// 0 == -> 0?
+		// "0 ==" convert to "0?"
 		OptPattern({getWord("std:_lit"),TypedValue(0),getWord("std:==")},
 				   {getWord("std:0?")}),
 		OptPattern({getWord("std:_lit"),TypedValue(2),getWord("std:/")},
 				   {getWord("std:2/")}),
-		OptPattern({getWord("std:0?"),getWord("std:branch-if-false")},
+		OptPattern({getWord("std:dup"),getWord("std:@r>"),getWord("std:%")},
+				   {getWord("std:_dup_@r>%")}),
+		OptPattern({getWord("std:dup"),getWord("std:i"),getWord("std:%")},
+				   {getWord("std:_dup_@r>%")}),
+		OptPattern({getWord("std:0?"),getWord("std:_branch-if-false")},
 				   {getWord("std:_branchIfNotZero")}),
 		OptPattern({getWord("std:@r>"),getWord("std:%")},{getWord("std:_r>%")}),
 		OptPattern({getWord("std:@r>"),getWord("std:+")},{getWord("std:_r>+")}),
 		OptPattern({getWord("std:i"),getWord("std:%")},{getWord("std:_r>%")}),
 		OptPattern({getWord("std:i"),getWord("std:+")},{getWord("std:_r>+")}),
 		OptPattern({getWord("std:dup"),getWord("std:i")},{getWord("std:_dup_i")}),
-		OptPattern({getWord("std:repeat?"),getWord("std:branch-if-false")},
+		OptPattern({getWord("std:_repeat?+"),getWord("std:_branch-if-false")},
 				   {getWord("std:_branchWhenLoopEnded")}),
+		OptPattern({getWord("std:_lit"),TypedValue(2),getWord("std:_step+")},
+				   {getWord("std:_step++")}),
 		OptPattern({getWord("std:swap"),getWord("std:_r>+"),getWord("std:swap")},
 				   {getWord("std:_r>+_second")}),
 		OptPattern({getWord("std:dup"),getWord("std:empty-list?")},
 				   {getWord("std:@empty-list?")}),
 		OptPattern({getWord("std:dup"),getWord("std:not-empty-list?")},
 				   {getWord("std:@not-empty-list?")}),
+		OptPattern({getWord("std:_lit"),TypedValue(1)},{getWord("std:_1")}),
+		OptPattern({getWord("std:_lit"),TypedValue(2)},{getWord("std:_2")}),
 		OptPattern(),	// the sentinel
 	};
 	gOptDB=optDB;
@@ -89,6 +99,8 @@ static bool optimize(CodeThread *ioThread,const OptPattern& inPattern) {
 		}
 		if(match==false) { continue; }
 
+		if(canGrouping(ioThread,i,patternTargetSize)==false) { continue; }
+
 		auto p=ioThread->begin()+i;
 		p=ioThread->erase(p,p+patternTargetSize);
 		ioThread->insert(p,inPattern.replaceTo.begin(),
@@ -103,5 +115,23 @@ static bool optimize(CodeThread *ioThread,const OptPattern& inPattern) {
 		ret=true;
 	}
 	return ret;
+}
+
+static bool canGrouping(const CodeThread *inThread,
+						const int inStartAddress,const int inBlockLength) {
+	// target block address is [inStartAddress,endAddress)
+	const int endAddress=inStartAddress+inBlockLength;
+	const int n=(int)inThread->size();
+	for(int i=0; i<n; i++) {
+		const TypedValue& tv=inThread->at(i);
+		if(tv.dataType==kTypeAddress) {
+			const int addr=tv.intValue;
+			if(inStartAddress<addr && addr<endAddress) {
+				// jump into target block
+				return false;
+			}
+		}
+	}
+	return true;
 }
 

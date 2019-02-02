@@ -7,13 +7,13 @@
 		case 2 % 0?  -> false break
 		// otherwise
 		true swap dup sqrt ceil >int 3 swap
-		for dup i % 0? if swap drop false swap leave then 2 step next drop
+		for+ dup i % 0? if swap drop false swap leave then 2 step next drop
 	dispatch
 ;
 
 reset-pipes
 // 奇数については並列処理で調べる
-[ 3 10000000 do i >pipe 2 step loop ]
+[ 3 10000000 for+ i >pipe 2 step next ]
 
 [[	// 複数スレッドで検証作業（=woker thrread)
 	while-pipe

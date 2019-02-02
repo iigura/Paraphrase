@@ -112,6 +112,12 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 	  }
 	},
 
+	{ E_SS_BROKEN, {
+		{ PPL_ENGLISH,	"SS may be broken."			},
+		{ PPL_JAPANESE, "SS が壊れているようです。" },
+	  }
+	},
+
 	{ E_NO_LAST_DEFINED_WORD, {
 		{ PPL_ENGLISH,	"no lst defined word." },
 		{ PPL_JAPANESE,	"定義されたワードが存在しません。" },
@@ -225,6 +231,40 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 	{ E_SHOULD_BE_COMPILE_MODE, {
 		{ PPL_ENGLISH,	"this word should be use on the compile mode." },
 		{ PPL_JAPANESE, "本ワードはコンパイルモードで使用して下さい。" },
+	  }
+	},
+
+	{ E_SYNTAX_MISMATCH_IF, {
+		{ PPL_ENGLISH,	"syntax mismatch. this word should use for 'if' block." },
+		{ PPL_JAPANESE,	"構文エラー。このワードは if ブロックにて使用して下さい。" },
+	  }
+	},
+	{ E_SYNTAX_MISMATCH_FOR, {
+		{ PPL_ENGLISH,	"syntax mismatch. "
+						"this word should use for 'for+' or 'for-' block." },
+		{ PPL_JAPANESE,	"構文エラー。"
+						"このワードは for+ または for- ブロックにて使用して下さい。" },
+	  }
+	},
+	{ E_SYNTAX_MISMATCH_WHILE, {
+		{ PPL_ENGLISH,	"syntax mismatch. "
+						"this word should use for 'while' block." },
+		{ PPL_JAPANESE,	"構文エラー。"
+						"このワードは while ブロックにて使用して下さい。" },
+	  }
+	},
+	{ E_SYNTAX_MISMATCH_DO, {
+		{ PPL_ENGLISH,	"syntax mismatch. "
+						"this word should use for 'do' block." },
+		{ PPL_JAPANESE,	"構文エラー。"
+						"このワードは do ブロックにて使用して下さい。" },
+	  }
+	},
+	{ E_SYNTAX_MISMATCH_SWITCH, {
+		{ PPL_ENGLISH,	"syntax mismatch. "
+						"this word should use for 'switch' block." },
+		{ PPL_JAPANESE,	"構文エラー。"
+						"このワードは switch ブロックにて使用して下さい。" },
 	  }
 	},
 };
@@ -453,6 +493,13 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 		{ PPL_ENGLISH,	"The TOS on RS should be an int or a long or a big-int." },
 		{ PPL_JAPANESE,	"RS の TOS は int か long もしくは big-int で"
 						"なければなりません。" }
+	  }
+	},
+	{ E_RS_TOS_WP, {
+		{ PPL_ENGLISH,	"RS's TOS should be a word pointer."
+						"current TOS at RS type is %s." },
+		{ PPL_JAPANESE,	"RS の TOS がワードではありません。"
+						"現在のリターンスタックの TOS は %s です。" },
 	  }
 	},
 	{ E_RS_TOS_ADDRESS, {

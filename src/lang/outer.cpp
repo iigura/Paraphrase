@@ -37,7 +37,8 @@ PP_API bool OuterInterpreter(Context& inContext,std::string& inLine) {
 	for(std::string tokVal=getToken(inLine,&scanPos);
 	  tokVal!=""; tokVal=getToken(inLine,&scanPos)) {
 		TypedValue tv=getTypedValue(inContext,tokVal);
-		if(tv.dataType==kTypeString && tv.stringPtr.get()->size()==0) {
+		if(tokVal!="\"\"" && tokVal!="''" 
+		  && tv.dataType==kTypeString && tv.stringPtr.get()->size()==0) {
 			// escape seq. error
 			continue;
 		} else {

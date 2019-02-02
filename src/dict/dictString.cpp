@@ -34,5 +34,51 @@ void InitDict_String() {
 		inContext.DS.emplace_back(hexStr);
 		NEXT;
 	}));
+
+	// s --- s t/f
+	Install(new Word("empty-str?",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		if(tos.dataType!=kTypeString) {
+			return inContext.Error_InvalidType(E_TOS_STRING,tos);
+		}
+		inContext.DS.emplace_back(tos.stringPtr->length()==0);
+		NEXT;
+	}));
+
+	// s --- s t/f
+	Install(new Word("not-empty-str?",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		if(tos.dataType!=kTypeString) {
+			return inContext.Error_InvalidType(E_TOS_STRING,tos);
+		}
+		inContext.DS.emplace_back(tos.stringPtr->length()>0);
+		NEXT;
+	}));
+
+	// s --- s
+	Install(new Word(">upper",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		if(tos.dataType!=kTypeString) {
+			return inContext.Error_InvalidType(E_TOS_STRING,tos);
+		}
+		std::transform(tos.stringPtr->cbegin(),tos.stringPtr->cend(),
+					   tos.stringPtr->begin(),toupper);
+		NEXT;
+	}));
+	//
+	// s --- s
+	Install(new Word(">lower",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		if(tos.dataType!=kTypeString) {
+			return inContext.Error_InvalidType(E_TOS_STRING,tos);
+		}
+		std::transform(tos.stringPtr->cbegin(),tos.stringPtr->cend(),
+					   tos.stringPtr->begin(),tolower);
+		NEXT;
+	}));
 }
 

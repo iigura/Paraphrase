@@ -56,6 +56,20 @@ enum DataType {
 	kTypeMiscInt,	// use intValue as misc. data.
 };
 
+// int value for kTypeMiscInt
+enum ControlBlockType {
+	kOPEN_C_STYLE_COMMENT			=-1000,
+	kOPEN_CPP_STYLE_ONE_LINE_COMMENT=-1001,
+
+	kSyntax_FOR_PLUS 	=-2000,
+	kSyntax_FOR_MINUS	=-2001,
+	kSyntax_WHILE	 	=-2010,
+	kSyntax_WHILE_COND	=-2011,
+	kSyntax_DO			=-2020,
+	kSyntax_IF		 	=-2100,
+	kSyntax_SWITCH	 	=-2110,
+};
+
 struct TypedValue {
 	DataType dataType;
 	union {

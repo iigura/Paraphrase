@@ -1,6 +1,6 @@
 "d-func" : // n --- d-func-value  see https://projecteuler.net/problem=21
 	1 swap  dup 2 /  2 swap  	// result n 2 n/2
-	for		// result n
+	for+	// result n
 		dup i % 0 == if	swap  i +  swap then
 	next
 	drop
@@ -11,7 +11,7 @@
 	dup 1 +	 new-array swap		/* array n	*/
 	>pipe		/* send n to child */
 				/* array	*/
-	[	pipe>  2 swap  do i >pipe loop ]
+	[	pipe>  2 swap  for+ i >pipe next ]
 	[[	while-pipe dup d-func tuple >pipe repeat ]]
 
 	while-pipe	/* array (t d-value-of-t) */
@@ -31,7 +31,7 @@
 	tuple	/* array ( from to ) */
 
 	/* init DS by the TOS (list:( from to )). */
-	[-> de-list /* from to */    do i >pipe loop ]
+	[-> de-list /* from to */    for+ i >pipe next ]
 
 	/* --- worker --- */
 	/* init DS by the TOS (array). */
@@ -58,9 +58,7 @@
 	dup make-d-array/mt	 swap 2 swap	/* array 2 n */
 	getAmicableNumbersFromArray/mt { < } sort
 	dup . cr
-	0 swap dup not-empty-list? while
-		pop-front rot + swap dup not-empty-list?
-	repeat
+	0 swap while{ @not-empty-list? }-> pop-front rot + swap repeat
 	drop . cr
 ;
 

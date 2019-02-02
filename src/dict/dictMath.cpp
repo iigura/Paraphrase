@@ -782,7 +782,7 @@ onError:
 		NEXT;
 	}));
 
-	Install(new Word("to-address",WORD_FUNC {
+	Install(new Word(">address",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
 		if(tos.dataType!=kTypeInt && tos.dataType!=kTypeAddress) {

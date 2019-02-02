@@ -178,7 +178,7 @@ void InitDict_Parallel() {
 		NEXT;
 	}));
 
-	// equivalent to "pipe> eoc? branch-if-true".
+	// equivalent to "pipe> eoc? _branch-if-true".
 	Install(new Word("_while/pipe>_body",WORD_FUNC {
 		// pipe>
 		if(inContext.fromPipe==NULL) {
@@ -189,7 +189,7 @@ void InitDict_Parallel() {
 		}
 		TypedValue tv=inContext.fromPipe->Recv();
 		
-		// eoc? and branch-if-true
+		// eoc? and _branch-if-true
 		if(tv.dataType==kTypeEOC) {
 			inContext.ip=(const Word**)(*(inContext.ip+1));
 		} else {
@@ -201,7 +201,7 @@ void InitDict_Parallel() {
 
 	// while-pipe
 	Install(new Word("while-pipe",WordLevel::Immediate,WORD_FUNC {
-		inContext.BeginControlBlock();
+		inContext.BeginControlBlock(kSyntax_WHILE);
 		inContext.MarkHere();
 		inContext.Compile(std::string("_while/pipe>_body"));
 		inContext.MarkAndCreateEmptySlot();	// for exit address slot

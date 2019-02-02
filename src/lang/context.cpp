@@ -9,6 +9,8 @@
 
 const int DS_InitialStackSize=4096;
 const int RS_InitialStackSize=1024;
+const int SS_InitialStackSize=1024;
+const int IS_InitialStackSize=1024;
 const int ES_InitialStackSize=1024;
 
 static std::vector< std::vector<int> > gStackForLeave;
@@ -43,8 +45,10 @@ PP_API Context::Context(Context *inParent,int inExecutionThreshold,
    lastOutputPipe(),initParamForPBlock(),isInitParamBroadcast(true) {
 	DS.reserve(DS_InitialStackSize);
 	RS.reserve(RS_InitialStackSize);
+	SS.reserve(SS_InitialStackSize);
 	ES.reserve(ES_InitialStackSize);
-	IS.reserve(1024);
+	IS.reserve(IS_InitialStackSize);
+
 	newWord=NULL;
 
 	if(inInitParamFromParent!=NULL) {
@@ -102,7 +106,17 @@ PP_API void Context::Compile(const TypedValue& inTypedValue) {
 	newWord->tmpParam->push_back(inTypedValue);
 }
 
-PP_API bool Context::BeginControlBlock() {
+PP_API bool Context::Compile(int inAddress,const TypedValue& inTypedValue) {
+	if(newWord->tmpParam->size()<=inAddress) {
+		fprintf(stderr,"SYSTEM ERROR at Compile(addr,tv).\n");
+		return false;
+	}
+	newWord->tmpParam->at(inAddress)=inTypedValue;
+	return true;
+}
+
+PP_API bool Context::BeginControlBlock(ControlBlockType inControlBlockType) {
+	SS.emplace_back(kTypeMiscInt,inControlBlockType);
 	RS.emplace_back(kTypeThreshold,ExecutionThreshold);
 	if(ExecutionThreshold==kInterpretLevel) {
 		if(newWord!=NULL) { return false; }
@@ -113,6 +127,8 @@ PP_API bool Context::BeginControlBlock() {
 }
 
 PP_API bool Context::EndControlBlock() {
+	if(SS.size()<1) { return Error(E_SS_BROKEN); }
+	Pop(SS);
 	if(RS.size()<1) { return Error(E_RS_BROKEN); }
 	TypedValue tvThreshold=Pop(RS);
 	if(tvThreshold.dataType!=kTypeThreshold) {
@@ -265,7 +281,7 @@ PP_API void Context::ExitLeavableLoop() {
 }
 
 PP_API void Context::Compile_Leave() {
-	Compile(std::string("absolute-jump"));
+	Compile(std::string("_absolute-jump"));
 	int p=GetNextThreadAddressOnCompile();
 	gStackForLeave.back().push_back(p);
 	CompileEmptySlot(ExecutionThreshold);
@@ -289,7 +305,7 @@ PP_API void Context::ExitSwitchBlock() {
 }
 
 PP_API void Context::Compile_Break() {
-	Compile(std::string("absolute-jump"));
+	Compile(std::string("_absolute-jump"));
 	int p=GetNextThreadAddressOnCompile();
 	gStackForBreak.back().push_back(p);
 	CompileEmptySlot(ExecutionThreshold);

@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.91.0"
+#define VERSION "0.92.0"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -63,7 +63,7 @@ static std::ifstream gFileStream;
 static std::vector<std::string> gArgsForScriptFile;
 
 static bool gDisplayTime=false;
-static bool gRunWithReducedDict=false;
+//static bool gRunWithReducedDict=false;
 static bool gUsePrompt=true;
 static bool gUseOkDisplay=true;
 
@@ -82,7 +82,7 @@ void InitDict_Object();
 void InitDict_IO();
 void InitDict_Math();
 void InitDict_Stack();
-void InitDict_Control(bool inOnlyUseCore);
+void InitDict_Control();
 void InitDict_String();
 void InitDict_Array();
 void InitDict_List();
@@ -136,7 +136,7 @@ int main(int argc,char *argv[]) {
 					GlobalContext->SetInterpretMode();
 				}
 			} else {
-				if( gUseOkDisplay ) { puts(" ok."); }
+				if(gUseOkDisplay && GlobalContext->IsInterpretMode()) { puts(" ok."); }
 			}
 		} else if(result==false) {
 			break;
@@ -167,7 +167,7 @@ static void initDict() {
 	InitDict_IO();
 	InitDict_Math();
 	InitDict_Stack();
-	InitDict_Control(gRunWithReducedDict);
+	InitDict_Control();
 	InitDict_String();
 	InitDict_Array();
 	InitDict_List();
@@ -185,7 +185,8 @@ static bool parseOption(int argc,char *argv[]) {
 		("noprompt,n",	"suppress prompt.")
 		("nook,k",		"suppress 'ok'.")
 		("time,t",		"display spent time.")
-		("refimp",		"run with reduced dict for reference implementation.");
+		("thread",bstPrgOpt::value<int>(),"set maximum thread (ex: --thread 8).");
+		//("refimp",		"run with reduced dict for reference implementation.");
 
 	bstPrgOpt::variables_map vm=bstPrgOpt::variables_map {};
 	std::vector<std::string> argVec;
@@ -208,10 +209,19 @@ static bool parseOption(int argc,char *argv[]) {
 	if( vm.count("help")     ) { printUsage();	return false; }
 	if( vm.count("version")  ) { printVersion(); return false; }
 	if( vm.count("time")     ) { gDisplayTime=true; }
-	if( vm.count("refimp")   ) { gRunWithReducedDict=true;    }
+	//if( vm.count("refimp")   ) { gRunWithReducedDict=true;    }
 	if( vm.count("noprompt") ) { gUsePrompt=false; }
 	if( vm.count("nook")     ) { gUseOkDisplay=false; }
 	if( vm.count("quiet")    ) { gUsePrompt=gUseOkDisplay=false; }
+	if( vm.count("thread")	 ) {
+		int n=vm["thread"].as<int>();
+		if(n<0) {
+			fprintf(stderr,"--thread argument should be a positive integer ");
+			fprintf(stderr,"(current argument is %d).\n",n);
+			return false;
+		}
+		G_NumOfCores=n;
+	}
 
 	const size_t n=argVec.size();
 	if(n>0) {
@@ -283,7 +293,7 @@ static std::string readFromStdin() {
 #endif
 
 static const char *getPrompt() {
-	return GlobalContext->IsInterpretMode() ? "> " : ">>";
+	return GlobalContext->IsInterpretMode() ? " > " : ">> ";
 }
 
 static std::string readFromFile() {
@@ -294,7 +304,7 @@ static std::string readFromFile() {
 
 static void printUsage() {
 	fprintf(stderr,
-			"Usage: para [-nhv] [--refimp] [program-file] [value1 ... valueN]\n");
+			"Usage: para [-nhv] [program-file] [value1 ... valueN]\n");
 	fprintf(stderr,"  -h (--help)      print help.\n");
 	fprintf(stderr,"  -v (--version)   print version.\n");
 	fprintf(stderr,
@@ -302,8 +312,10 @@ static void printUsage() {
 	fprintf(stderr,"  -n (--noprompt)  suppress prompt.\n");
 	fprintf(stderr,"  -k (--nook))     suppress 'ok' message (no ok)\n");
 	fprintf(stderr,"  -t (--time))     display spent time.\n");
-	fprintf(stderr,"  --refimp         run with reduced dict "
-									   "for reference implementation.\n");
+	fprintf(stderr,"  --thread N       set maximum thread. "
+				   "N should be a positive integer.\n");
+	//fprintf(stderr,"  --refimp         run with reduced dict "
+	//								   "for reference implementation.\n");
 }
 
 static void printVersion() {

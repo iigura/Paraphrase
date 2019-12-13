@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="top.css">
+	<style type="text/css"> <!-- .VERSION:before{content:"0.93.0";} --> </style>
+	<style type="text/css"> <!-- .DATE:before{content:"2019.12.13";} --> </style>
+	<title>Paraphrase ドキュメント ver. 0.93.0</title>
+</head>
+<body>
+<div id=main>
+<h1>実行ファイル para ver. <span class="VERSION"></span> のオプションについて</h1>
+<div id=author><span class="DATE"></span> 飯倉宏治</div>
+<p>
+Paraphrase の言語処理系プログラム para の引数は以下の通りとなります。
+	<p>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<tt>para [-ehknqtv] [--thread]  [program-file] [program-code]</tt>
+	</p>
+</p>
+
+<p>
+オプションの詳細は以下の通りです：
+</p>
+<div align=center>
+<table id=optList>
+	<tr>
+		<td width="180em"><tt>-h</tt> または <tt>--help</tt></td>
+		<td>ヘルプを表示します</td>
+	</tr>
+	<tr>
+		<td><tt>-v</tt> または <tt>--version</tt></td>
+		<td>バージョンを表示します</td>
+	</tr>
+	<tr>
+		<td><tt>-t</tt> または <tt>--time</tt></td>
+		<td>
+			para の初期化処理が完了し、終了するまでの時間を計測し、
+			その値を表示します。
+			Windows におけるプログラムのパフォーマンス測定などにご利用下さい
+			（Linux や MacOS でも利用可能です）。
+		</td>
+	</td>
+	<tr>
+		<td><tt>-k</tt> または <tt>--nook</tt></td>
+		<td>
+			処理が完了した旨を示す「ok.」という表示を抑制します
+			（nook = no ok の意）。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-n</tt> または <tt>--noprompt</tt></td>
+		<td>
+			ユーザーからの入力を促す「&gt;」を表示しないようにします。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-q</tt> または <tt>--quiet</tt></td>
+		<td>
+			ユーザーからの入力を促す「&gt;」および
+			処理が完了した旨を示す「ok.」という表示を抑制します。<br>
+			オプション <tt>-nk</tt> と同値です。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>--thread N</tt></td>
+		<td width="380em">
+			使用するスレッド数の最大値を設定します。<br>
+			N には整数を指定します。
+			<p>
+			使用例：<br>
+			<tt>--thread 3</tt> とすると、最大 3 スレッドまでしか
+			使用しなくなります。
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-e S</tt> または <tt>--eval S</tt></td>
+		<td>
+			指定されたプログラムファイルの実行に先立ち、
+			指定された文字列をプログラムとみなし実行します。
+			プログラムファイルを指定しない場合は、
+			インタプリタによるユーザーからの入力に先立ち、
+			指定された文字列がプログラムとみなされ実行されます。<br>
+			S には文字列を指定します。
+			<p>
+			使用例：<br>
+			<tt>para -e "2 3 + .cr"</tt> とすると、
+			Paraphrase のプロンプトが表示されるまえに
+			2+3 の計算結果である 5 が改行付きで表示され、
+			その後、プロンプトが表示されます。
+			</p>
+		</td>
+	</tr>
+	<tr>
+			<td></td>
+			<td></td>
+	</tr>
+</table>
+</div>
+</div>

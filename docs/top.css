@@ -29,3 +29,12 @@ li:before {
 	counter-increment: item
 }
 
+#optList {
+    border-collapse: separate;
+    border-spacing: 0px 15px;
+}
+
+#optList tr {
+	vertical-align: top;
+}
+

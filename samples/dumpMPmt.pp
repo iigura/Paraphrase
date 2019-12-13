@@ -1,13 +1,30 @@
+// usage: para dumpMPmt.pp
+
 "mersenne" : 2LL swap pow 1- ;
 
-"lucas-lehmer-test-fast" :
+"lucas-lehmer-test-fast-by-stack" :
 	dup 1 over mersenne	rot	2 - rot swap 4LL inv-rot
 	for+
-		dup * dup 4 pick >>	swap 3 pick	& +	dup	3 pick	
+		dup * dup 3 pick >>	swap 2 pick	& +	dup	2 pick	
 		>= if over - then
 		2 -	
 	next
 	0 == inv-rot drop drop
+;
+
+// p lucas-lehmer-test-fast
+"lucas-lehmer-test-fast" :
+	`p local-with
+	4LL `s local-with
+	2LL `p , pow 1- `M local-with
+	`sqrt local
+	2LL `p , 1- for+
+		`s , dup * `sqrt let
+		`sqrt , `M , & `sqrt , `p , >> + `s let
+		`s , `M , >= if `s , `M , - `s let then
+		`s , 2 - `s let
+	next
+	`s , 0 ==
 ;
 
 "prime?" :
@@ -61,4 +78,5 @@ while-pipe append repeat { < } sort
 0 >r {
 	r> 1+ dup "No=%2d, " putf >r
 	calc-and-print-mersenne cr
-} apply
+} foreach
+

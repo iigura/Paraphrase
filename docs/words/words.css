@@ -1,20 +1,13 @@
 @page { size: A4 } 
 
 @media print {
-	body {
-		font-size: 10pt;
-	}
-	a:link	  { color: #0000FF; }
+	body { font-size: 10pt; }
+	a:link { color: #0000FF; }
 	a:visited { color: #0000FF; }
 }
 
-body {
-	text-align: center;
-}
-
-h1 {
-	font-size: 180%;
-}
+body { text-align: center; }
+h1 { font-size: 180%; }
 
 #main {
 	max-width: 40em;
@@ -22,21 +15,12 @@ h1 {
 	margin: 0 auto;
 }
 
-#author {
-	text-align: right;
-}
+#author { text-align: right; }
 
-p.noindent {
-	text-indent: 0em;
-}
+p.noindent { text-indent: 0em; }
+p:not(.noindent) { text-indent: 1em; }
 
-p:not(.noindent) {
-	text-indent: 1em;
-}
-
-#context {
-	margin-left: 2em;
-}
+#context { margin-left: 2em; }
 
 h2.chapt {
 	border-top: 1px solid;
@@ -103,9 +87,7 @@ td.note {
 	padding-bottom: 1.5em;
 }
 
-h3.wordHeader {
-	border-bottom: 1px solid;
-}
+h3.wordHeader { border-bottom: 1px solid; }
 
 span.rem {
 	background: #FFFFAA;
@@ -116,11 +98,6 @@ h2.chapt {
 	border-bottom: 1px solid;
 }
 
-.chunk {
-	page-break-inside: avoid;
-}
-
-.newPage {
-	page-break-after: always;
-}
+.chunk { page-break-inside: avoid; }
+.newPage { page-break-after: always; }
 

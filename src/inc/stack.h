@@ -16,13 +16,9 @@ inline TypedValue& ReadTOS(Stack& inStack) {
 	return inStack.back();
 }
 
-inline TypedValue& ReadSecond(Stack& inStack,const char *inName) {
-	const size_t len=inStack.size();
-	if(len<2) {
-		fprintf(stderr,"ERROR: %s is empty\n",inName);
-		return G_InvalidTV;
-	} else {
-		return inStack[len-2];
-	}
+inline TypedValue& ReadSecond(Stack& inStack) {
+	return inStack[inStack.size()-2];
 }
+
+PP_API void ShowStack(Stack& inStack,const char *inStackName);
 

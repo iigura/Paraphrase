@@ -1,3 +1,5 @@
+// usage: para zdk.pp run
+
 "zdk" :
 	0 /* Zun counter */
 	true while
@@ -16,5 +18,8 @@
 			then
 		then
 	repeat
+	cr
 ;
+
+"run" : zdk ;
 

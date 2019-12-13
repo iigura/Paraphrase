@@ -12,7 +12,7 @@ void InitDict_Array() {
 
 		TypedValue tvArraySize=Pop(inContext.DS);
 		if(tvArraySize.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_INT,tvArraySize);
+			return inContext.Error(E_TOS_INT,tvArraySize);
 	   	}
 
 		const int n=tvArraySize.intValue;
@@ -30,9 +30,7 @@ void InitDict_Array() {
 
 		TypedValue tvInitValue=Pop(inContext.DS);
 		TypedValue tvSize=Pop(inContext.DS);
-		if(tvSize.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_SECOND_INT,tvSize);
-		}
+		if(tvSize.dataType!=kTypeInt) { return inContext.Error(E_SECOND_INT,tvSize); }
 
 		const int n=tvSize.intValue;
 		if(n<=0) { return inContext.Error(E_SECOND_POSITIVE_INT,n); }
@@ -56,9 +54,7 @@ void InitDict_Array() {
 		if(inContext.DS.size()<3) { return inContext.Error(E_DS_AT_LEAST_3); }
 		TypedValue tvValue=Pop(inContext.DS);
 		TypedValue tvIndex=Pop(inContext.DS);
-		if(tvIndex.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_SECOND_INT,tvIndex);
-		}
+		if(tvIndex.dataType!=kTypeInt) { return inContext.Error(E_SECOND_INT,tvIndex); }
 		const int index=tvIndex.intValue;
 		TypedValue& tvTarget=ReadTOS(inContext.DS);
 
@@ -79,7 +75,7 @@ void InitDict_Array() {
 			}
 			tvTarget.listPtr->at(index)=tvValue;
 		} else {
-			return inContext.Error_InvalidType(E_THIRD_ARRAY_OR_LIST,tvTarget);
+			return inContext.Error(E_THIRD_ARRAY_OR_LIST,tvTarget);
 		}
 		NEXT;
 	}));
@@ -92,9 +88,7 @@ void InitDict_Array() {
 		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
 		TypedValue tvIndex=Pop(inContext.DS);
 
-		if(tvIndex.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_INT,tvIndex);
-		}
+		if(tvIndex.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tvIndex); }
 		const int index=tvIndex.intValue;
 
 		TypedValue& tvTarget=ReadTOS(inContext.DS);
@@ -115,21 +109,41 @@ void InitDict_Array() {
 			}
 			inContext.DS.emplace_back(tvTarget.listPtr->at(index));
 		} else {
-			return inContext.Error_InvalidType(E_SECOND_ARRAY,tvTarget);
+			return inContext.Error(E_SECOND_ARRAY,tvTarget);
+		}
+		NEXT;
+	}));
+
+	// (array -- n)
+	Install(new Word("size",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue tos=Pop(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeArray: inContext.DS.emplace_back(tos.arrayPtr->length); break;
+			case kTypeList:
+				inContext.DS.emplace_back((int)tos.listPtr->size()); break;
+			case kTypeString:
+			case kTypeSymbol:
+				inContext.DS.emplace_back((int)tos.stringPtr->length()); break;
+			default:
+				return inContext.Error(E_TOS_ARRAY_OR_LIST_OR_STRING_OR_SYMBOL,tos);
 		}
 		NEXT;
 	}));
 
 	// (array -- array n)
-	Install(new Word("size",WORD_FUNC {
+	Install(new Word("@size",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType==kTypeArray) {
-			inContext.DS.emplace_back(tos.arrayPtr->length);
-		} else if(tos.dataType==kTypeList) {
-			inContext.DS.emplace_back((int)tos.listPtr->size());
-		} else {
-			return inContext.Error_InvalidType(E_TOS_ARRAY,tos);
+		switch(tos.dataType) {
+			case kTypeArray: inContext.DS.emplace_back(tos.arrayPtr->length); break;
+			case kTypeList:
+				inContext.DS.emplace_back((int)tos.listPtr->size()); break;
+			case kTypeString:
+			case kTypeSymbol:
+				inContext.DS.emplace_back((int)tos.stringPtr->length()); break;
+			default:
+				return inContext.Error(E_TOS_ARRAY_OR_LIST_OR_STRING_OR_SYMBOL,tos);
 		}
 		NEXT;
 	}));
@@ -141,11 +155,9 @@ void InitDict_Array() {
 		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
 
 		TypedValue& tvIndex=ReadTOS(inContext.DS);
-		if(tvIndex.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_INT,tvIndex);
-		}
+		if(tvIndex.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tvIndex); }
 
-		TypedValue& tvTarget=ReadSecond(inContext.DS,"DS");
+		TypedValue& tvTarget=ReadSecond(inContext.DS);
 		bool result;
 		if(tvTarget.dataType==kTypeArray) {
 			// is index in [0,tvTarget.arrayPtr->length) ?
@@ -156,7 +168,7 @@ void InitDict_Array() {
 			result=(unsigned int)(tvTarget.listPtr->size())
 					>(unsigned int)(tvIndex.intValue);
 		} else {
-			return inContext.Error_InvalidType(E_SECOND_ARRAY_OR_LIST,tvTarget);
+			return inContext.Error(E_SECOND_ARRAY_OR_LIST,tvTarget);
 		}
 
 		inContext.DS.emplace_back(result);

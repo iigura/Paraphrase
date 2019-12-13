@@ -142,6 +142,11 @@ IP---> Word* ----->+---------+
 ****/
 PP_API bool Docol(Context& inContext) NOEXCEPT {
 	inContext.IS.emplace_back(inContext.ip);
-	inContext.ip=(*inContext.ip)->param;
+	const Word *word=(*inContext.ip);
+	if(word->numOfLocalVar>0) {
+		inContext.Env.push_back(LocalVarSlot(word->numOfLocalVar,TypedValue()));
+	}
+	inContext.ip=word->param;
 	return true;
 }
+

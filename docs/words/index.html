@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="words.css">
 
-<style type="text/css"> <!-- .VERSION:before{content:"0.92.0";} --> </style>
-<style type="text/css"> <!-- .NUM_OF_WORDS:before{content:"192";} --> </style>
-<style type="text/css"> <!-- .DATE:before{content:"2019.02.02";} --> </style>
-<title>Paraphrase ワードリファレンス ver. 0.92.0</title>
+<style type="text/css"> <!-- .VERSION:before{content:"0.93.0";} --> </style>
+<style type="text/css"> <!-- .NUM_OF_WORDS:before{content:"248";} --> </style>
+<style type="text/css"> <!-- .DATE:before{content:"2019.12.13";} --> </style>
+<title>Paraphrase ワードリファレンス ver. 0.93.0</title>
 
 </head>
 <body>
@@ -34,16 +34,18 @@
 </p>
 <p>
 Paraphrase は Forth 系の言語です。
-そのため、いくつかのワードはその起源や、少なからぬ影響を Forth から得ています。
-しかし、Forth に存在するワードであっても、
-処理内容が異なる場合もあります。
+そのため、いくつかのワードは少なからぬ影響を Forth から得ています。
+しかし、Forth のプログラムとの互換性はありません。
+Forth に存在するワードであっても、処理内容が異なる場合もありますし、
+そもそも Paraphrase には存在しない場合もあります。
+</p>
+</p>
 本文書では Forth を知っている人のための情報は載せていませんが、
 （かつての、または、現役の）Forth ユーザーが混乱しないよう、
 補足説明を追記していければ、と思っております。
 </p>
 <p>
-なお、この文章では便宜上「プログラミング言語 C」を「C 言語」と
-表記しています。
+なお、この文章では便宜上「プログラミング言語 C」を「C 言語」と表記しています。
 この表現が気になる人は適当に読み替えて下さい。
 </p>
 </section>
@@ -74,34 +76,43 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#colon">:</a></td>
 		<td><a href="#double_colon">::</a></td>
 		<td><a href="#semicolon">;</a></td>
+		<td><a href="#def">def</a></td>
+		<td><a href="#forget">forget</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#immediate">immediate</a></td>
 		<td><a href="#vocabulary">vocabulary</a></td>
-	</tr>
-	<tr>
-		<th></th>
-		<td><a href="#const">const</a></td>
-		<td><a href="#const_bang">const!</a></td>
-		<td><a href="#var">var</a></td>
-		<td><a href="#store">store</a></td>
-		<td><a href="#fetch">fetch</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td colspan=2><a href="#set_vocabulary">set-vocabulary</a></td>
 		<td><a href="#left_curly">{</a></td>
-		<td><a href="#right_curly">}</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#doll_left_curly">${</a></td>
+		<td><a href="#right_curly">}</a></td>
 		<td><a href="#double_left_curly">{{</a></td>
 		<td><a href="#double_right_curly">}}</a></td>
-		<td><a href="#to_literal">&gt;lit</a></td>
-		<td><a href="#to_symbol">&gt;sym</a></td>
+		<td><a href="#double_right_curly_comma">}},</a></td>
+		<td><a href="#const">const</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#const_bang">const!</a></td>
+		<td><a href="#to_literal">&gt;lit</a></td>
+		<td><a href="#to_here">&gt;here</a></td>
 		<td><a href="#alias">alias</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>局所変数</th>
+		<td><a href="#local">local</a></td>
+		<td><a href="#local-with">local-with</a></td>
+		<td><a href="#let">let</a></td>
+		<td><a href="#comma">,（カンマ）</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>大域変数</th>
+		<td><a href="#global">global</a></td>
+		<td><a href="#store">store</a></td>
+		<td><a href="#fetch">fetch</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>条件分岐</th>
@@ -114,6 +125,7 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th></th>
 		<td><a href="#arrow">-&gt;</a></td>
+		<td><a href="#arrow_arrow">-&gt;&gt;</a></td>
 		<td><a href="#break">break</a></td>
 		<td><a href="#dispatch">dispatch</a></td>
 	</tr>
@@ -128,10 +140,9 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th></th>
 		<td><a href="#i">i</a></td>
+		<td><a href="#j">j</a></td>
 		<td><a href="#while">while</a></td>
 		<td><a href="#repeat">repeat</a></td>
-		<td><a href="#do">do</a></td>
-		<td><a href="#loop">loop</a></td>
 	</tr>
 	<tr>
 		<th class=categGrop>並列処理</th>
@@ -178,25 +189,31 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#two_dup">2dup</a></td>
 		<td><a href="#clone">clone</a></td>
 		<td><a href="#full-clone">full-clone</a></td>
 		<td><a href="#swap">swap</a></td>
 		<td><a href="#swap_rs">swap-rs</a></td>
-		<td><a href="#over">over</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#over">over</a></td>
 		<td><a href="#pick">pick</a></td>
-		<td><a href="#two_dup">2dup</a></td>
+		<td><a href="#replace">replace</a></td>
 		<td><a href="#drop">drop</a></td>
+		<td><a href="#2drop">2drop</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#3drop">3drop</a></td>
 		<td><a href="#drop_rs">drop-rs</a></td>
 		<td><a href="#rot">rot</a></td>
+		<td><a href="#inv_rot">inv-rot</a></td>
+		<td><a href="#to_r">&gt;r</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#inv_rot">inv-rot</a></td>
-		<td><a href="#to_r">&gt;r</a></td>
-		<td><a href="#@to_r">@&gt;r</a></td>
+		<td><a href="#ref_to_r">@&gt;r</a></td>
 		<td><a href="#from_r">r&gt;</a></td>
 		<td><a href="#@from_r">@r&gt;</a></td>
 	</tr>
@@ -210,9 +227,16 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_plus">@+</a></td>
+		<td><a href="#ref_minus">@-</a></td>
+		<td><a href="#ref_mult">@*</a></td>
+		<td><a href="#ref_div">@&frasl;</a></td>
 		<td><a href="#one_plus">1+</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#one_minus">1-</a></td>
-		<td><a href="#half">2&#47;</a></td>
+		<td><a href="#half">2 &frasl;</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>比較演算</th>
@@ -225,72 +249,99 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th></th>
 		<td><a href="#ne">!=</a></td>
-		<td><a href="#zero_q">0?</a></td>
+		<td><a href="#is_zero">0?</a></td>
+		<td><a href="#ref_lt">@&lt;</a></td>
+		<td><a href="#ref_le">@&lt;=</a></td>
+		<td><a href="#ref_gt">@&gt;</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_ge">@&gt;=</a></td>
+		<td><a href="#ref_ne">@!=</a></td>
+		<td><a href="#ref_eq">@==</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>ビット演算</th>
 		<td><a href="#bit_and">&amp;</a></td>
 		<td><a href="#bit_or">|</a></td>
+		<td><a href="#bit_not">~</a></td>
 		<td><a href="#bit_xor">^</a></td>
 		<td><a href="#bit_rshift">&gt;&gt;</td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#bit_lshift">&lt;&lt;</td>
+		<td><a href="#ref_bit_and">@&amp;</a></td>
+		<td><a href="#ref_bit_or">@|</a></td>
+		<td><a href="#ref_bit_not">@~</a></td>
+		<td><a href="#ref_bit_xor">@^</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_bit_lshift">@&lt;&lt;</a></td>
+		<td><a href="#ref_bit_rshift">@&gt;&gt;</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>論理演算</th>
 		<td><a href="#true">true</a></td>
 		<td><a href="#false">false</a></td>
-		<td><a href="#and">and</a></td>
+		<td><a href="#logical_and">&amp;&amp;</a></td>
+		<td><a href="#logical_or">||</a></td>
 		<td><a href="#or">or</a></td>
-		<td><a href="#xor">xor</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#xor">xor</a></td>
 		<td><a href="#not">not</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>型変換</th>
-		<td><a href="#to_address">&gt;address</a></td>
 		<td><a href="#to_int">&gt;int</a></td>
 		<td><a href="#to_long">&gt;long</a></td>
 		<td><a href="#to_big-int">&gt;INT</a></td>
 		<td><a href="#to_float">&gt;float</a></td>
+		<td><a href="#to_double">&gt;double</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#to_double">&gt;double</a></td>
 		<td><a href="#to_big-float">&gt;FLOAT</a></td>
+		<td><a href="#to_str">&gt;str</a></td>
+		<td><a href="#to_symbol">&gt;symbol</a></td>
+		<td><a href="#to_address">&gt;address</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>数学関数</th>
+		<td><a href="#square">square</a></td>
 		<td><a href="#sqrt">sqrt</a></td>
 		<td><a href="#exp">exp</a></td>
 		<td><a href="#pow">pow</a></td>
 		<td><a href="#log">log</a></td>
-		<td><a href="#log10">log10</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>（と関連ワード）</th>
+		<td><a href="#log10">log10</a></td>
+		<td><a href="#abs">abs</a></td>
 		<td><a href="#sin">sin</a></td>
 		<td><a href="#cos">cos</a></td>
 		<td><a href="#tan">tan</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#asin">asin</a></td>
 		<td><a href="#acos">acos</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td><a href="#atan">atan</a></td>
 		<td colspan=2><a href="#deg_to_rad">deg-to-rad</a></td>
-		<td colspan=2><a href="#rad_to_deg">rad-to-deg</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#rad_to_deg">rad-to-deg</a></td>
 		<td><a href="#rand">rand</a></td>
 		<td colspan=2><a href="#randomize">randomize</a></td>
-		<td><a href="#random">random</a></td>
-		<td><a href="#rand_to">rand-to</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#random">random</a></td>
+		<td><a href="#rand_to">rand-to</a></td>
 		<td><a href="#floor">floor</a></td>
 		<td><a href="#ceil">ceil</a></td>
 	</tr>
@@ -312,6 +363,10 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#size">size</a></td>
 	</tr>
 	<tr>
+		<th></th>
+		<td><a href="#ref_size">@size</a></td>
+	</tr>
+	<tr>
 		<th class=categGroup>リスト</th>
 		<td><a href="#begin-list">(</a></td>
 		<td><a href="#end-list">)</a></td>
@@ -328,19 +383,27 @@ Paraphrase は Forth 系の言語です。
 		<td colspan=2><a href="#@is_not-empty-list">@not-empty-list?</a></td>
 		<td><a href="#en-list">en-list</a></td>
 		<td><a href="#de-list">de-list</a></td>
-		<td><a href="#append">append</a></td>
+		<td><a href="#ref_de-list">@de-list</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#append">append</a></td>
 		<td><a href="#add">add</a></td>
 		<td><a href="#get">get</a></td>
 		<td><a href="#tuple">tuple</a></td>
 		<td><a href="#car">car</a></td>
-		<td><a href="#cdr">cdr</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_car">@car</a></td>
+		<td><a href="#cdr">cdr</a></td>
+		<td><a href="#ref_cdr">@cdr</a></td>
 		<td><a href="#pop-front">pop-front</a></td>
+		<td><a href="#last">last</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_last">@last</a></td>
 		<td><a href="#split">split</a></td>
 		<td><a href="#concat">concat</a></td>
 		<td><a href="#slice">slice</a></td>
@@ -349,33 +412,50 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th></th>
 		<td><a href="#size">size</a></td>
+		<td><a href="#ref_size">@size</a></td>
 		<td><a href="#map">map</a></td>
+		<td><a href="#vmap">vmap</a></td>
 		<td><a href="#sort">sort</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#sort_plus">sort+</a></td>
+		<td><a href="#sort_minus">sort-</a></td>
+		<td><a href="#filter">filter</a></td>
+		<td><a href="#has_p">has?</a></td>
+		<td><a href="#ref_has_p">@has?</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#in_p">in?</a></td>
+		<td><a href="#ref_in_p">@in?</a></td>
+		<td><a href="#foreach">foreach</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>入出力</th>
 		<td colspan=2><a href="#dot">. （ドット）</a></td>
-		<td><a href="#@dot">@.</a></td>
+		<td><a href="#ref_dot">@.</a></td>
+		<td><a href="#dot_cr">.cr</a></td>
 		<td><a href="#write">write</a></td>
-		<td><a href="#putf">putf</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#putf">putf</a></td>
 		<td><a href="#printf">printf</a></td>
 		<td><a href="#cr">cr</a></td>
 		<td colspan=2><a href="#flush-stdout">flush-stdout</a></td>
-		<td><a href="#open">open</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#open">open</a></td>
 		<td><a href="#to_read">to-read</a></td>
 		<td><a href="#new_file">new-file</a></td>
 		<td><a href="#close">close</a></td>
 		<td><a href="#to_file">&gt;file</a></td>
-		<td><a href="#fgets">fgets</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#fgets">fgets</a></td>
 		<td><a href="#flush-file">flush-file</a></td>
 		<td><a href="#load">load</a></td>
 		<td><a href="#import">import</a></td>
@@ -385,18 +465,27 @@ Paraphrase は Forth 系の言語です。
 		<th class=categGroup>文字列</th>
 		<td><a href="#is_empty-str">empty-str?</a></td>
 		<td colspan=2><a href="#is_not-empty-str">not-empty-str?</a></td>
+		<td><a href="#size">size</a></td>
+		<td><a href="#ref_size">@size</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#eval">eval</a></td>
 		<td><a href="#to_hex_str">to-hex-str</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td><a href="#to_upper">&gt;upper</a></td>
 		<td><a href="#to_lower">&gt;lower</a></td>
-		<td colspan=2><a href="#make-literal-code-list">make-literal-code-list</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#make-literal-code-list">make-literal-code-list</a></td>
 		<td colspan=2><a href="#str-to-list-byte">str-to-list-byte</a></td>
+		<td><a href="#thru">thru</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#utf8_to_sjis">utf8&gt;sjis</a></td>
+		<td><a href="#sjis_to_utf8">sjis&gt;utf8</a></td>
+		<td><a href="#ccc-str">ccc-str</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>制御構造定義用</th>
@@ -404,29 +493,46 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th class=categGroup>その他</th>
+		<td><a href="#args">args</a></td>
 		<td><a href="#type">type</a></td>
 		<td><a href="#is_valid">valid?</a></td>
+		<td><a href="#size">size</a></td>
+		<td><a href="#ref_size">@size</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#exec">exec</a></td>
 		<td><a href="#begin_comment">&frasl;&lowast;</a></td>
 		<td><a href="#end_comment">*&frasl;</a></td>
+		<td><a href="#cpp-style-comment">&#47;&#47;</a></td>
+		<td><a href="#to_word">&gt;word</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#cpp-style-comment">&#47;&#47;</a></td>
-		<td><a href="#to_word">&gt;word</a></td>
 		<td><a href="#show">show</a></td>
 		<td><a href="#show-rs">show-rs</a></td>
 		<td><a href="#inspect">inspect</a></td>
+		<td><a href="#and">and</a></td>
+		<td><a href="#dump">dump</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#dump">dump</a></td>
+		<td colspan=2><a href="#show-local-vars">show-local-vars</a></td>
+		<td><a href="#quit">quit</a></td>
+		<td><a href="#exit">exit</a></td>
+		<td><a href="#is_windows">windows?</a></td>
+	</tr>
+		<th></th>
+		<td><a href="#is_linux">linux?</a></td>
+		<td><a href="#is_mac">mac?</a></td>
+		<td><a href="#is_interactive">interactive?</a></td>
 	</tr>
 </table>
 <p>
-※ 配列およびリストにワード <a href="#size">size</a> が書かれていますが、
-これは同じワードです。
-このワードは配列にもリストにも対応するワードですので、両カテゴリに所属させています。
+※ 配列およびリスト等にワード <a href="#size">size</a> 等が書かれていますが、
+同名のワードは全て同じワードを指します。
+これらのワードは配列やリストにも対応するワードですので、
+複数のカテゴリに所属させています。
 </p>
 
 <h4>3.2. アルファベット順</h4>
@@ -434,9 +540,9 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th class=indexGroup>記号&nbsp;&nbsp;</th>
 		<td><a href="#ne">!=</a></td>
-		<td><a href="#doll_left_curly">${</a></td>
 		<td><a href="#mod">%</a></td>
 		<td><a href="#bit_and">&amp;</a></td>
+		<td><a href="#logical_and">&amp;&amp;</a></td>
 		<td><a href="#begin-list">(</a></td>
 	</tr>
 	<tr>
@@ -449,40 +555,47 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#comma">,（カンマ）</a></td>
 		<td><a href="#minus">-</a></td>
 		<td><a href="#arrow">-&gt;</a></td>
-		<td colspan=2><a href="#dot">. （ドット）</a></td>
-		<td><a href="#slash">&frasl;</a></td>
+		<td><a href="#arrow_arrow">-&gt;&gt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#dot">. （ドット）</a></td>
+		<td><a href="#dot_cr">.cr</a></td>
+		<td><a href="#slash">&frasl;</a></td>
 		<td><a href="#begin_comment">&frasl;&lowast;</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#cpp-style-comment">&#47;&#47;</a></td>
 		<td><a href="#colon">:</a></td>
 		<td><a href="#double_colon">::</a></td>
 		<td><a href="#semicolon">;</a></td>
+		<td><a href="#lt">&lt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#lt">&lt;</a></td>
 		<td><a href="#bit_lshift">&lt;&lt;</td>
 		<td><a href="#le">&lt;=</a></td>
 		<td><a href="#eq">==</a></td>
 		<td><a href="#gt">&gt;</a></td>
+		<td><a href="#ge">&gt;=</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#ge">&gt;=</a></td>
 		<td><a href="#bit_rshift">&gt;&gt;</td>
 		<td><a href="#to_address">&gt;address</a></td>
 		<td><a href="#to_child">&gt;child</a></td>
 		<td><a href="#to_double">&gt;double</a></td>
+		<td><a href="#to_file">&gt;file</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#to_file">&gt;file</a></td>
 		<td><a href="#to_float">&gt;float</a></td>
 		<td><a href="#to_big-float">&gt;FLOAT</a></td>
+		<td><a href="#to_here">&gt;here</a></td>
 		<td><a href="#to_int">&gt;int</a></td>
 		<td><a href="#to_big-int">&gt;INT</a></td>
 	</tr>
@@ -497,33 +610,74 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th></th>
 		<td><a href="#to_r">&gt;r</a></td>
-		<td><a href="#to_symbol">&gt;sym</a></td>
+		<td><a href="#to_str">&gt;str</a></td>
+		<td><a href="#to_symbol">&gt;symbol</a></td>
 		<td><a href="#to_upper">&gt;upper</a></td>
 		<td><a href="#to_word">&gt;word</a></td>
-		<td><a href="#left_bracket">[</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#left_bracket">[</a></td>
 		<td><a href="#l_bracket_arrow">[-&gt;</a></td>
 		<td><a href="#double_left_brackets">[[</a></td>
 		<td><a href="#ll_brackets_arrow">[[-&gt;</a></td>
 		<td><a href="#ll_brackets_multi_arrows">[[=&gt;</a></td>
-		<td><a href="#right_bracket">]</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#right_bracket">]</a></td>
 		<td><a href="#double_right_brackets">]]</a></td>
 		<td><a href="#bit_xor">^</a></td>
 		<td><a href="#left_curly">{</a></td>
 		<td><a href="#double_left_curly">{{</a></td>
-		<td><a href="#bit_or">|</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#bit_or">|</a></td>
+		<td><a href="#logical_or">||</a></td>
 		<td><a href="#right_curly">}</a></td>
 		<td><a href="#double_right_curly">}}</a></td>
-		<td><a href="#@dot">@.</a></td>
-		<td><a href="#@to_r">@&gt;r</a></td>
+		<td><a href="#double_right_curly_comma">}},</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_ne">@!=</a></td>
+		<td><a href="#ref_bit_and">@&amp;</a></td>
+		<td><a href="#ref_mult">@*</a></td>
+		<td><a href="#ref_plus">@+</a></td>
+		<td><a href="#ref_minus">@-</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_dot">@.</a></td>
+		<td><a href="#ref_div">@&frasl;</a></td>
+		<td><a href="#ref_lt">@&lt;</a></td>
+		<td><a href="#ref_bit_lshift">@&lt;&lt;</td>
+		<td><a href="#ref_le">@&lt;=</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_eq">@==</a></td>
+		<td><a href="#ref_gt">@&gt;</a></td>
+		<td><a href="#ref_bit_rshift">@&gt;&gt;</td>
+		<td><a href="#ref_ge">@&gt;=</a></td>
+		<td><a href="#ref_to_r">@&gt;r</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_bit_xor">@^</a></td>
+		<td><a href="#ref_bit_or">@|</a></td>
+		<td><a href="#ref_car">@car</a></td>
+		<td><a href="#ref_cdr">@cdr</a></td>
+		<td><a href="#ref_de-list">@de-list</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_has_p">@has?</a></td>
+		<td><a href="#ref_in_p">@in?</a></td>
+		<td><a href="#ref_last">@last</a></td>
+		<td><a href="#ref_size">@size</a></td>
+		<td><a href="#ref_bit_not">@~</a></td>
 	</tr>
 	<tr>
 		<th></th>
@@ -532,23 +686,34 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#@from_r">@r&gt;</a></td>
 	</tr>
 	<tr>
+		<th></th>
+		<td><a href="#bit_not">~</a></td>
+	</tr>
+	<tr>
 		<th class=indexGroup>数値</th>
-		<td><a href="#zero_q">0?</a></td>
+		<td><a href="#is_zero">0?</a></td>
 		<td><a href="#one_plus">1+</a></td>
 		<td><a href="#one_minus">1-</a></td>
 		<td><a href="#half">2&#47;</a></td>
+		<td><a href="#2drop">2drop</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#two_dup">2dup</a></td>
+		<td><a href="#3drop">3drop</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>A</th>
+		<td><a href="#abs">abs</a></td>
 		<td><a href="#acos">acos</a></td>
 		<td><a href="#add">add</a></td>
 		<td><a href="#alias">alias</a></td>
 		<td><a href="#and">and</a></td>
-		<td><a href="#append">append</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#append">append</a></td>
+		<td><a href="#args">args</a></td>
 		<td><a href="#asin">asin</a></td>
 		<td><a href="#atan">atan</a></td>
 	</tr>
@@ -560,6 +725,7 @@ Paraphrase は Forth 系の言語です。
 		<th class=indexGroup>C</th>
 		<td><a href="#car">car</a></td>
 		<td><a href="#case">case</a></td>
+		<td><a href="#ccc-str">ccc-str</a></td>
 		<td><a href="#cdr">cdr</a></td>
 		<td><a href="#ceil">ceil</a></td>
 	</tr>
@@ -585,10 +751,10 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th class=indexGroup>D</th>
 		<td><a href="#de-list">de-list</a></td>
+		<td><a href="#def">def</a></td>
 		<td><a href="#deg_to_rad">deg-to-rad</a></td>
 		<td><a href="#depth">depth</a></td>
 		<td><a href="#dispatch">dispatch</a></td>
-		<td><a href="#do">do</a></td>
 	</tr>
 	<tr>
 		<th></th>
@@ -614,6 +780,7 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#exit">exit</a></td>
 		<td><a href="#exp">exp</a></td>
 	</tr>
 	<tr>
@@ -621,6 +788,7 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#false">false</a></td>
 		<td><a href="#fetch">fetch</a></td>
 		<td><a href="#fgets">fgets</a></td>
+		<td><a href="#filter">filter</a></td>
 		<td><a href="#floor">floor</a></td>
 	</tr>
 	<tr>
@@ -632,12 +800,19 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#foreach">foreach</a></td>
+		<td><a href="#forget">forget</a></td>
 		<td><a href="#full-clone">full-clone</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>G</th>
 		<td><a href="#get">get</a></td>
 		<td><a href="#get-line">get-line</a></td>
+		<td><a href="#global">global</a></td>
+	</tr>
+	<tr>
+		<th class=indexGroup>H</th>
+		<td><a href="#has_p">has?</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>I</th>
@@ -645,19 +820,32 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#if">if</a></td>
 		<td><a href="#immediate">immediate</a></td>
 		<td><a href="#import">import</a></td>
-		<td><a href="#inspect">inspect</a></td>
+		<td><a href="#in_p">in?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#inspect">inspect</a></td>
+		<td><a href="#is_interactive">interactive?</a></td>
 		<td><a href="#inv_rot">inv-rot</a></td>
 	</tr>
 	<tr>
+		<th class=indexGroup>J</th>
+		<td><a href="#j">j</a></td>
+	</tr>
+	<tr>
 		<th class=indexGroup>L</th>
+		<td><a href="#last">last</a></td>
 		<td><a href="#leave">leave</a></td>
+		<td><a href="#let">let</a></td>
+		<td><a href="#is_linux">linux?</a></td>
 		<td><a href="#load">load</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#local">local</a></td>
+		<td><a href="#local-with">local-with</a></td>
 		<td><a href="#log">log</a></td>
 		<td><a href="#log10">log10</a></td>
-		<td><a href="#loop">loop</a></td>
 	</tr>
 	<tr>
 		<th></th>
@@ -665,6 +853,7 @@ Paraphrase は Forth 系の言語です。
 	</tr>
 	<tr>
 		<th class=indexGroup>M</th>
+		<td><a href="#is_mac">mac?</a></td>
 		<td colspan=2><a href="#make-literal-code-list">make-literal-code-list</a></td>
 		<td><a href="#map">map</a></td>
 	</tr>
@@ -708,6 +897,10 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#putf">putf</a></td>
 	</tr>
 	<tr>
+		<th class=indexGroup>Q</th>
+		<td><a href="#quit">quit</a></td>
+	</tr>
+	<tr>
 		<th class=indexGroup>R</th>
 		<td><a href="#from_r">r&gt;</a></td>
 		<td><a href="#rad_to_deg">rad-to-deg</a></td>
@@ -720,7 +913,11 @@ Paraphrase は Forth 系の言語です。
 		<td><a href="#random">random</a></td>
 		<td><a href="#randomize">randomize</a></td>
 		<td><a href="#repeat">repeat</a></td>
+		<td><a href="#replace">replace</a></td>
 		<td><a href="#reset_pipes">reset-pipes</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#rot">rot</a></td>
 	</tr>
 	<tr>
@@ -733,13 +930,20 @@ Paraphrase は Forth 系の言語です。
 		<th></th>
 		<td><a href="#show-rs">show-rs</a></td>
 		<td><a href="#show">show</a></td>
+		<td colspan=2><a href="#show-local-vars">show-local-vars</a></td>
 		<td><a href="#sin">sin</a></td>
-		<td><a href="#size">size</a></td>
-		<td><a href="#slice">slice</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#size">size</a></td>
+		<td><a href="#sjis_to_utf8">sjis&gt;utf8</a></td>
+		<td><a href="#slice">slice</a></td>
 		<td><a href="#sort">sort</a></td>
+		<td><a href="#sort_plus">sort+</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#sort_minus">sort-</a></td>
 		<td><a href="#split">split</a></td>
 		<td><a href="#sqrt">sqrt</a></td>
 		<td><a href="#step">step</a></td>
@@ -748,34 +952,44 @@ Paraphrase は Forth 系の言語です。
 	<tr>
 		<th></th>
 		<td colspan=2><a href="#str-to-list-byte">str-to-list-byte</a></td>
+		<td><a href="#square">square</a></td>
 		<td><a href="#swap">swap</a></td>
 		<td><a href="#swap_rs">swap-rs</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#switch">switch</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>T</th>
 		<td><a href="#tan">tan</a></td>
 		<td><a href="#then">then</a></td>
+		<td><a href="#thru">thru</a></td>
 		<td><a href="#to_hex_str">to-hex-str</a></td>
 		<td><a href="#to_read">to-read</a></td>
-		<td><a href="#true">true</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#true">true</a></td>
 		<td><a href="#tuple">tuple</a></td>
 		<td><a href="#type">type</a></td>
+	</tr>
+	<tr>
+		<th class=indexGroup>U</th>
+		<td><a href="#utf8_to_sjis">utf8&gt;sjis</a></a>
 	</tr>
 	<tr>
 		<th class=indexGroup>V</th>
 		<td><a href="#valid-index_q">valid-index?</a></td>
 		<td><a href="#is_valid">valid?</a></td>
-		<td><a href="#var">var</a></td>
+		<td><a href="#vmap">vmap</a></td>
 		<td><a href="#vocabulary">vocabulary</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>W</th>
 		<td><a href="#while">while</a></td>
 		<td><a href="#while-pipe">while-pipe</a></td>
+		<td><a href="#is_windows">windows?</a></td>
 		<td><a href="#write">write</a></td>
 	</tr>
 	<tr>
@@ -825,6 +1039,13 @@ N1 N2 --- N　などと表記することとします。
 なお、Forth ではスタックの変化を示す情報は
 (n1 n2 --- n3) 等と、丸括弧で囲んで表記されることもありますが、
 本文書では特に必要のない限り両端の丸括弧は省略するものとします。
+</p>
+<p>
+ワード <a href="#size">size</a> など、
+複数の種類の値に対応するワードでは、
+例えば TOS にある値について、{ A | S } --- I などという表現を用いています。
+中括弧 { } と、縦線で構成される { A | S } という表記ですが、
+これは A または S という状態を表すこととします。
 </p>
 <p>
 スタックの状態を示す際に「RS:」という表記がある場合は、
@@ -1042,7 +1263,13 @@ N1 N2 --- N　などと表記することとします。
 <tr>
 	<th class=termLabel-symbol id=_String>S</th>
 	<td class=note>
-		任意の文字列を表します。
+		文字列を表します。
+	</td>
+</tr>
+<tr>
+	<th class=termLabel-symbol id=_Symbol>&sigma;</th>
+	<td class=note>
+		シンボルを表します。
 	</td>
 </tr>
 <tr>
@@ -1228,47 +1455,6 @@ N1 N2 --- N　などと表記することとします。
 </table>
 </div>
 
-<div class=chunk> 
-<!-- ============================== ${ ============================== -->
-<h3 class=wordHeader id=doll_left_curly>${</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>即時実行レベル 2 </td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		RS: --- <a href="#_Omega">&omega;</a> <a href="#_Theta">&theta;</a>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		ワード <a href="#right_curly">}</a> と対を成し、
-		レベル 1 の即時実行属性を持つ無名ワード（ラムダ）を定義します。
-		本ワードでは、現在の実行モードをリターンスタック上に保存し、
-		コンパイルモードへと移行します。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		ワード <a href="#right_curly">}</a> では、
-		無名ワードの構成を完了するとともに、
-		本ワードで作成されたワードを即時に実行します。
-		詳細は、ワード <a href="#right_curly">}</a> の使用例を見て下さい。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		エラーは発生しません。
-	</td>
-</tr>
-</table>
-</div>
-
 <div class=chunk>
 <!-- ============================== % ============================== -->
 <h3 class=wordHeader id=mod>%</h3>
@@ -1356,6 +1542,50 @@ N1 N2 --- N　などと表記することとします。
 	<td class=note>
 		TOS と Second が整数型（int もしくは long）でない場合は
 		エラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== &amp;&amp; ============================== -->
+<h3 class=wordHeader id=logical_and>&amp;&amp;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Bool">B</a> <a href="#_Bool">B</a>
+		---
+		<a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Second と TOS の論理積を計算し、スタックにプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、true と false の論理積を計算しています。
+		<div class=example>
+			<code>
+				&gt; <u> true false &amp;&amp; . </u><br>
+				&nbsp; false ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックに 2 つ以上の値が格納されていなかったり、
+		TOS および Second が bool 値でなかったりした場合にはエラーとなります。
 	</td>
 </tr>
 </table>
@@ -1635,6 +1865,73 @@ N1 N2 --- N　などと表記することとします。
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== ,（カンマ） ============================== -->
+<h3 class=wordHeader id=comma>,（カンマ）</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<br>
+		<a href="#_Symbol">&sigma;</a> --- <a href="#_Any">X</a><br>
+		または<br>
+		<a href="#_List">&Lscr;</a>
+		---
+		<a href="#_Any">X1</a>
+		<a href="#_Any">X2</a>
+		...
+		<a href="#_Any">Xn</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS がシンボルの場合：
+		TOS を取り出し、その TOS と同名のローカル変数の値をスタックに積みます。
+		<p>
+		TOS がシンボルリストの場合：
+		TOS を取り出し、そのシンボルリスト中のシンボルと同名の
+		ローカル変数の値を順次スタックに積んでいきます。
+		なお、リスト中のシンボルは先頭より順次取り出されていきます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、シンボルリストを活用して、
+		ローカル変数の値が順次スタックに積まれる様子を示しています。
+		<div class=example>
+			<code>
+				&gt;&nbsp;<u>  { 10 20 30 ( x y z ) local-with </u><br>
+				&gt;&gt; <u>  ( z x y x x ) , show } exec </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 10 |
+      | int 10 |
+      | int 20 |
+      | int 10 |
+      | int 30 |
+DS:----------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が空であったり、シンボルまたはシンボルリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 <div class=chunk>
 <!-- ============================== - ============================== -->
 <h3 class=wordHeader id=minus>-</h3>
@@ -1724,6 +2021,98 @@ N1 N2 --- N　などと表記することとします。
 </div>
 
 <div class=chunk>
+<!-- ============================== -&gt;&gt; ============================== -->
+<h3 class=wordHeader id=arrow_arrow>-&gt;&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>RS: --- <a href="#_Position">&pi;</a></td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		switch 〜 dispatch 内において、
+		TOS が有った場合に -&gt;&gt; 以降を実行するコードを生成します。
+		<p>
+		リターンスタック上にプッシュされる &pi; ですが、
+		条件分岐を行うため、TOS が false だった場合にジャンブする
+		ジャンプ先アドレスを格納する場所を示すものです。
+		</p>
+		<p>
+		同様のワードに <a href="#arrow">-&gt;</a> がありますが、
+		<a href="#arrow">-&gt;</a> との違いは、TOS を捨てるかどうかだけです。
+		<a href="#arrow">-&gt;</a> は TOS を捨てる drop を暗黙的に実行しますが、
+		本ワード -&gt;&gt; はこの drop を実行しません。
+		そのため、-&gt;&gt; 以降の処理においても、
+		TOS が保存されるという特徴があります。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<p>
+		最大公約数を求めるワード gcd-main はスタックより 2 つの整数値をとり、
+		その 2 数の最大公約数をスタックに積むものとします。
+		使用には条件があり、Second は TOS より大きい値である必要があります。
+		</p>
+		<p>
+		次のコードで定義されるワード gcd では、
+		gcd-main を呼び出す前に Second と TOS の値を比較し、
+		必要であれば swap を実行し、Second &gt; TOS という条件を満たした上で
+		gcd-main を呼び出しています。
+		なお、Second と TOS が等しい場合には、最大公約数は TOS (Second でもある）と
+		なるので、単に TOS を drop する処理を行うものとします。
+		
+		</p>
+		<div class=example>
+			<code>
+				"gcd" : <br>
+				&nbsp;&nbsp; switch <br>
+				&nbsp; &nbsp; &nbsp; &nbsp; @== -&gt;&gt; drop break
+					// 等しいときは Second が答え <br>
+				&nbsp; &nbsp; &nbsp; &nbsp; @&lt; -&gt;&gt; swap gcd-main break <br>
+				&nbsp; &nbsp; &nbsp; &nbsp; // 上記以外の時、<br>
+				&nbsp; &nbsp; &nbsp; &nbsp;
+					// つまり Second &gt; TOS のときはそのまま呼び出し<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; gcd-main <br>
+				&nbsp; &nbsp; dispatch <br>
+				; <br>
+			</code>
+		</div>
+		<p>
+		ちなみに、ワード gcd-main は次のように定義されます：
+		</p>
+		<div class=example>
+			<code>
+<pre>
+"gcd-main" :    // m n --- gcd  where m&gt;=n 
+    dup 0? if   // "N 0 gcd-main"'s result is N.
+        drop    // --- m
+    else
+        dup inv-rot % gcd-main  // n m%n
+    then
+;
+</pre>
+
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== . ============================== -->
 <h3 class=wordHeader id=dot>. <span class=rem>（← ドット）</span></h3>
 <table>
@@ -1755,7 +2144,7 @@ N1 N2 --- N　などと表記することとします。
 		</div>
 		<p>
 			同様のワードとして TOS を消費しない（参照するだけ）の
-			<a href="#@dot">@.</a>というワードもあります。
+			<a href="#ref_dot">@.</a>というワードもあります。
 		</p>
 	</td>
 </tr>
@@ -1768,7 +2157,48 @@ N1 N2 --- N　などと表記することとします。
 </table>
 </div>
 
-
+<div class=chunk> 
+<!-- ============================== .cr ============================== -->
+<h3 class=wordHeader id=dot_cr>.cr</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> <a href="#_Any">X</a> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS を改行付きで出力します。
+		このワードは <a href="#dot">.</a> と <a href="#cr">cr</a> を
+		連続して実行したものと同値です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、123 という値を改行付きで表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> 123 .cr </u><br>
+				&nbsp; 123<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空の場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=chunk>
 <!-- ============================== &frasl; ============================== -->
 <h3 class=wordHeader id=slash>&frasl;</h3>
@@ -1927,6 +2357,11 @@ N1 N2 --- N　などと表記することとします。
 			ワード定義モード（コンパイルモード）に移行します。
 		</p>
 		<p>
+			ただし、'$' 記号で始まるワード名は使用できません
+			（'$' 記号で始まるワードは、
+			グローバル変数や定数定義の処理にて予約されています）。
+		</p>
+		<p>
 			定義されるワードは、省略形として TOS に積まれたワード名と
 			ボキャブラリ名と TOS に積まれたワード名とを
 			コロンで繋いだ正規名でのワード、両方が定義されます。
@@ -1952,6 +2387,7 @@ N1 N2 --- N　などと表記することとします。
 	<th class=boldLabel>エラー</th>
 	<td class=note>
 		TOS が文字列でない場合はエラーとなります。
+		TOS にある文字列が '$' 記号で始まる場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -2031,7 +2467,8 @@ N1 N2 --- N　などと表記することとします。
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		エラーは発生しません。
+		ワードの定義中でなかったり、while 〜 repeat など、
+		繰り返し処理で対になるワードが閉じていない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -2124,8 +2561,7 @@ N1 N2 --- N　などと表記することとします。
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		TOS と Second が整数型（int もしくは long）でない場合は
-		エラーとなります。
+		TOS と Second が整数型でない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -2191,14 +2627,18 @@ N1 N2 --- N　などと表記することとします。
 	<td class=note>
 		<a href="#_Number">N</a> <a href="#_Number">N</a>
 		---
-		<a href="#_Bool">B</a>
+		<a href="#_Bool">B</a> <br>
+		または、<br>
+		<a href="#_List">&Lscr;</a> <a href="#_List">&Lscr;</a>
+		---
+		<a href="#_Bool">B</a> <br>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		スタック上にある 2 つの数値を取り出して比較し、
-		それらの数値が等しい場合には true を、
+		スタック上にある 2 つの数値またはリストを取り出して比較し、
+		それらが等しい場合には true を、
 		そうでなければ false をプッシュします。
 	</td>
 </tr>
@@ -2218,7 +2658,7 @@ N1 N2 --- N　などと表記することとします。
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		スタック上に 2 つの数値がない場合にはエラーとなります。
+		スタック上に 2 つの数値またはリストがない場合にはエラーとなります。
 	</td>
 </tr>
 </table>
@@ -2392,8 +2832,7 @@ N1 N2 --- N　などと表記することとします。
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		<a href="#end-loop-block">end-loop-block</a> における、
-		ワード loop の参照実装例をみて下さい。
+		使用例はありません。
 	</td>
 </tr>
 <tr>
@@ -2645,6 +3084,56 @@ N1 N2 --- N　などと表記することとします。
 	<td class=note>
 		スタックが空であったり、
 		TOS が数値でなかったりした場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== &gt;here ============================== -->
+<h3 class=wordHeader id=to_here>&gt;here</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある値をシンボルとしてコンパイルします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<p>
+			次の例では、1 から 10 までの値より構成されるリストを
+			手続きにより定義しています。
+		</p>
+		<div class=example>
+			<code>
+				&gt; <u> ( {{ 1 10 for+ i &gt;here next }} ) . </u><br>
+				&nbsp; ( 1 2 3 4 5 6 7 8 9 10 ) ok.<br>
+			</code>
+		</div>
+		<p>
+			備考：実は上のサンプルコードは、
+			ワード <a href="#double_right_curly_comma">}},</a> を使うと、
+			本ワード <a href=#to_here>&gt;here</a> を用いずとも実現できます。
+			詳細はワード<a href=#to_here>&gt;here</a> のサンプルコードを見て下さい。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空である場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -2982,8 +3471,335 @@ RS:-------------------
 </table>
 </div>
 
+<div class=chunk>
+<!-- ============================== }}, ============================== -->
+<h3 class=wordHeader id=double_right_curly_comma>}},</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 2 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS:
+		<a href="#_Int">I</a>
+		<a href="#_Omega">&omega;</a>
+		<a href="#_Theta">&theta;</a>
+		---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_left_curly">{{</a> と対を無し、
+		即時実行される無名ワードを構成します。
+		本ワードにより定義された無名ワードは即時に実行され、
+		かつ、ワード <a href="#double_left_curly">{{</a> 実行時に
+		保存されたデータスタックの深さを読み出し、
+		それよりも増えている分について以下の処理を行います。
+		対をなすワード <a href="#double_left_curly">{{</a> の実行直前の
+		モードが、
+		<dl>
+			<dt><b>インタプリタモードの場合</b></dt>
+			<dd>
+				なにもしません。
+				本ワードの実行により、
+				実行された無名ワードによりデータスタックに積まれた値は
+				そのままデータスタックに残ります。
+			</dd>
+			<br>
+			<dt><b>コンパイルモードの場合</b></dt>
+			<dd>
+				増加したデータスタック上の値は、
+				リテラルとしてコンパイルされます。
+				データスタックの深さにより、増加した値として認識されるので、
+				例えば、<a href="#drop">drop</a> して、
+				2 つの値をプッシュした場合は最後の値のみがリテラル化されます。
+			</dd>
+			<br>
+			<dt><b>シンボルモードの場合</b></dt>
+			<dd>
+				リテラルとしてコンパイルされずにシンボルとしてコンパイルされる以外は、
+				コンパイルモードのときと同様です。
+			</dd>
+		</dl>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<p>
+			次の例では、1 から 10 までの値より構成されるリストを
+			手続きにより定義しています。
+		</p>
+		<div class=example>
+			<code>
+				&gt; <u> ( {{ 1 10 for+ i next }}, ) . </u><br>
+				&nbsp; ( 1 2 3 4 5 6 7 8 9 10 ) ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		リターンスタックのデータが予期せぬ値となっている場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
+<div class=chunk>
+<!-- ============================== @!= ============================== -->
+<h3 class=wordHeader id=ref_ne>@!=</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		セカンドと TOS に格納されている数値を参照し（＝取り出さず）、
+		それら 2 数が等しくないことを確認します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 2 1 @!= show </u><br>
+<pre>
+      +-----------+
+TOS--&gt;| bool true |
+      |   int 1   |
+      |   int 2   |
+DS:-------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @&amp; ============================== -->
+<h3 class=wordHeader id=ref_bit_and>@&amp;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a>
+		---
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a> <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		セカンドと TOS に格納されている整数値を参照し（＝取り出さず）、
+		それら 2 数のビットごとの論理積を計算しプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 2 15 @&amp; show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 2  |
+      | int 15 |
+      | int 2  |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの整数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @* ============================== -->
+<h3 class=wordHeader id=ref_mult>@*</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Number">N</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		セカンドと TOS に格納されている数値を参照し（＝取り出さず）、
+		それら 2 数の積を計算しプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 2 15 @* show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 30 |
+      | int 15 |
+      | int 2  |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @+ ============================== -->
+<h3 class=wordHeader id=ref_plus>@+</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Number">N</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	セカンドと TOS を参照し（取り出さずに）、その和をプッシュします。
+	<td class=note>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 10 20 @+ show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 30 |
+      | int 20 |
+      | int 10 |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @- ============================== -->
+<h3 class=wordHeader id=ref_minus>@-</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Number">N</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	セカンドと TOS を参照し（取り出さずに）、その差をプッシュします。
+	<td class=note>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 30 20 @- show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 10 |
+      | int 20 |
+      | int 30 |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 <!-- ============================== @. ============================== -->
-<h3 class=wordHeader id=@dot>@. <span class=rem>（← @ドット）</span></h3>
+<h3 class=wordHeader id=ref_dot>@. <span class=rem>（← @ドット）</span></h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -3038,9 +3854,9 @@ RS:-------------------
 </table>
 </div>
 
-<div class=chunk>
-<!-- ============================== @not-empty-list? ============================== -->
-<h3 class=wordHeader id=@is_not-empty-list>@not-empty-list?</h3>
+<div class=chunk> 
+<!-- ============================== @&frasl; ============================== -->
+<h3 class=wordHeader id=ref_div>@&frasl;</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -3049,15 +3865,15 @@ RS:-------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_List">&Lscr;</a>	
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
 		---
-		<a href="#_List">&Lscr;</a>	<a href="#_Bool">B</a>
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Number">N</a>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		TOS を消費しない <a href="#is_not-empty-list">not-empty-list?</a> です。
+	セカンドと TOS を参照し（取り出さずに）、その商をプッシュします。
 	</td>
 </tr>
 <tr>
@@ -3065,8 +3881,15 @@ RS:-------------------
 	<td class=note>
 		<div class=example>
 			<code>
-				&gt; <u> ( 1 2 3 ) @not-empty-list? . . </u><br>
-				&nbsp; true ( 1 2 3 ) ok.<br>
+				&gt; <u> 30 10 @&frasl; show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 3  |
+      | int 10 |
+      | int 30 |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
 			</code>
 		</div>
 	</td>
@@ -3074,7 +3897,367 @@ RS:-------------------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		スタックが空であったり、TOS がリストでない場合はエラーとなります。
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @&lt; ============================== -->
+<h3 class=wordHeader id=ref_lt>@&lt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	セカンドと TOS を参照し（取り出さずに）、
+	セカンドの方が真に小さいか否かを調べます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 30 10 @&lt; show </u><br>
+<pre>
+      +------------+
+TOS--&gt;| bool false |
+      |   int 10   |
+      |   int 30   |
+DS:--------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @&lt;&lt; ============================== -->
+<h3 class=wordHeader id=ref_bit_lshift>@&lt;&lt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a>
+		---
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a> <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Second と TOS を参照し（取り出さずに）、
+		Second の値を TOS 分だけビット単位で左シフトします。
+		計算時には、Second と TOS のうち、情報量が大きい方へと整えられます。
+		例えば int と long 型で計算を行った場合、
+		計算結果は long となります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、0x1234 を左に 4 ビットシフトして、
+		その値を 16 進数に変換しています。
+		<div class=example>
+			<code>
+				&gt; <u> 0x1234 4 @&lt;&lt; to-hex-str show </u><br>
+<pre>
+      +--------------+
+TOS--&gt;| string 12340 |
+      |    int 4     |
+      |   int 4660   |
+DS:----------------------
+</pre>
+				ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS と Second が整数型でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @&lt;= ============================== -->
+<h3 class=wordHeader id=ref_le>@&lt;=</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	セカンドと TOS を参照し（取り出さずに）、
+	セカンドの値が TOS の値以下であるか否かを調べます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 30 10 @&lt;= show </u><br>
+<pre>
+      +------------+
+TOS--&gt;| bool false |
+      |   int 10   |
+      |   int 30   |
+DS:--------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @== ============================== -->
+<h3 class=wordHeader id=ref_eq>@==</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		セカンドと TOS に格納されている数値を参照し（＝取り出さず）、
+		それら 2 数が等しいことを確認します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 2 1 @== show </u><br>
+<pre>
+      +------------+
+TOS--&gt;| bool false |
+      |   int 1    |
+      |   int 2    |
+DS:--------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @&gt; ============================== -->
+<h3 class=wordHeader id=ref_gt>@&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	セカンドと TOS を参照し（取り出さずに）、
+	セカンドの値が TOS の値より大きいか否かを調べます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 30 10 @&gt; show </u><br>
+<pre>
+      +-----------+
+TOS--&gt;| bool true |
+      |  int 10   |
+      |  int 30   |
+DS:-------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @&gt;&gt; ============================== -->
+<h3 class=wordHeader id=ref_bit_rshift>@&gt;&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a>
+		---
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a> <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Second と TOS の値を参照し（取り出さずに）、
+		Second の値を TOS 分だけビット単位で右シフトします。
+		計算時には、Second と TOS のうち、情報量が大きい方へと整えられます。
+		例えば int と long 型で計算を行った場合、
+		計算結果は long となります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、0x1234 を右に 4 ビットシフトして、
+		その値を 16 進数にて表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> 0x1234 4 @&gt;&gt; to-hex-str show </u><br>
+<pre>
+      +------------+
+TOS--&gt;| string 123 |
+      |   int 4    |
+      |  int 4660  |
+DS:--------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS と Second が整数型でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @&gt;= ============================== -->
+<h3 class=wordHeader id=ref_ge>@&gt;=</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> <a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a> <a href="#_Number">N</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	セカンドと TOS を参照し（取り出さずに）、
+	セカンドの値が TOS の値以上であるかを調べます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 30 10 @&gt;= show </u><br>
+<pre>
+      +-----------+
+TOS--&gt;| bool true |
+      |  int 10   |
+      |  int 30   |
+DS:-------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの数値が存在しない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -3082,7 +4265,7 @@ RS:-------------------
 
 <div class=chunk>
 <!-- ============================== @&gt;r ============================== -->
-<h3 class=wordHeader id=@to_r>@&gt;r</h3>
+<h3 class=wordHeader id=ref_to_r>@&gt;r</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -3120,6 +4303,619 @@ RS:-------------------
 </div>
 
 <div class=chunk>
+<!-- ============================== @^ ============================== -->
+<h3 class=wordHeader id=ref_bit_xor>@^</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a>
+		---
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a> <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		セカンドと TOS に格納されている整数値を参照し（＝取り出さず）、
+		それら 2 数のビットごとの排他的論理和を計算しプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 5 70 @^ show </u><br>
+<pre>
+      +-------+
+TOS--&gt;| int 2 |
+      | int 7 |
+      | int 5 |
+DS:---------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの整数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @| ============================== -->
+<h3 class=wordHeader id=ref_bit_or>@|</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a>
+		---
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a> <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		セカンドと TOS に格納されている整数値を参照し（＝取り出さず）、
+		それら 2 数のビットごとの論理和を計算しプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> 3 10 @| show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int 11 |
+      | int 10 |
+      | int 3  |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に 2 つの整数値が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @car ============================== -->
+<h3 class=wordHeader id=ref_car>@car</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>	
+		---		
+		<a href="#_List">&Lscr;</a>	<a href="#_Any">X</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるリストの先頭要素を取り出し、スタックに積みます。
+		対象のリストはスタックから取り除かれません。
+		ワード <a href="#pop-front">pop-front</a> とは異なり、
+		実行直前に TOS にあったリストの先頭要素は、
+		そのリストから取り除かれません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、リスト ( 10 20 30 ) から、先頭の要素 10 を得ます。
+		<div class=example>
+			<code>
+				&gt; <u> ( 10 20 30 ) @car</u><br>
+				&nbsp; ok.<br>
+				&gt; <u> . </u><br>
+				&nbsp; 10 ok.
+				<span class=rem>← 先頭の要素が得られていることが分かる</span><br>
+				&gt; <u> . </u><br>
+				&nbsp; ( 10 20 30 ) ok.<br>
+				<span class=rem>
+					↑  対象のリストから先頭の要素は取り除かれていません
+				</span>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空の場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== ccc-str ============================== -->
+<h3 class=wordHeader id=ccc-str>ccc-str</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- <a href="#_String">S</a></td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		文字コード変換モード（ccc mode=Character Code Conversion mode）を
+		表す文字列をスタックに積みます。
+		ccc が無変換（=thru）のときは THRU を、
+		UTF8 から SJIS へ変換する場合は utf8&gt;sjis を、
+		逆に SJIS から UTF8 へ変換する場合は sjis&gt;utf8 なる文字列を
+		スタックに積みます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		サンプルコードはありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @cdr ============================== -->
+<h3 class=wordHeader id=ref_cdr>@cdr</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>	
+		---
+		<a href="#_List">&Lscr;</a>	<a href="#_List">&Lscr;</a>	
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	TOS にあるリストの cdr 部をスタックに積みます。
+	ワードの実行直前に TOS にあったリストは変化しません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、cdr 部を取り出し表示します。
+		<div class=example>
+			<code>
+				&gt; <u> ( apple banana cherry ) cdr .</u><br>
+				&nbsp; ( banana cherry )ok.<br>
+				&gt; <u> . </u> <span class=rem>← 元のリストを確認しても…</span><br>
+				<span class=rem>↓ 変化していないことが確認できる</span><br>
+				&nbsp; ( apple banana cherry ) ok.
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================== @de-list ============================== -->
+<h3 class=wordHeader id=ref_de-list>@de-list</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>
+		---
+		<a href="#_List">&Lscr;</a>
+		<a href="#_Any">X1</a> <a href="#_Any">X2</a> … <a href="#_Any">Xn</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるリストを参照し、
+		当該リストに含まれる要素をそれぞれ取り出し、
+		先頭の要素から順にスタックに積んでいきます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、( 10 20 30 ) というリストを分解し、
+		10 20 30 という値が順次スタックに積まれていることを確認しています
+		（ドットでスタックから値を取り出しているので、
+		表示される値は 30 20 10 と、スタックに積まれた順序と逆順、
+		つまり、リストの後ろの値から表示されることとなります）。
+		<div class=example>
+			<code>
+				&gt; <u> ( 10 20 30 ) de-list</u><br>
+<pre>
+      +-------------------+
+TOS--&gt;|      int 30       |
+      |      int 20       |
+      |      int 10       |
+      | list ( 10 20 30 ) |
+DS:---------------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+
+<div class=chunk>
+<!-- ============================== def ============================== -->
+<h3 class=wordHeader id=def>def</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<br>
+		<a href="#_String">S</a> <a href="#_Word">W</a> --- <br>
+		または<br>
+		<a href="#_Word">W</a> <a href="#_String">S</a> --- 
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS とセカンドにある、無名ワードと文字列を用いてワードを登録します。
+		無名ワードのワード名には TOS またはセカンドにある文字列が用いられます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、TOS にある値を 2 倍する無名ワードを Twice という名前の
+		ワードとして登録しています。
+		<div class=example>
+			<code>
+				&gt; <u> "Twice" { 2 * } def </u><br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+		なお、本ワードは文字列と無名ワードがスタックの上部にあれば良いので、
+		{ 2 * } "Twice" def と書くこともできます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS とセカンドに無名ワードと文字列がそれぞれ 1 つづつ存在しない場合は
+		エラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @has? ============================== -->
+<h3 class=wordHeader id=ref_has_p>@has?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> <a href="#_List">&Lscr;</a>
+		---
+		<a href="#_Any">X</a> <a href="#_List">&Lscr;</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		スタックより TOS およびセカンドを参照し、TOS にあるリスト中に、
+		セカンドの要素が含まれているか否かを調べます。
+		含まれている場合は true をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+		本ワードはワード <a href="#has_p">has?</a> のスタックを消費しない版ですので、
+		ワード <a href="#has_p">has?</a> の使用例を参考にして下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックに 2 つ以上の値が存在しなかったり、
+		TOS がリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== @in? ============================== -->
+<h3 class=wordHeader id=ref_in_p>@in?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a> <a href="#_Any">X</a>
+		---
+		<a href="#_List">&Lscr;</a> <a href="#_Any">X</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		スタックより TOS およびセカンドを参照し、
+		TOS にある値がセカンドにあるリスト中に含まれているか否かを調べます。
+		含まれている場合は true をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+		本ワードはワード <a href="#in_p">in?</a> のスタックを消費しない版ですので、
+		ワード <a href="#in_p">in?</a> の使用例を参考にして下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックに 2 つ以上の値が存在しなかったり、
+		セカンドがリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @last ============================== -->
+<h3 class=wordHeader id=ref_last>@last</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>
+		---
+		<a href="#_List">&Lscr;</a>
+		<a href="#_Any">X</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		<p>
+			TOS にあるリストを参照し、その末尾の要素をスタックにプッシュします。
+			対象となるリストは変化しません。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> ( 11 22 33 ) @last show </u><br>
+<pre>
+      +-------------------+
+TOS--&gt;|      int 33       |
+      | list ( 11 22 33 ) |
+DS:---------------------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がリストでない場合や、対象のリストが空であった場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================== @size ============================== -->
+<h3 class=wordHeader id=ref_size>@size</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		TOS の値を参照し、その値のサイズをスタックに積みます。
+		各値のサイズについては、
+		ワード <a href="#size">size</a> の説明を見てください。 <br>
+		{ <a href="#_Array">A</a>
+		  | <a href="#_List">&Lscr;</a>
+		  | <a href="#_String">S</a>
+		  | <a href="#_Symbol">&sigma;</a> }
+		---
+		{ <a href="#_Array">A</a>
+		  | <a href="#_List">&Lscr;</a>
+		  | <a href="#_String">S</a>
+		  | <a href="#_Symbol">&sigma;</a> }
+		<a href="#_Int">I</a><br>
+		<br>
+		※ ただし、実行後のセカンドの値は、
+		実行前の TOS と同一であるとします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある配列・リスト・文字列・シンボルのサイズ（または要素数）を
+		スタックに積みます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、要素数 5 の配列を作成し、
+		その配列のサイズを表示しています。
+		<div class=example>
+			<code>
+				&gt; <u>5 new-array</u> &nbsp;
+				<span class=rem>← 要素数 5 の配列を作成</span><br>
+				&nbsp; ok.<br>
+				&gt; <u> @size . </u>
+				<span class=rem>
+					← TOS にある配列のサイズを取得し、
+					それを表示
+				</span><br>
+				&nbsp; 5 ok. &nbsp;
+				<span class=rem>← 要素数 5 と表示された。</span><br>
+			</code>
+		</div>
+		<br>
+		次はリストの要素数を取得して表示します。
+		リストの要素は apple、banana というシンボル 2 つと、
+		シンボルと数値からなる ( cherry 100 ) というリスト 1 つなので、
+		計 3 つとなります。
+		<div class=example>
+			<code>
+				&gt; <u> ( apple banana ( cherry 100 ) ) @size . </u><br>
+				&nbsp; 3 ok.
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が本ワードに対応している値でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+
+<div class=chunk>
+<!-- ============================== @~ ============================== -->
+<h3 class=wordHeader id=ref_bit_not>@~</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a>
+		---
+		<a href="#_Integer">K</a> <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS を取り出さずに参照し、そのビット単位での反転（not）を計算します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、2 のビット単位での反転を計算しています。
+		<div class=example>
+			<code>
+				&gt; <u> 2 @~ show </u><br>
+<pre>
+      +--------+
+TOS--&gt;| int -3 |
+      | int 2  |
+DS:----------------
+</pre>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+		ちなみに、-3 の 16 進表現は、
+		<div class=example>
+			<code>
+				&gt; <u> -3 to-hex-str . </u><br>
+				&nbsp; FFFFFFFD ok.<br>
+			</code>
+		</div>
+		であり、2 をビット反転したものが -3 であることが分かります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が整数型（int もしくは long）でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== @empty-list? ============================== -->
 <h3 class=wordHeader id=@is_empty-list>@empty-list?</h3>
 <table>
@@ -3148,6 +4944,48 @@ RS:-------------------
 			<code>
 				&gt; <u> clear ( 1 2 3 ) @empty-list? . . </u><br>
 				&nbsp; false ( 1 2 3 ) ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、TOS がリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== @not-empty-list? ============================== -->
+<h3 class=wordHeader id=@is_not-empty-list>@not-empty-list?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>	
+		---
+		<a href="#_List">&Lscr;</a>	<a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS を消費しない <a href="#is_not-empty-list">not-empty-list?</a> です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> ( 1 2 3 ) @not-empty-list? . . </u><br>
+				&nbsp; true ( 1 2 3 ) ok.<br>
 			</code>
 		</div>
 	</td>
@@ -3200,8 +5038,8 @@ RS:-------------------
 </div>
 
 <div class=chunk>
-<!-- ============================== &gt;sym ============================== -->
-<h3 class=wordHeader id=to_symbol>&gt;sym</h3>
+<!-- ============================== &gt;str ============================== -->
+<h3 class=wordHeader id=to_str>&gt;str</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -3216,18 +5054,22 @@ RS:-------------------
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		TOS にある値をシンボルとしてコンパイルします。
+		TOS にある値を文字列に変換してプッシュします。
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、1 から 10 までの値より構成されるリストを
-		手続きにより定義しています。
+		次の例では、123 という数値を文字列の "123" に変換しています。
 		<div class=example>
 			<code>
-				&gt; <u> ( {{ 1 10 for+ i &gt;sym next }} ) . </u><br>
-				&nbsp; ( 1 2 3 4 5 6 7 8 9 10 ) ok.<br>
+				&gt; <u> 123 &gt;str show . </u><br>
+<pre>
+      +------------+
+TOS--&gt;| string 123 |
+DS:--------------------
+ ok.
+</pre>
 			</code>
 		</div>
 	</td>
@@ -3236,6 +5078,56 @@ RS:-------------------
 	<th class=boldLabel>エラー</th>
 	<td class=note>
 		スタックが空である場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== &gt;symbol ============================== -->
+<h3 class=wordHeader id=to_symbol>&gt;symbol</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_String">S</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある文字列をシンボルに変換してプッシュします。
+		ただし、変換する文字列はアルファベットもしくはアンダーバーで
+		始まっているものに限ります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、"orange" という文字列をシンボルとしての orange に変換しています。
+		<div class=example>
+			<code>
+				&gt; <u> "orange" &gt;symbol show </u><br>
+<pre>
+      +---------------+
+TOS--&gt;| symbol orange |
+DS:-----------------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が文字列でない場合や、
+		文字列であっても変換できない文字列である場合などは
+		エラーとなります。
 	</td>
 </tr>
 </table>
@@ -3896,34 +5788,43 @@ RS:-------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		RS: --- <a href="#_Omega">&omega;</a> <a href="#_Theta">&theta;</a>
+		RS: ---
+		<a href="#_Int">I</a>
+		<a href="#_Omega">&omega;</a>
+		<a href="#_Theta">&theta;</a>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		ワード <a href="#double_right_curly">}}</a> と対を成し、
-		無名ワード（ラムダ）を定義します。
-		現在の実行モードをリターンスタック上に保存し、
-		コンパイルモードへと移行します。
 		<p>
-		{{ … }} で構成される無名ワードブロックは、
-		コンパイル中であっても即時に実行されます。
-		ワード <a href="#to_literal">&gt;lit</a> を用いることにより、
-		リスト内に配置された無名ワードブロックにて、
-		手続きによりリストを構築できます。
+			ワード <a href="#double_right_curly">}}</a> や
+			<a href="#double_right_curly_comma">}},</a> と対を成し、
+			無名ワード（ラムダ）を定義します。
+			現在の実行モード等をリターンスタック上に保存し、
+			コンパイルモードへと移行します。
 		</p>
 		<p>
-		本ワードの実体は <a href="#left_curly">{</a> と同じです。
-		ワード <a href="#double_right_curly">}}</a> と対を成すため、
-		このような形で用意されています。
+			{{ … }} で構成される無名ワードブロックは、
+			コンパイル中であっても即時に実行されます。
+			ワード <a href="#to_literal">&gt;lit</a> を用いることにより、
+			リスト内に配置された無名ワードブロックにて、
+			手続きによりリストを構築できます。
+		</p>
+		<p>
+			本ワードの実体は <a href="#left_curly">{</a> と殆ど同じですが、
+			本ワード実行直前のデータスタックの位置を RS にキャプチャ
+			（プッシュして保存）するところが異なります。
+			このキャプチャされたデータスタックの位置の利用方法については、
+			ワード <a href="#double_right_curly_comma">}},</a> の説明をみて下さい。
 		</p>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		ワード <a href="#double_right_curly">}}</a> の使用例を見て下さい。
+		ワード <a href="#double_right_curly">}}</a>
+		または <a href="#double_right_curly_comma">}},</a> の使用例を見て下さい。
 	</td>
 </tr>
 <tr>
@@ -3984,6 +5885,50 @@ RS:-------------------
 </div>
 
 <div class=chunk>
+<!-- ============================== || ============================== -->
+<h3 class=wordHeader id=logical_or>||</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Bool">B</a> <a href="#_Bool">B</a>
+		---
+		<a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Second と TOS の論理和（or）を計算します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、true と false の論理和を計算し、
+		その結果（true）を表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> true false || . </u><br>
+				&nbsp; true ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS と Second が論理値でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== } ============================== -->
 <h3 class=wordHeader id=right_curly>}</h3>
 <table>
@@ -4011,21 +5956,14 @@ RS:-------------------
 			<dd>
 				<p>生成された無名ワードは、スタックに積まれます。</p>
 			</dd>
-			<dt><b>コンパイルモードの場合：</b></dt>
+			<dt><b>上記以外の場合：</b></dt>
 			<dd>
-				<p>
-				生成された無名ワードが即時実行属性を保つ場合
-				（つまり、ワード <a href="#doll_left_curly">${</a> にて
-				無名ワードの生成が開始されている場合）は、
-				生成されたワードを実行し、
-				リテラルとしてその値をコンパイルします。
-				</p>
-				<p>
 				無名ワードが即時実行属性を持たない場合は、
 				リテラルとして生成された無名ワードをコンパイルします。
-				</p>
+				リスト中であればリストの要素として無名ワードが格納されます。
 			</dd>
-			<dt><b>シンボルモード（リスト中）の場合：</b></dt>
+<!--
+			<dt><b>シンボルモード（リスト中など）の場合：</b></dt>
 			<dd>
 				<p>
 				生成された無名ワードが即時実行属性を保つ場合、
@@ -4038,6 +5976,7 @@ RS:-------------------
 				（リスト中に追加）します。
 				</p>
 			</dd>
+-->
 		</dl>
 		<p>
 		なお、本ワードはコメント中では何も処理を行いません。
@@ -4050,9 +5989,9 @@ RS:-------------------
 		<br>
 		<b>その 1 - インタプリタモードでの使用</b><br>
 		<p>
-		次のコードでは、"lambda\n" と表示する無名ワードをスタックに積み、
-		その積まれた無名ワードをワード <a href="#exec">exec</a> により
-		実行しています。
+			次のコードでは、"lambda\n" と表示する無名ワードをスタックに積み、
+			その積まれた無名ワードをワード <a href="#exec">exec</a> により
+			実行しています。
 		</p>
 		<div class=example>
 			<code>
@@ -4061,7 +6000,22 @@ RS:-------------------
 				&nbsp; ok.<br>
 			</code>
 		</div>
-
+		<br>
+		<b>その 2 - リスト中での使用</b><br>
+		<p>
+			以下に示すコードではリスト中に無名ワード（ラムダ）を格納し、
+			それを利用しています。
+		</p>
+		<div class=example>
+			<code>
+				&gt;<u> (  { "1st lambda" .cr } { "2nd lambda" .cr } ) </u><br>
+				&nbsp; ok.<br>
+				&gt;<u> car exec </u><br>
+				&nbsp; 1st lambda<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+<!--
 		<br>
 		<b>その 2 - コンパイルモードでの使用</b><br>
 		<p>
@@ -4073,7 +6027,7 @@ RS:-------------------
 		</p>
 		<div class=example>
 			<code>
-				&gt; <u> "deg-to-rad-ratio" : ${ pi 180 / } ; </u><br>
+				&gt; <u> "deg-to-rad-ratio" : {{ pi 180 / >lit }} ; </u><br>
 				&nbsp; ok.<br>
 				&gt; <u> "deg-to-rad-ratio" dump </u><br>
 				&nbsp; the word 'user:deg-to-rad-ratio' is:<br>
@@ -4102,11 +6056,12 @@ RS:-------------------
 			<code>
 				&gt; <u> ( 10 20 30 40 50 ) </u><br>
 				&nbsp; ok.<br>
-				&gt; <u>( "size=%d last=%d\n" ${ size } ${ last } ) printf</u><br>
+				&gt; <u>( "size=%d last=%d\n" {{ @size >here }} {{ last >here }} ) printf</u><br>
 				size=5 last=50<br>
 				&nbsp; ok.<br>
 			</code>
 		</div>
+-->
 	</td>
 </tr>
 <tr>
@@ -4142,9 +6097,9 @@ RS:-------------------
 		<p>
 		本ワードにより生成された無名ワードは
 		コンパイル中であっても即時に実行されます。
-		ワード <a href="#to_sym">&gt;sym</a> や
-		<a href="#to_literal">&gt;lit</a> とあわせて利用することにより、
-		手続きにてワードやリストを定義することが可能となります。
+		ワード <a href="#to_here">&gt;here</a> や
+		<a href="#to_literal">&gt;lit</a> と併用することにより、
+		プログラムにてワードやリストを定義することが可能となります。
 		</p>
 	</td>
 </tr>
@@ -4187,8 +6142,57 @@ DS:----------------
 </div>
 
 <div class=chunk>
+<!-- ============================== ~ ============================== -->
+<h3 class=wordHeader id=bit_not>~</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> --- <a href="#_Integer">K</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS のビット単位での反転（not）を計算します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、2 のビット単位での反転を計算しています。
+		<div class=example>
+			<code>
+				&gt; <u> 2 ~ . </u><br>
+				&nbsp; -3 ok.<br>
+			</code>
+		</div>
+		ちなみに、-3 の 16 進表現は、
+		<div class=example>
+			<code>
+				&gt; <u> -3 to-hex-str . </u><br>
+				&nbsp; FFFFFFFD ok.<br>
+			</code>
+		</div>
+		であり、2 をビット反転したものが -3 であることが分かります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が整数型（int もしくは long）でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== 0? ============================== -->
-<h3 class=wordHeader id=zero_q>0?</h3>
+<h3 class=wordHeader id=is_zero>0?</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -4364,6 +6368,53 @@ DS:----------------
 </div>
 
 <div class=chunk> 
+<!-- ============================== 2drop ============================== -->
+<h3 class=wordHeader id=2drop>2drop</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> <a href="#_Any">X</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		drop を 2 回繰り返します。
+		結果としては、TOS ならびにセカンドを捨てます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、TOS とセカンドの値が捨てられている様子を示しています。
+		<div class=example>
+			<code>
+				&gt; <u> 100 200 300 2drop show </u><br>
+<pre>
+      +---------+
+TOS--&gt;| int 100 |
+DS:-----------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックにデータが 2 つ以上存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
 <!-- ============================== 2dup ============================== -->
 <h3 class=wordHeader id=two_dup>2dup</h3>
 <table>
@@ -4410,6 +6461,96 @@ DS:-----------------------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== 3drop ============================== -->
+<h3 class=wordHeader id=3drop>3drop</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> <a href="#_Any">X</a> <a href="#_Any">X</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		drop を 3 回繰り返します。
+		つまり、スタックの上から 3 つのデータは破棄されます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、スタックの上から 3 つの値が捨てられている様子を示しています。
+		<div class=example>
+			<code>
+				&gt; <u> 100 200 300 400 3drop show </u><br>
+<pre>
+      +---------+
+TOS--&gt;| int 100 |
+DS:-----------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックにデータが 3 つ以上存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== abs ============================== -->
+<h3 class=wordHeader id=abs>abs</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		スタックより値を一つ取り出し、
+		その値の絶対値をスタックにプッシュします
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、-5 の絶対値を表示しています。
+		rad-to-deg ワードを用いて度に変換しています。
+		<div class=example>
+			<code>
+				&gt; <u> -5 abs . </u><br>
+				&nbsp; 5 ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が数値でない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -4548,9 +6689,9 @@ DS:-----------------------
 </table>
 </div>
 
-<div class=chunk>
-<!-- ============================== and ============================== -->
-<h3 class=wordHeader id=and>and</h3>
+<div class=chunk> 
+<!-- ============================== and  ============================== -->
+<h3 class=wordHeader id="and">and</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -4559,25 +6700,40 @@ DS:-----------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Bool">B</a> <a href="#_Bool">B</a>
-		---
-		<a href="#_Bool">B</a>
+		<a href="#_List">&Lscr;</a> --- <a href="#_Bool">B</a>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		Second と TOS の論理積を計算し、スタックにプッシュします。
+		<p>
+		TOS にあるラムダリスト（全ての要素が無名ワードから構成されているリスト）を
+		取り出し、格納されている無名ワード（ラムダ）を順次実行していきます。
+		全ての無名ワードの実行結果が true であった場合に限り、
+		true をプッシュします。
+		それ以外の場合は false をプッシュします。
+		</p>
+		<p>
+		リストに格納されている無名ワードは、
+		実行の結果、true または false をスタックにプッシュすることを
+		期待されています。
+		しかし、これらの無名ワードの挙動まではシステムとして
+		確認している訳ではありません。
+		あくまでも各無名ワードを実行し、
+		実行直後のスタックからひとつ値を取り出して、
+		その値が true であるか否かを確認するだけです。
+		</p>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、true と false の論理積を計算しています。
+		次の例では、TOS の値（この例では 5）が 3 より大きく、
+		かつ 10 未満であるかどうかを確認しています。
 		<div class=example>
 			<code>
-				&gt; <u> true false and .</u><br>
-				&nbsp; false ok.<br>
+				&gt; <u> 5  ( { dup 3 &gt; } { 10 &lt; } ) and . </u><br>
+				&nbsp; true ok.<br>
 			</code>
 		</div>
 	</td>
@@ -4585,8 +6741,8 @@ DS:-----------------------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		スタックに 2 つ以上の値が格納されていなかったり、
-		TOS および Second が bool 値でなかったりした場合にはエラーとなります。
+		スタックに 2 つの値が存在しなかったり、
+		TOS がラムダリストでない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -4634,6 +6790,61 @@ DS:-----------------------
 	<td class=note>
 		スタックの要素が 2 個以上なかったり、
 		また上から 2 番目の要素がリストでない場合などはエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== args ============================== -->
+<h3 class=wordHeader id=args>args</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- &Lscr; </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		<p>
+			コマンドライン引数として与えられたスクリプトファイルへの引数
+			（スクリプトファイル以降に与えられたプログラム列）をリスト化して
+			スタックにプッシュします。
+		</p>
+		<p>
+			args に格納される引数（プログラム片）は、
+			それぞれ評価の後に格納されます。
+			そのため、スクリプトファイル中で定義されるワードは、
+			args に格納される時点では、まだワードとして認識されないため、
+			「ワードの可能性のあるトークン」として評価・格納されます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、ワンライナーとして与えらた引数を表示しています。
+		この例は、他の例と異なり、Paraphrase インタプリタ上での実行例ではなく、
+		MacOS での terminal での実行の様子です。
+		表示されている 16 進数は、実行環境により変化するもののため、
+		必ずしも以下の例のような値にはなりません。
+		<div class=example>
+			<code>
+				<u> $ ./para "" 1 23 args .cr </u><br>
+			    ( 1 23 0x7fc313c06830[std:args] 0x7fc313c07070[std:.cr] )<br>
+				$ <br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
 	</td>
 </tr>
 </table>
@@ -4774,19 +6985,13 @@ DS:-----------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_List">&Lscr;</a>	
-		---		
-		<a href="#_List">&Lscr;</a>	<a href="#_Any">X</a>
+		<a href="#_List">&Lscr;</a>	--- <a href="#_Any">X</a>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		TOS にあるリストの先頭要素を取り出し、スタックに積みます。
-		対象のリストはスタックから取り除かれません。
-		ワード <a href="#pop-front">pop-front</a> とは異なり、
-		実行直前に TOS にあったリストの先頭要素は、
-		そのリストから取り除かれません。
+		TOS にあるリストを取り出し、その先頭要素をスタックに積みます。
 	</td>
 </tr>
 <tr>
@@ -4799,12 +7004,6 @@ DS:-----------------------
 				&nbsp; ok.<br>
 				&gt; <u> . </u><br>
 				&nbsp; 10 ok.
-				<span class=rem>← 先頭の要素が得られていることが分かる</span><br>
-				&gt; <u> . </u><br>
-				&nbsp; ( 10 20 30 ) ok.<br>
-				<span class=rem>
-					↑  対象のリストから先頭の要素は取り除かれていません
-				</span>
 			</code>
 		</div>
 	</td>
@@ -4887,8 +7086,7 @@ DS:-----------------------
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-	TOS にあるリストの cdr 部をスタックに積みます。
-	ワードの実行直前に TOS にあったリストは変化しません。
+	TOS にあるリストを取り出し、cdr 部をスタックに積みます。
 	</td>
 </tr>
 <tr>
@@ -4899,9 +7097,6 @@ DS:-----------------------
 			<code>
 				&gt; <u> ( apple banana cherry ) cdr .</u><br>
 				&nbsp; ( banana cherry )ok.<br>
-				&gt; <u> . </u> <span class=rem>← 元のリストを確認しても…</span><br>
-				<span class=rem>↓ 変化していないことが確認できる</span><br>
-				&nbsp; ( apple banana cherry ) ok.
 			</code>
 		</div>
 	</td>
@@ -5558,50 +7753,6 @@ DS:-----------------------
 </table>
 
 <div class=chunk>
-<!-- ============================== do ============================== -->
-<h3 class=wordHeader id=do>do</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>即時実行レベル 1 </td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		---
-		<a href="#_Theta">&theta;</a> <a href="#_Position">&pi;</a> 
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		ワード <a href="loop">loop</a> と対を成し、
-		無限ループを構成します。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-			次の例では、ワード <a href="#leave">leave</a> を用いて、
-			1 から 5 までを表示します。
-		<div class=example>
-			<code>
-				&gt; <u> 1 do dup . 1+ dup 5 > if drop leave then loop </u><br>
-				&nbsp; 1 2 3 4 5 ok.<br>
-			</code>
-		</div>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		エラーは発生しません。
-	</td>
-</tr>
-</table>
-</div>
-
-<div class=chunk>
 <!-- ============================== drop ============================== -->
 <h3 class=wordHeader id=drop>drop</h3>
 <table>
@@ -6210,6 +8361,40 @@ the word 'std:sq' is:
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== exit ============================== -->
+<h3 class=wordHeader id=exit>exit</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> <a href="#_Int">I</a> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある整数値とともに終了します
+		(C の関数 exit() を呼び出します）。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が int でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 <div class=chunk>
 <!-- ============================== exp ============================== -->
 <h3 class=wordHeader id=exp>exp</h3>
@@ -6322,12 +8507,12 @@ the word 'std:sq' is:
 	<td class=note>
 		TOS に格納されているアドレスに格納されている値を読み出します。
 		標準的な使い方としては、TOS のアドレスは
-		ワード <a href="#var">var</a> により作られたワードにて
+		ワード <a href="#global">global</a> により作られたワードにて
 		プッシュされたものを想定しています。
 		<p>
 			このワードはスレッドセーフです。
-			ワード var により定義される、変数へ参照用ワード
-			&変数名&gt; も内部的に本ワードを呼び出していますので、
+			ワード global により定義される、変数へ参照用ワード
+			$変数名&gt; も内部的に本ワードを呼び出していますので、
 			スレッドセーフとなります。
 		</p>
 	</td>
@@ -6419,6 +8604,55 @@ the word 'std:sq' is:
 	<td class=note>
 		スタックが空であったり、
 		TOS がファイルオブジェクトでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== filter ============================== -->
+<h3 class=wordHeader id=filter>filter</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+			<a href="#_List">&Lscr;</a> <a href="#_Word">W</a>
+			---
+			<a href="#_List">&Lscr;</a> 
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるワード（またはラムダ）をセカンドのリストに適用します。
+		ワードは TOS をひとつ消費し、true か false をスタックに積むものとします。
+		本ワードでは、セカンドのリストの要素に対し、
+		ワード（またはラムダ）を適用し、その結果が true であれば
+		結果のリストに登録し、そうでなければその要素は捨ててしまいます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、与えられたリストの要素のうち、
+		偶数のものだけを残したリストを作成しています。
+		<div class=example>
+			<code>
+				&gt; <u> ( 1 2 3 4 5 ) { 2 % 0? } filter . </u><br>
+				&nbsp; ( 2 4 ) ok. <br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、TOS およびセカンドが想定している
+		値でなければエラーとなります。
 	</td>
 </tr>
 </table>
@@ -6538,7 +8772,7 @@ the word 'std:sq' is:
 </table>
 
 <!-- ============================== for+ ============================== -->
-<h3 class=wordHeader id=for_inc>do</h3>
+<h3 class=wordHeader id=for_inc>for+</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -6647,6 +8881,108 @@ the word 'std:sq' is:
 	</td>
 </tr>
 </table>
+
+<div class=chunk>
+<!-- ============================== foreach ============================== -->
+<h3 class=wordHeader id=foreach>foreach</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&lscr;</a> <a href="#_Word">W</a>
+		---
+		不定（TOS にあるワードによる）
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		スタックより TOS およびセカンドを取り出し、次の処理を行います：
+		セカンドに格納されていたリストの各要素を先頭より順次取り出し、
+		TOS に格納されていたワードをそれぞれの要素に順次適用します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、リスト中にある数値の総和を求めて表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> 0 ( 10 20 30 ) { + } foreach . </u><br>
+				&nbsp; 60 ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、
+		セカンドがリストでなかったり TOS がワードでない場合は
+		エラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== forget ============================== -->
+<h3 class=wordHeader id=forget>forget</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_String">S</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある文字列と同名のワードを消去します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、hello というワードを定義し、
+		短縮名で登録されているものを消去しています。
+		本ワードで消去されるのは指定した短縮名のみのものですので、
+		正規名である user:hello は消去されていません
+		（正規名の方も消去したい場合は "user:hello" forget として下さい）。
+		<div class=example>
+			<code>
+				&gt; <u> "hello" : "HELLO!" .cr ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> hello </u><br>
+				&nbsp; HELLO!<br>
+				&nbsp; ok.<br>
+				&gt; <u> "hello" forget </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> hello </u><br>
+				&nbsp; エラー : 無効なトークン 'hello' です。<br>
+				&gt; <u> user:hello </u><br>
+				&nbsp; HELLO!<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、TOS が文字列でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
 
 <div class=chunk>
 <!-- ============================== full-clone ============================== -->
@@ -6818,6 +9154,139 @@ the word 'std:sq' is:
 </table>
 </div>
 
+<div class=chunk>
+<!-- ============================== global ============================== -->
+<h3 class=wordHeader id=global>global</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_String">S</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある文字列と同名の変数を定義します。
+		変数と言っても、その実態は変数名と同名のワードを定義するものです。
+		変数として定義されるワードでは、
+		情報の格納場所となるメモリアドレスをスタックに積む動作をします。
+		実際に変数に値を格納する場合、このアドレスに対しワード
+		<a href="#store">store</a> を実行します。
+		また、値を参照する場合にはワード
+		<a href="#fetch">fetch</a> を実行します。
+		<p>
+		変数への代入や参照のために、2 ワードも使用するのは煩雑です。
+		そのため、本ワードでは、&gt;$変数名 や $変数名&gt; というワードをあわせて
+		定義します。
+		例えば、x という変数名を "x" global として定義した場合、
+		x に代入を行う &gt;$x や、変数 x に格納されている値を取り出す
+		$x&gt; というワードも定義します。
+		もちろん、変数名が count というものであれば、
+		&gt;$count と $count&gt; というワードを定義します。
+		</p>
+		<p>
+		本ワードにて定義されるワード群は、
+		他のワード同様に辞書に格納されます。
+		そのため、並列実行している（もしくはしていない）
+		全てのコンテキストから使用可能です。
+		また、保持している値も、全てのコンテキストにて同じ値となります。
+		このことは、コンテキスト単位でローカルに変数を宣言する
+		<a href="#local">local</a> と大きく異なる部分です。
+		ワード <a href="#local">local</a> で宣言した変数の場合、
+		同名の変数であっても各コンテキスト毎に保持している値が異なりますし、
+		また、場合によってはあるコンテキストでは、
+		指定されたローカル変数が存在しない可能性もあります。
+		</p>
+		<p>
+		ローカル変数はワード内でしか宣言できませんが、
+		本ワードはそのような制限はありません。
+		なので、インタラクティブモードでも変数の定義が可能です。
+		</p>
+		<p>
+		なお、&gt;$x などのユーティリティワードはスレッドセーフです。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、変数の使用方法を示しています。
+		<div class=example>
+			<code>
+				&gt; <u> "x" global </u>
+					<span class="rem">← x という変数を宣言します</span><br>
+				&nbsp; ok.<br>
+				&gt; <u> 123 &gt;$x </u>
+					<span class="rem">← x に 123 を代入します</span><br>
+				&gt; <u> $x&gt; . </u>
+					<span class="rem">← x に格納された値を取り出します</span><br>
+				&nbsp; 123 ok.
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が文字列でない場合はエラーとなります。
+		また、TOS の文字列と同名のワードが存在する場合もエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== has? ============================== -->
+<h3 class=wordHeader id=has_p>has?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> <a href="#_List">&Lscr;</a>
+		---
+		<a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		スタックより TOS およびセカンドを取り出し、TOS にあるリスト中に、
+		セカンドの要素が含まれているか否かを調べます。
+		含まれている場合は true をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、リスト ( 3 4 ) が TOS にあるリスト中に含まれているか
+		どうかを調べています。
+		<div class=example>
+			<code>
+				&gt; <u> ( 3 4 ) ( 1 2 ( 3 4 ) 5 ) has? . </u><br>
+				&nbsp; true ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックに 2 つ以上の値が存在しなかったり、
+		TOS がリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 <!-- ============================== i ============================== -->
 <h3 class=wordHeader id=i>i</h3>
 <table>
@@ -6827,7 +9296,7 @@ the word 'std:sq' is:
 </tr>
 <tr>
 	<th class=boldLabel>スタックの変化</th>
-	<td class=note> --- <a href="#_Int">I</a></td>
+	<td class=note> --- <a href="#_Integer">K</a></td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
@@ -6843,13 +9312,13 @@ the word 'std:sq' is:
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		使用例はワード <a href="#do">do</a> のものを参照して下さい。
+		使用例はワード <a href="#for_inc">for+</a> のものを参照して下さい。
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		適切に for 〜 repeat 内で使用されないとエラーとなる場合があります
+		for+ 〜 next 等のループ内で適切に使用されないとエラーとなる場合があります
 		（リターンスタックが空、などのエラー）。
 	</td>
 </tr>
@@ -6884,10 +9353,10 @@ the word 'std:sq' is:
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、TOS の絶対値をスタックに積むワード abs を定義します。
+		次の例では、TOS の絶対値をスタックに積むワード myAbs を定義します。
 		<div class=example>
 			<code>
-				&gt; <u>"abs" : dup 0 < if -1 * then ; </u><br>
+				&gt; <u>"myAbs" : dup 0 &lt; if -1 * then ; </u><br>
 				&nbsp; ok.<br>
 			</code>
 		</div>
@@ -6895,9 +9364,9 @@ the word 'std:sq' is:
 		このワードを実際に使ってみると、
 		<div class=example>
 			<code>
-				&gt; <u>-5 abs .</u><br>
+				&gt; <u>-5 myAbs .</u><br>
 				&nbsp; 5 ok.<br>
-				&gt; <u>3 abs .</u><br>
+				&gt; <u>3 myAbs .</u><br>
 				&nbsp; 3 ok.<br>
 			</code>
 		</div>
@@ -7040,6 +9509,52 @@ the word 'std:sq' is:
 </div>
 
 <div class=chunk>
+<!-- ============================== in? ============================== -->
+<h3 class=wordHeader id=in_p>in?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a> <a href="#_Any">X</a>
+		---
+		<a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		スタックより TOS およびセカンドを取り出し、
+		TOS にある値がセカンドにあるリスト中に含まれているか否かを調べます。
+		含まれている場合は true をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、
+		<div class=example>
+			<code>
+				&gt; <u> ( apple banana cherry ) `apple in? . </u><br>
+				&nbsp; true ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックに 2 つ以上の値が存在しなかったり、
+		セカンドがリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== inspect ============================== -->
 <h3 class=wordHeader id=inspect>inspect</h3>
 <table>
@@ -7084,6 +9599,57 @@ the word 'std:sq' is:
 </table>
 </div>
 
+<div class=chunk>
+<!-- ============================== interactive? ============================== -->
+<h3 class=wordHeader id=is_interactive>interactive?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- <a href="#_Bool">B</a></td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		対話モードであるか否かを確認します。
+		対話モードである場合には true をスタックに積み、
+		そうでない場合は false をスタックに積みます。
+		<p>
+			対話モードでない場合とは、例えば引数にスクリプトファイルが指定され、
+			そのスクリプトファイル内でプログラムが実行されている場合などです。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		以下の例は、記述されているスクリプトファイルが
+		引数に与えられた場合に限り、スクリプトファイルの引数をチェックし、
+		何も引数が与えられなかったら help メッセージを表示する、という例です。
+		<div class=example>
+			<code>
+				<u> "help" : "usage: ..." .cr ; </u><br>
+				<u> interactive? not if </u><br>
+				&nbsp; &nbsp; <u> args size 0? if </u><br>
+				&nbsp; &nbsp; &nbsp; <u> help cr -1 exit </u><br>
+				&nbsp; &nbsp; <u> then </u><br>
+				<u> then </u><br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=chunk>
 <!-- ============================== inv-rot ============================== -->
 <h3 class=wordHeader id=inv_rot>inv-rot</h3>
@@ -7136,6 +9702,106 @@ DS:-----------
 </table>
 </div>
 
+<!-- ============================== j ============================== -->
+<h3 class=wordHeader id=j>j</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- <a href="#_Integer">J</a></td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		<a href="#for_inc">for+</a> 〜 <a href="#next">next</a>
+		もしくは
+		<a href="#for_dec">for-</a> 〜 <a href="#next">next</a>
+		における二重ループ内にて使用され、
+		ひとつ外側のループにおけるカウンタ値をスタックに積みます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例は、九九の表を出力します。
+		<div class=example>
+			<code>
+				&nbsp;&gt; <u> 1 9 for+ </u><br>
+				&gt;&gt; <u> &nbsp; 1 9 for+ </u><br>
+				&gt;&gt; <u> &nbsp;&nbsp;&nbsp; j i * "%2d " putf </u><br>
+				&gt;&gt; <u> &nbsp; next </u><br>
+				&gt;&gt; <u> &nbsp; cr </u><br>
+				&gt;&gt; <u> next </u><br>
+<pre>
+ 1  2  3  4  5  6  7  8  9
+ 2  4  6  8 10 12 14 16 18
+ 3  6  9 12 15 18 21 24 27
+ 4  8 12 16 20 24 28 32 36
+ 5 10 15 20 25 30 35 40 45
+ 6 12 18 24 30 36 42 48 54
+ 7 14 21 28 35 42 49 56 63
+ 8 16 24 32 40 48 56 64 72
+ 9 18 27 36 45 54 63 72 81
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		for+ 〜 next 内等で適切に使用されないとエラーとなる場合があります
+		（リターンスタックが空、などのエラー）。
+	</td>
+</tr>
+</table>
+
+<div class=chunk> 
+<!-- ============================== last ============================== -->
+<h3 class=wordHeader id=last>last</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a> --- <a href="#_Any">X</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS よりリストを取り出し、
+		その末尾に格納されている要素をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		<div class=example>
+			<code>
+				&gt; <u> ( 11 22 33 ) last .</u><br>
+				&nbsp; 33 ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がリストでなかったり、
+		リストが空である場合などはエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 <div class=chunk>
 <!-- ============================== leave ============================== -->
 <h3 class=wordHeader id=leave>leave</h3>
@@ -7163,7 +9829,6 @@ DS:-----------
 			<li>while 〜 repeat</li>
 			<li>while{ ... }-&gt; 〜 repeat</li>
 			<li>wihle-pipe 〜 repeat</li>
-			<li>do 〜 loop</li>
 		</ul>
 		の各種ループに対応しています。
 		</p>
@@ -7172,7 +9837,7 @@ DS:-----------
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、1 から 10 まで do ループを回していますが、
+		次の例では、1 から 10 まで for+ ループを回していますが、
 		カウンタ変数の値が 5 以上になったところで
 		leave ワードを用いて中断しています。
 		<div class=example>
@@ -7198,6 +9863,112 @@ DS:-----------
 		同一のワード定義に所属していない場合はエラーとなります
 		（正しくコンパイルされません）。
 		ループブロック以外で使用した場合の挙動は不明です。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== let ============================== -->
+<h3 class=wordHeader id=let>let</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>---</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		変数に値を代入するワード _setValue をコンパイルします。
+		本ワードでは何もスタックを消費しませんが、
+		このワードが書かれている処理では、
+		TOS にある変数（シンボルまたはシンボルリスト）に
+		セカンド以下の値を代入する、という動作となります。
+		詳細については以下の使用例を見て下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例その 1</th>
+	<td class=note>
+		次の例では、t という変数に値 10 を設定しています。
+		<div class=example>
+			<code>
+				&nbsp;&gt; <u> { `t local </u><br>
+				&gt;&gt; <u> 10 `t let </u><br>
+				&gt;&gt; <u> t , "t=%d\n" putf </u><br>
+				&gt;&gt; <u> } exec </u><br>
+				&nbsp; t=10 <br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例その 2</th>
+	<td class=note>
+		次の例では、x, y, z という変数にそれぞれ 10, 20, 30 という値を設定しています。
+		<div class=example>
+			<code>
+				&nbsp;&gt; <u>{ ( x y z ) local </u><br>
+				&gt;&gt; <u> 10 20 30 ( x y z ) let </u><br>
+				&gt;&gt; <u> ( "(x,y,z)=(%d, %d, %d)\n" x y z ) printf </u>
+				&gt;&gt; <u> } exec </u><br>
+				&nbsp; (x,y,z)=(10, 20, 30)<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+		本ワードにてコンパイルされるワード _setValue では、
+		TOS がシンボルの場合は、セカンドに値が存在しなければエラーとなります。
+		また、TOS がシンボルリストである場合、
+		そのリスト中に存在するシンボルの数以上に
+		セカンド以降にデータが存在しなければエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== linux? ============================== -->
+<h3 class=wordHeader id=is_linux>linux?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		--- <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Linux 上で実行されているか否かを示します。
+		Linux 上で実行されているのであれば true をプッシュし、
+		そうでなければ false をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
 	</td>
 </tr>
 </table>
@@ -7240,6 +10011,108 @@ DS:-----------
 	<td class=note>
 		スタックが空であったり、
 		TOS が文字列でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== local ============================== -->
+<h3 class=wordHeader id=local>local</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>---</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		現在定義中のワード（無名ワード含む）にローカル変数を宣言します。
+		本ワードでは、実際にローカル変数を宣言する _newLocal というワードを
+		コンパイルするだけなので、スタックの変化はありません。
+		しかし、実際の使用に際しては TOS にシンボルが存在する必要があります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、ローカル変数 count に 100 を代入し、
+		その値を表示させています。
+		<div class=example>
+			<code>
+			&nbsp;&gt; <u> { `count local &nbsp; // count の宣言 </u><br>
+			&gt;&gt; &nbsp; <u>100 `count let  // count に 100 を代入</u></br>
+			&gt;&gt; &nbsp; <u>`count , &nbsp; // count に格納されている値を取得</u><br>
+			&gt;&gt; &nbsp; <u>. &nbsp; &nbsp;// 表示 </u></br>
+			&gt;&gt; &nbsp; <u>} exec</u><br>
+			&nbsp; 100 ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		（無名）ワードの定義中でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== local-with ============================== -->
+<h3 class=wordHeader id=local-with>local-with</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>---</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		現在定義中のワード（無名ワード含む）にローカル変数を宣言します。
+		本ワードでは、dup および実際にローカル変数を宣言する
+		_newLocal ならびに TOS にあるシンボルに初期値を設定する
+		_setValue というワードをコンパイルするだけなので、スタックの変化はありません。
+		しかし、実際の使用に際してはスタック上に初期値と TOS に
+		シンボルが存在する必要があります。
+		<p>
+		TOS がシンボルの場合は、
+		セカンドにある値をそのシンボルが示すローカル変数に代入します。
+		TOS がシンボルから構成されるリスト（これをシンボルリストと呼ぶ）の場合は、
+		そのリストに格納されているシンボルの数だけスタック上に初期値が必要です。
+		具体的な使用方法は以下の使用例をみて下さい。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、シンボルリストを用いて
+		x y z という 3 つのローカル変数を宣言し、それぞれに 10, 20, 30 という
+		初期値を設定しています。
+		<div class=example>
+			<code>
+			&nbsp;&gt;<u> { 10 20 30 ( x y z ) local-with &nbsp; // 宣言と初期化</u><br>
+			&gt;&gt; &nbsp; <u>( "(x,y,z)=(%d, %d, %d)\n" x y z ) printf</u></br>
+			&gt;&gt; &nbsp; <u>} exec</u><br>
+			&nbsp; (x,y,z)=(10, 20, 30)  ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		（無名）ワードの定義中でない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -7329,40 +10202,6 @@ DS:-----------
 </table>
 </div>
 
-<!-- ============================== loop ============================== -->
-<h3 class=wordHeader id=loop>loop</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>即時実行レベル 1 </td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		RS: <a href="#_Theta">&theta;</a>
-			<a href="#_Position">&pi;</a> ---
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		ワード do と対を成し、無限ループを実現します。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		使用例はワード <a href="#do">do</a> のものを参照してさい。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		リターンスタック上に &theta; %pi; が無い場合はエラーとなります。
-	</td>
-</tr>
-</table>
-
 <div class=chunk>
 <!-- ============================== loop-epilogue ============================== -->
 <h3 class=wordHeader id=loop-epilogue>loop-epilogue</h3>
@@ -7388,14 +10227,50 @@ DS:-----------
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		ワード <a href="#end-loop-block">end-loop-block</a> の使用例にある
-		loop の参照実装例を見て下さい。
+		使用例はありません。
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
 		RS に 2 つの値が積まれていない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== mac? ============================== -->
+<h3 class=wordHeader id=is_mac>mac?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		--- <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Mac 上で実行されているか否かを示します。
+		Mac 上で実行されているのであれば true をプッシュし、
+		そうでなければ false をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		 サンプルコードはありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
 	</td>
 </tr>
 </table>
@@ -7987,25 +10862,43 @@ DS:-----------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Bool">B</a> <a href="#_Bool">B</a>
-		---
-		<a href="#_Bool">B</a>
+		<a href="#_List">&Lscr;</a> --- <a href="#_Bool">B</a>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		Second と TOS の論理和を計算し、スタックにプッシュします。
+		<p>
+		TOS にあるラムダリスト（全ての要素が無名ワードから構成されているリスト）を
+		取り出し、格納されている無名ワード（ラムダ）を順次実行していきます。
+		全ての無名ワードの実行結果がひとつでも true であった場合に
+		true をプッシュします。
+		それ以外の場合、
+		つまり全て false であった場合に限り、false をプッシュします。
+		</p>
+		<p>
+		リストに格納されている無名ワードは、
+		TOS からひとつの値を取り出し、
+		何らかの処理の結果、
+		true または false をスタックにプッシュすることを期待されています。
+		しかし、これらの無名ワードの挙動まではシステムとして確認してはいません。
+		あくまでも各無名ワードを実行し、
+		実行直後のスタックからひとつ値を取り出して、
+		その値が true であるか否かを確認するだけです。
+		</p>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、true と false の論理和を計算しています。
+		次の例では、TOS の値（この例では 5）が 0 未満か、
+		もしくは 10 より大きいか、を確認しています。
+		そしてもちろん、TOS に存在する 5 という値はそのどちらでも無いため
+		この例では false を表示しています。
 		<div class=example>
 			<code>
-				&gt; <u> true false or .</u><br>
-				&nbsp; true ok.<br>
+				&gt; <u> 5 ( { dup 0 &lt; } { 10 &gt; } ) or . </u><br>
+				&nbsp; false ok.<br>
 			</code>
 		</div>
 	</td>
@@ -8013,8 +10906,8 @@ DS:-----------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		スタックに 2 つ以上の値が格納されていなかったり、
-		TOS および Second が bool 値でなかったりした場合にはエラーとなります。
+		スタックに 2 つの値が存在しなかったり、
+		TOS がラムダリストでない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -8159,12 +11052,14 @@ TOS| alpha |
 		... 
 		<a href="#_Any">X2</a>
 		<a href="#_Any">X1</a>
+		<a href="#_Any">X0</a>
 		<a href="#_Int">I</a>
 		---
 		<a href="#_Any">Xn</a>
 		... 
 		<a href="#_Any">X2</a>
 		<a href="#_Any">X1</a>
+		<a href="#_Any">X0</a>
 		<a href="#_Any">Xk</a>
 	</td>
 </tr>
@@ -8173,22 +11068,23 @@ TOS| alpha |
 	<td class=note>
 		TOS の int 値を k とすると、
 		TOS の int 値を含まず、スタックの上から k 番目の値をスタックに積みます。
-		2 pick は <a href="#over">over</a> と同じ動作となります。
+		0 pick は <a href="#dup">dup</a> と、
+		1 pick は <a href="#over">over</a> と同じ動作となります。
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、3 pick を実行する直前に、
+		次の例では、2 pick を実行する直前のスタックにて、
 		上から 3 番目に積まれている "MOGREF" をスタックに積んでいます。
 		<div class=example>
 			<code>
-				&gt; <u> "HALITO" "MOGREF" "KATINO" "DUMAPIC" 3 pick</u><br>
+				&gt; <u> "HALITO" "MOGREF" "KATINO" "DUMAPIC" 2 pick</u><br>
 				&nbsp; ok.<br>
 				&gt; <u> show </u><br>
 <pre>
       +----------------+
-TOS-->| string MOGREF  |
+TOS--&gt;| string MOGREF  |
       | string DUMAPIC |
       | string KATINO  |
       | string MOGREF  |
@@ -8370,6 +11266,13 @@ DS:------------------------
 		書式に使用される文字列は、C 言語の printf の説明を
 		適宜参照して下さい。
 		</p>
+		<p>
+		2 番目以降の要素としてシンボルが存在する場合、
+		そのシンボルと同名のローカル変数に保持されている値が
+		このワードの評価対象となります。
+		例えば、ローカル変数 x に 10 が代入されている場合、
+		( "score is %d\n" x ) は ( "score is %d\n" 10 ) として評価されます。
+		</p>
 	</td>
 </tr>
 <tr>
@@ -8496,6 +11399,40 @@ DS:------------------------
 	<td class=note>
 		スタックに 2 つの値が積まれていない場合はエラーとなります。
 		また、TOS が文字列でない場合もエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== quit ============================== -->
+<h3 class=wordHeader id=quit>quit</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Paraphrase システムから抜けます
+		（C 言語の exit(0) を実行します）。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
 	</td>
 </tr>
 </table>
@@ -8650,7 +11587,7 @@ DS:------------------------
 		次の例では、[0,10) の乱数を 10 個生成し表示しています。
 		<div class=example>
 			<code>
-				&gt; <u> 1 10 do 10 rand-to . loop </u><br>
+				&gt; <u> 1 10 for+ 10 rand-to . next </u><br>
 				&nbsp;  0 1 7 4 5 2 0 6 6 9 ok.<br>
 			</code>
 		</div>
@@ -8847,6 +11784,71 @@ DS:------------------------
 	</td>
 </tr>
 </table>
+
+<div class=chunk> 
+<!-- ============================== replace ============================== -->
+<h3 class=wordHeader id=replace>replace</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">a<sub>n</sub></a>
+		... <a href="#_Any">a<sub>1</sub></a> <a href="#_Any">a<sub>0</sub></a>
+		<a href="#_Any">X</a> <a href="#_Int">I</a>
+		---
+		<a href="#_Any">a<sub>n</sub></a>
+		... <a href="#_Any">a<sub>k+1</sub></a>
+		<a href="#_Any">X</a>
+		<a href="#_Any">a<sub>k-1</sub></a>
+		... <a href="#_Any">a<sub>1</sub></a><a href="#_Any">a<sub>0</sub></a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある整数値およびセカンドにある任意の値を取り出した後のスタックに対し
+		操作を行います。
+		TOS にあった整数値の値を k とし、セカンドにあった値を X とするとき、
+		スタックの上から k 番目の値を X に置き換えます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、既にスタックに積まれている値の、
+		上から 2 番目の値を 999 に置き換えています。
+		<div class=example>
+			<code>
+				&gt; <u> 3 2 1 0 </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> 999 2 replace show </u><br>
+<pre>
+      +---------+
+TOS--&gt;|  int 0  |
+      |  int 1  |
+      | int 999 |
+      |  int 3  |
+DS:-----------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックに 3 つ以上データが積まれていない場合や、
+		スタックの深さが、書き換え対象として指定した深さよりも浅い場合は、
+		エラーとなります。
+	</td>
+</tr>
+</table>
+</div>
 
 <div class=chunk>
 <!-- ============================== reset-pipes ============================== -->
@@ -9209,6 +12211,58 @@ DS:-----------------
 </table>
 </div>
 
+<div class=chunk>
+<!-- ========================= show-local-vars ========================= -->
+<h3 class=wordHeader id=show-local-vars>show-local-vars</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		現在実行中のワードのローカル変数に関する情報を表示します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、test というワードで定義されている
+		ローカル変数の情報（変数 x には 123 が、y には "ABC" が格納されている様子）を
+		表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> "test" : ( x y ) local </u><br>
+				&gt;&gt; &nbsp;&nbsp; <u> 123 `x let </u><br>
+				&gt;&gt; &nbsp;&nbsp; <u> "ABC" `y let </u><br>
+				&gt;&gt; &nbsp;&nbsp; <u> show-local-vars </u><br>
+				&gt;&gt; <u> ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> test </u><br>
+<pre>
+num of local vars: 2
+  slot #00: local var name: x dataType:int value:123
+  slot #01: local var name: y dataType:string value:ABC
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
 <!-- ============================== sin ============================== -->
 <div class=chunk>
 <h3 class=wordHeader id=sin>sin</h3>
@@ -9262,18 +12316,51 @@ DS:-----------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
+		TOS の値を参照し、その値のサイズをスタックに積みます。
+		各値のサイズは以下のとおりです：<br>
 		<br>
-		<a href="#_Array">A</a> --- <a href="#_Array">A</a> <a href="#_Int">I</a><br>
-		または、<br>
-		<a href="#_List">&Lscr;</a>
+		<table>
+			<tr>
+				<th>配列</th><td>要素数</td>
+			</tr>
+			<tr valign=top>
+				<th>リスト</th>
+				<td width=300px>
+					含まれる要素数がサイズとなります。
+					ただし、リストが要素の場合は、
+					そのリスト中の要素は考慮されず、
+					単に 1 つの要素として数えられます。
+				</td>
+			</tr>
+			<tr valign=top>
+				<th width=80px>
+					文字列<br>
+					および<br>
+					シンボル
+				</th>
+				<td width=300px>
+					文字列が消費するメモリ量（バイト数）がサイズとなります。
+					この仕様は将来変更される可能性があります。
+					それは、
+					いわゆる半角英数字の場合は文字数と一致しますが、
+					日本語の場合は文字数とサイズが一致しないためです。
+				</td>
+			</tr>
+		</table>
+		<br>
+		{ <a href="#_Array">A</a>
+		  | <a href="#_List">&Lscr;</a>
+		  | <a href="#_String">S</a>
+		  | <a href="#_Symbol">&sigma;</a> }
 		---
-		<a href="#_List">&Lscr;</a> <a href="#_Int">I</a>
+		<a href="#_Int">I</a><br>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		TOS にある配列もしくはリストのサイズ（または要素数）をスタックに積みます。
+		TOS にある配列・リスト・文字列・シンボルのサイズ（または要素数）を
+		スタックに積みます。
 	</td>
 </tr>
 <tr>
@@ -9311,11 +12398,43 @@ DS:-----------------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		スタックにデータが存在しなかったり、
-		TOS が配列もしくはリストではない場合にエラーとなります。
+		TOS が本ワードに対応している値でない場合はエラーとなります。
 	</td>
 </tr>
 </table>
+
+<div class=chunk> 
+<!-- ============================== sjis&gt;utf8 ============================== -->
+<h3 class=wordHeader id=sjis_to_utf8>sjis&gt;utf8</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		文字コード変換モードを、SJIS から UTF8 に変換するモードにします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例は特にありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
 
 <!-- ============================== slice ============================== -->
 <h3 class=wordHeader id=slice>slice</h3>
@@ -9411,6 +12530,94 @@ DS:-----------------
 	<td class=note>
 		セカンドがリスト、TOS がワード（へのポインタ）でなければ
 		エラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== sort+ ============================== -->
+<h3 class=wordHeader id=sort_plus>sort+</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>
+		---
+		<a href="#_List">&Lscr;</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるリストを昇順で並べ替え（ソート）します。
+		{ &lt; } sort と同値です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、TOS にあるリストを昇順でソートし、表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> ( 10 1 4 ) sort+ . </u><br>
+				&nbsp; ( 1 4 10 ) ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がリストでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== sort- ============================== -->
+<h3 class=wordHeader id=sort_minus>sort-</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_List">&Lscr;</a>
+		---
+		<a href="#_List">&Lscr;</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるリストを降順で並べ替え（ソート）します。
+		{ &gt; } sort と同値です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、TOS にあるリストを降順でソートし、表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> ( 10 1 4 ) sort- . </u><br>
+				&nbsp; ( 10 4 1 ) ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がリストでない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -9572,12 +12779,12 @@ DS:-----------------
 	<td class=note>
 		TOS にあるアドレスに Second の値を格納します。
 		標準的な使い方としては、TOS のアドレスは
-		ワード <a href="#var">var</a> で作成されたワードにて
+		ワード <a href="#global">global</a> で作成されたワードにて
 		プッシュされるものを想定しています。
 		<p>
 			このワードはスレッドセーフです。
-			ワード var により定義される、変数への代入用ワード
-			&gt;&変数名も内部的に本ワードを呼び出していますので、
+			ワード globl により定義される、変数への代入用ワード
+			&gt;$変数名も内部的に本ワードを呼び出していますので、
 			スレッドセーフとなります。
 		</p>
 	</td>
@@ -9588,7 +12795,7 @@ DS:-----------------
 		次の例では、変数 x を宣言し、x に 123 という値を格納しています。
 		<div class=example>
 			<code>
-				&gt; <u> "x" var </u><br>
+				&gt; <u> "x" global </u><br>
 				&nbsp; ok.<br>
 				&gt; <u> 123 x store </u><br>
 				&nbsp; ok.<br>
@@ -9648,6 +12855,50 @@ DS:-----------------
 	<th class=boldLabel>エラー</th>
 	<td class=note>
 		TOS が文字列でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== square ============================== -->
+<h3 class=wordHeader id=square>square</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Number">N</a>
+		---
+		<a href="#_Number">N</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にある数値を取り出して 2 乗し、
+		スタックに積みます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、5 の 2 乗を計算し表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> 5 square . </u><br>
+				&nbsp; 25 ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が数値でなければエラーとなります。
 	</td>
 </tr>
 </table>
@@ -9781,9 +13032,9 @@ DS:-----------------
 			<code>
 				"FizzBuzz" :<br>
 				&nbsp; &nbsp; switch<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; case 15 % 0? -> "FizzBuzz" break<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; case 5 % 0?  -> "Buzz"     break<br>
-				&nbsp; &nbsp; &nbsp; &nbsp; case 3 % 0?  -> "Fizz"     break<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; case 15 % 0? -&gt; "FizzBuzz" break<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; case 5 % 0?  -&gt; "Buzz"     break<br>
+				&nbsp; &nbsp; &nbsp; &nbsp; case 3 % 0?  -&gt; "Fizz"     break<br>
 				&nbsp; &nbsp; dispatch<br>
 				;<br>
 			</code>
@@ -9792,9 +13043,9 @@ DS:-----------------
 		上記スクリプトの実行例
 		<div class=example>
 			<code>
-				&gt; <u>"FizzBuzz.pp" load </u><br>
+				&gt; <u> "FizzBuzz.pp" load </u><br>
 				&nbsp; ok.<br>
-				&gt; <u>1 20 do i FizzBuzz . loop</u><br>
+				&gt; <u> 1 20 for+ i FizzBuzz . next </u><br>
 				&nbsp; 1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz
 				11 Fizz 13 14 FizzBuzz 16 17 Fizz 19 Buzz ok.
 			</code>
@@ -9891,6 +13142,40 @@ DS:-----------------
 	</td>
 </tr>
 </table>
+
+<div class=chunk>
+<!-- ============================== thru ============================== -->
+<h3 class=wordHeader id=thru>thru</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		文字コード変換モードを、無変換モードにします。
+		なお、デフォルトではこのモードになっています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例は特にありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
 
 <div class=chunk>
 <!-- ============================== to-hex-str ============================== -->
@@ -10102,6 +13387,39 @@ DS:-----------------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== utf8&gt;sjis ============================== -->
+<h3 class=wordHeader id=utf8_to_sjis>utf8&gt;sjis</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note> --- </td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		文字コード変換モードを、UTF8 から SJIS に変換するモードにします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例は特にありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
 <!-- ============================== valid-index? ============================== -->
 <h3 class=wordHeader id=valid-index_q>valid-index?</h3>
 <table>
@@ -10219,9 +13537,9 @@ DS:-----------------
 </table>
 </div>
 
-<div class=chunk>
-<!-- ============================== var ============================== -->
-<h3 class=wordHeader id=var>var</h3>
+<div class=chunk> 
+<!-- ============================== vmap ============================== -->
+<h3 class=wordHeader id=vmap>vmap</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -10230,46 +13548,46 @@ DS:-----------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_String">S</a> ---
+		<a href="#_List">&Lscr;1</a> <a href="#_List">&Lscr;2</a>
+		---
+		<a href="#_List">&Lscr;</a>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		TOS にある文字列の変数を定義します。
-		ワード var では、TOS にある文字列と同名のワードを定義しますが、
-		このワードは情報の格納場所となるメモリアドレスをスタックに積む動作をします。
-		実際に変数に値を格納する場合は、このアドレスに対し store を実行します。
-		また、値を参照する場合は fetch を実行します。
 		<p>
-		ただ、変数への代入や参照のために、2 ワードも使用するのは煩雑なので、
-		ワード var では、&gt;$変数名 や $変数名&gt; というワードをあわせて
-		定義します。
-		例えば、x というワードを "x" var として定義した場合は、
-		x に代入を行う &gt;$x や、変数 x に格納されている値を取り出す
-		$x&gt; というワードも定義します。
-		もちろん、変数名が count というものであれば、
-		&gt;$count と $count&gt; というワードを定義します。
+		セカンドにあるリスト &Lscr;2 の各要素に対し、
+		TOS にあるリスト &Lscr;1 の要素として、
+		それぞれ格納されているラムダ（無名ワード）を適用します。
+		</p>
+		</p>
+		例えば、&Lscr;1=( e1 e2 ... eN ) とし、
+		&Lscr;2=( λ1 λ2 ... λN ) とすると、
+		&Lscr;1 &Lscr;2 vmap の結果は、
+		( e1・λ1 &nbsp; e2・λ2 &nbsp; ... &nbsp; eN・λN ) となります。
+		ただし、ek・λk は ek に λk を適用した結果を表すものとします。
 		</p>
 		<p>
-		これらのユーティリティワードはスレッドセーフです。
+		本ワードにおいては、
+		λk はスタックから 1 つ値を取り出し、かつ、
+		処理の結果何らかの値を 1 つスタックに積むような無名ワードであると
+		想定されています。
 		</p>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、変数の使用方法を示しています。
+		次の例では、リスト ( 1 2 ) の要素 1 および 2 に、
+		それぞれ { 2 * } と { 3 * } を適用しています。
+		1 { 2 * } <a href="#exec">exec</a> の結果は 2 となり、
+		2 { 3 * } <a href="#exec">exec</a> の結果は 6 となりますので、
+		vmap の結果として ( 2 6 ) というリストが表示されています。
 		<div class=example>
 			<code>
-				&gt; <u> "x" var </u>
-					<span class="rem">← x という変数を宣言します</span><br>
-				&nbsp; ok.<br>
-				&gt; <u> 123 &gt;$x </u>
-					<span class="rem">← x に 123 を代入します</span><br>
-				&gt; <u> $x&gt; . </u>
-					<span class="rem">← x に格納された値を取り出します</span><br>
-				&nbsp; 123 ok.
+				&gt; <u> ( 1 2 ) ( { 2 * } { 3 * } ) vmap . </u><br>
+				&nbsp; ( 2 6 ) ok.<br>
 			</code>
 		</div>
 	</td>
@@ -10277,8 +13595,9 @@ DS:-----------------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
-		TOS が文字列でない場合はエラーとなります。
-		また、TOS の文字列と同名のワードが存在する場合もエラーとなります。
+		スタックが空であったり、セカンドおよび TOS がリストでない、
+		もしくは TOS がλで構成されるリスト（ラムダリスト）でない場合は
+		エラーとなります。
 	</td>
 </tr>
 </table>
@@ -10417,6 +13736,50 @@ DS:-----------------
 	<th class=boldLabel>エラー</th>
 	<td class=note>
 		コンパイル時は、RS に想定したデータが存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== windows? ============================== -->
+<h3 class=wordHeader id=is_windows>windows?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		--- <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		Windows 上で実行されているか否かを示します。
+		Windows 上で実行されているのであれば true をプッシュし、
+		そうでなければ false をプッシュします。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、Windows 上で実行されている場合に限り、
+		SJIS で出力するように文字コード変換モードを変更します。
+		<div class=example>
+			<code>
+				&gt; <u> windows? if utf8>sjis then </u><br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
 	</td>
 </tr>
 </table>

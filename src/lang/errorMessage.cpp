@@ -37,6 +37,27 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 		{ PPL_JAPANESE,	"システムエラー。" },
 	  }
 	},
+
+	{ E_SYSTEM_ERROR, {
+		{ PPL_ENGLISH,	"Illegal LVOP." },
+		{ PPL_JAPANESE,	"不正な LVOP です" },
+	  }
+	},
+
+	{ E_SHOULD_BE_EXECUTED_IN_DEFINITION, {
+		{ PPL_ENGLISH,	"should be executed in definition "
+						"(forgot ':' or {{ ... }} ?)." },
+		{ PPL_JAPANESE,	"ワード定義中に実行する必要があります"
+						"（ : や {{ ... }} を忘れましたか？)" },
+	  }
+	},
+	{ E_INVALID_USE, {
+		{ PPL_ENGLISH,	"The usage of the Word is incorrect (see word reference)." },
+		{ PPL_JAPANESE,	"ワードの使用方法が間違っています"
+						"（ワードリファレンスを参照して下さい）。" },
+	  }
+	},
+
 	{ E_SORRY_NOT_SUPPORT_THIS_OPERATION, {
 		{ PPL_ENGLISH,	"sorry, can not support this operation.." },
 		{ PPL_JAPANESE,	"この操作は現段階ではまだサポートされていません。" },
@@ -52,11 +73,30 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 		{ PPL_JAPANESE, "シングルクォーテーションが閉じていません。"},
 	  }
 	},
+	{ E_INVALID_WORD_NAME, {
+		{ PPL_ENGLISH,	"invalid word name (might not it start with the '$' sign?)" },
+		{ PPL_JAPANESE,	"有効なワード名ではありません"
+						"（ワード名が '$' 記号で始まっていませんか？）" },
+	  }
+	},
 	{ E_THREAD_MAY_BE_BROKEN, {
 		{ PPL_ENGLISH,	"thread may be broken." },
 		{ PPL_JAPANESE,	"スレッドの情報が異常です。" },
 	  }
 	},
+
+	{ E_LOCAL_VAR_USE_ONLY_WORD_DEF, {
+		{ PPL_ENGLISH,	"local variables can only use in word definition." },
+		{ PPL_JAPANESE,	"ローカル変数はワード定義中にのみ使用できます。" },
+	  }
+	},
+
+	{ E_NO_LOCAL_VAR_FRAME, {
+		{ PPL_ENGLISH,	"no local variable frames." },
+		{ PPL_JAPANESE,	"ローカル変数用のフレームが存在しません。" },
+	  }
+	},
+
 	{ E_DS_IS_EMPTY, {
 		{ PPL_ENGLISH,	"DS is empty." },
 		{ PPL_JAPANESE, "DS が空です。"},
@@ -72,6 +112,42 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 		{ PPL_JAPANESE,	"DS に 3 つの値が格納されていません。"	 },
 	  }
 	},
+	{ E_DS_AT_LEAST_4, {
+		{ PPL_ENGLISH,	"DS should have four elements at least."},
+		{ PPL_JAPANESE,	"DS に 4 つの値が格納されていません。"	 },
+	  }
+	},
+	{ E_DS_AT_LEAST_5, {
+		{ PPL_ENGLISH,	"DS should have five elements at least."},
+		{ PPL_JAPANESE,	"DS に 5 つの値が格納されていません。"	 },
+	  }
+	},
+	{ E_DS_AT_LEAST_6, {
+		{ PPL_ENGLISH,	"DS should have six elements at least."},
+		{ PPL_JAPANESE,	"DS に 6 つの値が格納されていません。"	 },
+	  }
+	},
+	{ E_DS_AT_LEAST_7, {
+		{ PPL_ENGLISH,	"DS should have seven elements at least."},
+		{ PPL_JAPANESE,	"DS に 7 つの値が格納されていません。"	 },
+	  }
+	},
+	{ E_DS_AT_LEAST_8, {
+		{ PPL_ENGLISH,	"DS should have eight elements at least."},
+		{ PPL_JAPANESE,	"DS に 8 つの値が格納されていません。"	 },
+	  }
+	},
+	{ E_DS_AT_LEAST_9, {
+		{ PPL_ENGLISH,	"DS should have nine elements at least."},
+		{ PPL_JAPANESE,	"DS に 9 つの値が格納されていません。"	 },
+	  }
+	},
+	{ E_DS_AT_LEAST_10, {
+		{ PPL_ENGLISH,	"DS should have ten elements at least."},
+		{ PPL_JAPANESE,	"DS に 10 個の値が格納されていません。"	 },
+	  }
+	},
+
 	{ E_RS_IS_EMPTY, {
 		{ PPL_ENGLISH,	"RS is empty."  },
 		{ PPL_JAPANESE,	"RS が空です。" },
@@ -80,6 +156,11 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 	{ E_RS_AT_LEAST_2, {
 		{ PPL_ENGLISH,	"RS should have two elements at least."},
 		{ PPL_JAPANESE,	"RS に 2 つの値が格納されていません。" },
+	  }
+	},
+	{ E_RS_AT_LEAST_3, {
+		{ PPL_ENGLISH,	"RS should have three elements at least."},
+		{ PPL_JAPANESE,	"RS に 3 つの値が格納されていません。" },
 	  }
 	},
 	{ E_RS_BROKEN, {
@@ -156,6 +237,11 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 		{ PPL_JAPANESE,	"オーバーフローのため floatに変換できません。" },
 	  }
 	},
+	{ E_CAN_NOT_CONVERT_TO_SYMBOL, {
+		{ PPL_ENGLISH,	"can not convert to symbol." },
+		{ PPL_JAPANESE,	"シンボルに変換できません。" },
+	  }
+	},
 
 	{ E_CHAN_IS_ALREADY_CLOSED, {
 		{ PPL_ENGLISH,	"The channel is already cloased." },
@@ -192,6 +278,27 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 		{ PPL_ENGLISH,	"The list at the TOS should have number of elements "
 						"at least the number of cores or more." },
 		{ PPL_JAPANESE,	"TOS にあるリストには少なくともコア数以上の要素が必要です。" },
+	  }
+	},
+	{ E_TOS_LAMBDA_LIST, {
+		{ PPL_ENGLISH,	"The list should be consist of lambdas." },
+		{ PPL_JAPANESE,	"リストがラムダで構成されていません。" },
+	  }
+	},
+	{ E_TOS_SYMBOL_LIST, {
+		{ PPL_ENGLISH,	"The list should be consist of symbols." },
+		{ PPL_JAPANESE,	"リストがシンボルで構成されていません。" },
+	  }
+	},
+	{ E_TOS_SHOULD_BE_NONZERO, {
+		{ PPL_ENGLISH,	"The TOS should be non zero value." },
+		{ PPL_JAPANESE,	"TOS はゼロでない値である必要があります。" },
+	  }
+	},
+
+	{ E_LIST_MISMATCH, {
+		{ PPL_ENGLISH,	"Lists mismatch." },
+		{ PPL_JAPANESE,	"リストが対応しません。" },
 	  }
 	},
 
@@ -267,6 +374,38 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 						"このワードは switch ブロックにて使用して下さい。" },
 	  }
 	},
+
+	{ E_SYNTAX_OPEN_IF, {
+		{ PPL_ENGLISH,	"Syntax error. 'if' block is not closed."   },
+		{ PPL_JAPANESE,	"構文エラー。if ブロックが閉じていません。" },
+	  }
+	},
+	{ E_SYNTAX_OPEN_FOR, {
+		{ PPL_ENGLISH,	"Syntax error. 'for' block is not closed."   },
+		{ PPL_JAPANESE,	"構文エラー。for ブロックが閉じていません。" },
+	  }
+	},
+	{ E_SYNTAX_OPEN_WHILE, {
+		{ PPL_ENGLISH,	"Syntax error. 'while' block is not closed."   },
+		{ PPL_JAPANESE,	"構文エラー。while ブロックが閉じていません。" },
+	  }
+	},
+	{ E_SYNTAX_OPEN_DO, {
+		{ PPL_ENGLISH,	"Syntax error. 'do' block is not closed."   },
+		{ PPL_JAPANESE,	"構文エラー。do ブロックが閉じていません。" },
+	  }
+	},
+	{ E_SYNTAX_OPEN_SWITCH, {
+		{ PPL_ENGLISH,	"Syntax error. 'switch' block is not closed."   },
+		{ PPL_JAPANESE,	"構文エラー。switch ブロックが閉じていません。" },
+	  }
+	},
+
+	{ E_SS_MISCINT_INVALID, {
+		{ PPL_ENGLISH,	"System error. invalid value of MiscInt."   },
+		{ PPL_JAPANESE,	"システムエラー。無効な MiscInt 値です。" },
+	  }
+	},
 };
 
 static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
@@ -315,7 +454,21 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 	{ E_TOS_STRING, {
 		{ PPL_ENGLISH,	"TOS should be a string.\n"
 						"current TOS type is %s." },
-		{ PPL_JAPANESE, "TOS が string ではありません。\n"
+		{ PPL_JAPANESE, "TOS が文字列ではありません。\n"
+               			"現在の TOS は %s です。" },
+	  }
+	},
+	{ E_TOS_SYMBOL, {
+		{ PPL_ENGLISH,	"TOS should be a symbol.\n"
+						"current TOS type is %s." },
+		{ PPL_JAPANESE, "TOS がシンボルではありません。\n"
+               			"現在の TOS は %s です。" },
+	  }
+	},
+	{ E_TOS_SYMBOL_OR_LIST, {
+		{ PPL_ENGLISH,	"TOS should be a symbol or symbol-list.\n"
+						"current TOS type is %s." },
+		{ PPL_JAPANESE, "TOS がシンボルもしくはシンボルリストではありません。\n"
                			"現在の TOS は %s です。" },
 	  }
 	},
@@ -323,6 +476,13 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 		{ PPL_ENGLISH,	"TOS should be an array."
                 		"current TOS type is %s." },
 		{ PPL_JAPANESE,	"TOS が配列ではありません。"
+                		"現在の TOS は %s です。" },
+	  }
+	},
+	{ E_TOS_ARRAY_OR_LIST_OR_STRING_OR_SYMBOL, {
+		{ PPL_ENGLISH,	"TOS should be an array,list,string or a symbol."
+                		"current TOS type is %s." },
+		{ PPL_JAPANESE,	"TOS が配列、リスト、文字列またはシンボルではありません。"
                 		"現在の TOS は %s です。" },
 	  }
 	},
@@ -531,6 +691,13 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 						"現在のリターンスタックのセカンドは %s です。" },
 	  }
 	},
+	{ E_SS_MISCINT, {
+		{ PPL_ENGLISH,	"The SS's TOS should be MiscInt."
+						"current type is %s." },
+		{ PPL_JAPANESE,	"SS の TOS は MiscInt でなければなりません。"
+						"現在の型は %s です。" },
+	  }
+	},
 	{ E_TOS_CAN_NOT_CONVERT_TO_DOUBLE, {
 		{ PPL_ENGLISH,	"TOS can not convert to double."
 						"current the TOS type is %s." },
@@ -585,9 +752,19 @@ static InvalidTypeStrTvTvErrorMessageDict gInvalidTypeStrTvTvErrorMessageDict {
 };
 
 static ErrorWithStringMessageDict gErrorWithStringMessageDict {
+	{ E_INVALID_TOKEN, {
+		{ PPL_ENGLISH,	"Invalid token: '%s'." },
+		{ PPL_JAPANESE,	"無効なトークン '%s' です。" },
+	  }
+	},
 	{ E_CAN_NOT_FIND_THE_WORD, {
 		{ PPL_ENGLISH,	"Can not find the word '%s'." },
 		{ PPL_JAPANESE,	"ワード '%s' が見つかりません。" },
+	  }
+	},
+	{ E_CAN_NOT_FIND_THE_LOCAL_VAR, {
+		{ PPL_ENGLISH,	"Can not find the local variable '%s'." },
+		{ PPL_JAPANESE,	"ローカル変数 '%s' が見つかりません。" },
 	  }
 	},
 	{ E_CAN_NOT_INSTALL_UNOVERWRITABLE, {
@@ -620,6 +797,18 @@ static ErrorWithStringMessageDict gErrorWithStringMessageDict {
 	{ E_ALREADY_DEFINED, {
 		{ PPL_ENGLISH,	"'%s' is already defined." },
 		{ PPL_JAPANESE,	"'%s' は既に定義されています。" },
+	  }
+	},
+
+	{ E_ALREADY_REGISTERED_LOCAL_VAR, {
+		{ PPL_ENGLISH,	"the local variable of '%s' is already registered." },
+		{ PPL_JAPANESE,	"ローカル変数 '%s' は既に登録されています。" },
+	  }
+	},
+
+	{ E_NO_SUCH_LOCAL_VAR, {
+		{ PPL_ENGLISH,	"no such local variable '%s'." },
+		{ PPL_JAPANESE,	"ローカル変数 '%s' は存在しません。" },
 	  }
 	},
 
@@ -679,9 +868,23 @@ static ErrorWithIntMessageDict gErrorWithIntMessageDict {
 						"現在の値は %d です。" },
 	  }
 	},
+
+	{ E_INVALID_LOCAL_SLOT_INDEX, {
+		{ PPL_ENGLISH,	"Invalid slot index for local variables: %d." },
+		{ PPL_JAPANESE,	"無効なローカル変数用スロットインデックスです:%d" },
+	  }
+	},
 };
 
 static ErrorWith2IntMessageDict gErrorWith2IntMessageDict {
+	{ E_DS_NOT_ENOUGH_DATA, {
+		{ PPL_ENGLISH,	"DS should have %d elements."
+						"There are only %d elements." },
+		{ PPL_JAPANESE,	"DS には少なくとも %d 個の要素が存在する必要があります。"
+						"現在は %d 個の要素しか DS に存在しません。" },
+	  }
+	},
+
 	{ E_DEPTH_INDEX_OUT_OF_RANGE, {
 		{ PPL_ENGLISH,	"stack index is out of range.\n"
                			"the depth range is 0 to %d, but index is %d." },
@@ -728,9 +931,18 @@ static ErrorWith2IntMessageDict gErrorWith2IntMessageDict {
 
 static PP_Lang gLang=PPL_JAPANESE;
 
+static Mutex gErrorMessageMutex;
+
+static void beginErrorMessage();
+static void endErrorMessage();
+static void printCalleeInfo(Context& inContext);
 static const char *getErrStr();
 
-bool Error(const Context& inContext,const NoParamErrorID inErrorID) {
+PP_API void InitErrorMessage() {
+	initMutex(gErrorMessageMutex);
+}
+
+bool Error(Context& inContext,const NoParamErrorID inErrorID) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
 	const char *message=NULL;
@@ -745,13 +957,17 @@ bool Error(const Context& inContext,const NoParamErrorID inErrorID) {
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	message=messageDict[gLang].c_str();
-	fprintf(stderr,"%s %s: %s\n",errorStr,wordName,message);
+
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: %s\n",errorStr,wordName,message);
+	endErrorMessage();
 	return false;
 }
 
-bool ErrorWithStr(const Context& inContext,
-		   		  const InvalidTypeErrorID inErrorID,const std::string& inStr) {
+bool Error(Context& inContext,
+		   const InvalidTypeErrorID inErrorID,const std::string& inStr) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
 
@@ -765,15 +981,18 @@ bool ErrorWithStr(const Context& inContext,
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	const char *message=messageDict[gLang].c_str();
 
-	fprintf(stderr,"%s %s: ",errorStr,wordName);
-	fprintf(stderr,message,inStr.c_str());
-	fprintf(stderr,"\n");
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		const char *message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: ",errorStr,wordName);
+		fprintf(stderr,message,inStr.c_str());
+		fprintf(stderr,"\n");
+	endErrorMessage();
 	return false;
 }
 
-bool Error(const Context& inContext,
+bool Error(Context& inContext,
 		   const ErrorID_withString inErrorID,const char *inStr) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
@@ -788,15 +1007,18 @@ bool Error(const Context& inContext,
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	const char *message=messageDict[gLang].c_str();
 
-	fprintf(stderr,"%s %s: ",errorStr,wordName);
-	fprintf(stderr,message,inStr);
-	fprintf(stderr,"\n");
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		const char *message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: ",errorStr,wordName);
+		fprintf(stderr,message,inStr);
+		fprintf(stderr,"\n");
+	endErrorMessage();
 	return false;
 }
 
-bool Error(const Context& inContext,const InvalidTypeTosSecondErrorID inErrorID,
+bool Error(Context& inContext,const InvalidTypeTosSecondErrorID inErrorID,
 		   const TypedValue& inTos,const TypedValue& inSecond) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
@@ -811,16 +1033,19 @@ bool Error(const Context& inContext,const InvalidTypeTosSecondErrorID inErrorID,
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	const char *message=messageDict[gLang].c_str();
 
-	fprintf(stderr,"%s %s: ",errorStr,wordName);
-	fprintf(stderr,message,inTos.GetTypeStr().c_str(),
-						   inSecond.GetTypeStr().c_str());
-	fprintf(stderr,"\n");
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		const char *message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: ",errorStr,wordName);
+		fprintf(stderr,message,inTos.GetTypeStr().c_str(),
+							   inSecond.GetTypeStr().c_str());
+		fprintf(stderr,"\n");
+	endErrorMessage();
 	return false;
 }
 
-bool Error(const Context& inContext,const InvalidTypeStrTvTvErrorID inErrorID,
+bool Error(Context& inContext,const InvalidTypeStrTvTvErrorID inErrorID,
 		   const std::string& inStr,const TypedValue inTV1,const TypedValue& inTV2) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
@@ -835,17 +1060,20 @@ bool Error(const Context& inContext,const InvalidTypeStrTvTvErrorID inErrorID,
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	const char *message=messageDict[gLang].c_str();
 
-	fprintf(stderr,"%s %s: ",errorStr,wordName);
-	fprintf(stderr,message,inStr.c_str(),
-						   inTV1.GetTypeStr().c_str(),
-						   inTV2.GetTypeStr().c_str());
-	fprintf(stderr,"\n");
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		const char *message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: ",errorStr,wordName);
+		fprintf(stderr,message,inStr.c_str(),
+							   inTV1.GetTypeStr().c_str(),
+							   inTV2.GetTypeStr().c_str());
+		fprintf(stderr,"\n");
+	endErrorMessage();
 	return false;
 }
 
-bool Error(const Context& inContext,const ErrorID_withInt inErrorID,
+bool Error(Context& inContext,const ErrorID_withInt inErrorID,
 		   const int inIntValue) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
@@ -859,15 +1087,18 @@ bool Error(const Context& inContext,const ErrorID_withInt inErrorID,
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	const char *message=messageDict[gLang].c_str();
 
-	fprintf(stderr,"%s %s: ",errorStr,wordName);
-	fprintf(stderr,message,inIntValue);
-	fprintf(stderr,"\n");
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		const char *message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: ",errorStr,wordName);
+		fprintf(stderr,message,inIntValue);
+		fprintf(stderr,"\n");
+	endErrorMessage();
 	return false;
 }
 
-bool Error(const Context& inContext,const ErrorID_with2int inErrorID,
+bool Error(Context& inContext,const ErrorID_with2int inErrorID,
 		   const int inIntValue1,const int inIntValue2) {
 	const char *wordName=inContext.GetExecutingWordName();
 	const char *errorStr=getErrStr();
@@ -881,11 +1112,29 @@ bool Error(const Context& inContext,const ErrorID_with2int inErrorID,
 		fprintf(stderr,"gLang=%d\n",gLang);
 		exit(-1);
 	}
-	const char *message=messageDict[gLang].c_str();
-	fprintf(stderr,"%s %s: ",errorStr,wordName);
-	fprintf(stderr,message,inIntValue1,inIntValue2);
-	fprintf(stderr,"\n");
+
+	beginErrorMessage();
+		printCalleeInfo(inContext);
+		const char *message=messageDict[gLang].c_str();
+		fprintf(stderr,"%s %s: ",errorStr,wordName);
+		fprintf(stderr,message,inIntValue1,inIntValue2);
+		fprintf(stderr,"\n");
+	endErrorMessage();
 	return false;
+}
+
+static void beginErrorMessage() {
+	Lock(gErrorMessageMutex);
+}
+static void endErrorMessage() {
+	Unlock(gErrorMessageMutex);
+}
+
+static void printCalleeInfo(Context& inContext) {
+	if(inContext.IS.size()>0) {
+		const Word**& callee=inContext.IS.back();
+		fprintf(stderr,"In word '%s': ",(*callee)->longName.c_str());
+	}
 }
 
 static const char *getErrStr() {
@@ -896,3 +1145,4 @@ static const char *getErrStr() {
 	}
 	return ret;
 }
+

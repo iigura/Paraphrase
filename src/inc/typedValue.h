@@ -19,41 +19,63 @@ struct Context;
 #include "paraphrase.h"
 #include "array.h"
 #include "file.h"
-#include "outer.h"
+#include "lvop.h"
 
 typedef bool (*WordFunc)(Context& inContext) NOEXCEPT;
 typedef boost::multiprecision::cpp_int BigInt;
 typedef boost::multiprecision::cpp_dec_float_100 BigFloat;
 
 enum DataType {
-	kTypeInvalid,	// no values
-	kTypeDirectWord,
-	kTypeIP,
-	kTypeNewWord,	// wordPtr value as NewWord.
-	kTypeThreshold,	// intValue as ExecutionThreshold
-	kTypeEmptySlot,	// use intValue as execution-threshld level backup.
-	kTypeAddress,	// intValue as an address.
-	kTypeParamDest,	// ipValue's vallue as a pointer to param[target]
+	kTypeInvalid	=9999,	// no values
+	kTypeMayBeAWord =9998,	// for args, use stringPtr.
+	kTypeDirectWord	=9000,
+	kTypeIP			=9100,
+	kTypeNewWord	=9200,	// wordPtr value as NewWord.
+	kTypeThreshold	=9300,	// intValue as ExecutionThreshold
+	kTypeEmptySlot	=9400,	// use intValue as execution-threshld level backup.
+	kTypeAddress	=9500,	// intValue as an address.
+	kTypeParamDest	=9600,	// ipValue's vallue as a pointer to param[target]
 	//kTypeEnvFrame,
 
-	kTypeBool,
-	kTypeInt,
-	kTypeLong,
-	kTypeBigInt,
-	kTypeFloat,
-	kTypeDouble,
-	kTypeBigFloat,
-	kTypeString,
-	kTypeWord,
-	kTypeArray,
-	kTypeList,
-	//kTypeMap,
-	kTypeSymbol,
-	kTypeEOC,	// no values
-	kTypeFile,
-	kTypeEOF,	// no values
+	kTypeBool	 =100,
+	kTypeInt	 =0,
+	kTypeLong	 =1,
+	kTypeBigInt	 =2,
+	kTypeFloat	 =3,
+	kTypeDouble	 =4,
+	kTypeBigFloat=5,
 
-	kTypeMiscInt,	// use intValue as misc. data.
+	kTypeString=200,
+	kTypeWord=300,
+
+	kTypeArray=400,
+	kTypeList =500,
+	//kTypeMap,
+	kTypeSymbol=600,
+	kTypeEOC=700,	// no values
+	kTypeFile	=800,
+	kTypeEOF	=801,	// no values
+
+	kTypeMiscInt=900,	// use intValue as misc. data.
+	kTypeLVOP=1000,		// use intValue as LVOP.
+};
+
+inline int GetMathOpType(int inType1,int inType2) {
+	return inType1*6+inType2;
+}
+
+enum TypeCombinationForMathOP {
+	kIntInt =0, kIntLong=1, kIntBigInt=2, kIntFloat=3, kIntDouble=4,  kIntBigFloat=5,
+	kLongInt=6, kLongLong=7,kLongBigInt=8,kLongFloat=9,kLongDouble=10,kLongBigFloat=11,
+	kBigIntInt  =12, kBigIntLong  =13, kBigIntBigInt=14,
+	kBigIntFloat=15, kBigIntDouble=16, kBigIntBigFloat=17,
+	kFloatInt  =18, kFloatLong  =19, kFloatBigInt  =20,
+	kFloatFloat=21, kFloatDouble=22, kFloatBigFloat=23,
+	kDoubleInt  =24, kDoubleLong  =25, kDoubleBigInt  =26,
+	kDoubleFloat=27, kDoubleDouble=28, kDoubleBigFloat=29,
+	kBigFloatInt  =30, kBigFloatLong  =31, kBigFloatBigInt  =32,
+	kBigFloatFloat=33, kBigFloatDouble=34, kBigFloatBigFloat=35,
+	kInvalidMathOpTypeThreshold=36,
 };
 
 // int value for kTypeMiscInt
@@ -121,6 +143,7 @@ struct TypedValue {
 			case kTypeThreshold:
 			case kTypeEmptySlot:
 			case kTypeMiscInt:
+			case kTypeLVOP:
 			case kTypeInt:		intValue=inSrc.intValue;		 break;
 
 			case kTypeBigInt:
@@ -139,6 +162,7 @@ struct TypedValue {
 
 			case kTypeString:
 			case kTypeSymbol:
+			case kTypeMayBeAWord:
 				new(&stringPtr) std::shared_ptr<std::string>(inSrc.stringPtr);
 				break;
 
@@ -184,6 +208,10 @@ struct TypedValue {
 			|| inDataType==kTypeThreshold
 			|| inDataType==kTypeAddress
 			|| inDataType==kTypeMiscInt);
+	}
+
+	TypedValue(LVOP inLVOP):dataType(kTypeLVOP),intValue(static_cast<int>(inLVOP)) {
+		// empty
 	}
 
 	TypedValue(int inIntValue):dataType(kTypeInt),intValue(inIntValue) {
@@ -253,7 +281,9 @@ struct TypedValue {
 	~TypedValue() {
 		switch(dataType) {
 			case kTypeSymbol:
-			case kTypeString:	stringPtr.reset();	break;
+			case kTypeString:
+			case kTypeMayBeAWord:
+								stringPtr.reset();	break;
 
 			case kTypeArray:	arrayPtr.reset();	break;
 			case kTypeList:		listPtr.reset();	break;
@@ -272,6 +302,7 @@ struct TypedValue {
 			switch(dataType) {
 				case kTypeSymbol:
 				case kTypeString:
+				case kTypeMayBeAWord:
 					stringPtr.reset();
 					break;
 
@@ -289,6 +320,7 @@ struct TypedValue {
 			switch(inSrc.dataType) {
 				case kTypeSymbol:
 				case kTypeString:
+				case kTypeMayBeAWord:
 					new(&stringPtr) std::shared_ptr<std::string>(
 															inSrc.stringPtr);
 					dataType=inSrc.dataType;
@@ -352,6 +384,7 @@ struct TypedValue {
 			case kTypeThreshold:
 			case kTypeEmptySlot:
 			case kTypeMiscInt:
+			case kTypeLVOP:
 			case kTypeInt:
 				dataType=inSrc.dataType;
 				intValue=inSrc.intValue;
@@ -388,6 +421,7 @@ struct TypedValue {
 
 			case kTypeSymbol:
 			case kTypeString:
+			case kTypeMayBeAWord:
 				dataType=inSrc.dataType;
 				stringPtr=inSrc.stringPtr;
 				break;
@@ -408,6 +442,117 @@ struct TypedValue {
 		return *this;
 	}
 
+	inline void Set(int inValue) {
+		switch(dataType) {
+			case kTypeInvalid:
+			case kTypeInt:
+			case kTypeLong:
+			case kTypeFloat:
+			case kTypeDouble:
+				intValue=inValue;
+				break;
+			case kTypeBigInt:
+				delete(bigIntPtr);
+				intValue=inValue;
+				break;
+			case kTypeBigFloat:
+				delete(bigFloatPtr);
+				intValue=inValue;
+				break;
+			default:
+				switch(dataType) {
+					case kTypeSymbol:
+					case kTypeString:
+					case kTypeMayBeAWord:
+						stringPtr.reset();
+						break;
+
+					case kTypeArray:	arrayPtr.reset();	break;
+					case kTypeList: 	listPtr.reset();	break;
+					case kTypeFile:		filePtr.reset();	break;
+
+					default:
+						;	// dummy
+				}
+				intValue=inValue;
+		}
+		dataType=kTypeInt;
+	}
+
+	inline void Set(float inValue) {
+		switch(dataType) {
+			case kTypeInvalid:
+			case kTypeInt:
+			case kTypeLong:
+			case kTypeFloat:
+			case kTypeDouble:
+				floatValue=inValue;
+				break;
+			case kTypeBigInt:
+				delete(bigIntPtr);
+				floatValue=inValue;
+				break;
+			case kTypeBigFloat:
+				delete(bigFloatPtr);
+				floatValue=inValue;
+				break;
+			default:
+				switch(dataType) {
+					case kTypeSymbol:
+					case kTypeString:
+					case kTypeMayBeAWord:
+						stringPtr.reset();
+						break;
+
+					case kTypeArray:	arrayPtr.reset();	break;
+					case kTypeList: 	listPtr.reset();	break;
+					case kTypeFile:		filePtr.reset();	break;
+
+					default:
+						;	// dummy
+				}
+				floatValue=inValue;
+		}
+		dataType=kTypeFloat;
+	}
+
+	inline void Set(double inValue) {
+		switch(dataType) {
+			case kTypeInvalid:
+			case kTypeInt:
+			case kTypeLong:
+			case kTypeFloat:
+			case kTypeDouble:
+				doubleValue=inValue;
+				break;
+			case kTypeBigInt:
+				delete(bigIntPtr);
+				doubleValue=inValue;
+				break;
+			case kTypeBigFloat:
+				delete(bigFloatPtr);
+				doubleValue=inValue;
+				break;
+			default:
+				switch(dataType) {
+					case kTypeSymbol:
+					case kTypeString:
+					case kTypeMayBeAWord:
+						stringPtr.reset();
+						break;
+
+					case kTypeArray:	arrayPtr.reset();	break;
+					case kTypeList: 	listPtr.reset();	break;
+					case kTypeFile:		filePtr.reset();	break;
+
+					default:
+						;	// dummy
+				}
+				doubleValue=inValue;
+		}
+		dataType=kTypeDouble;
+	}
+
 	inline bool IsInvalid() { return dataType==kTypeInvalid; }
 
 	int GetLevel() const;
@@ -418,7 +563,7 @@ struct TypedValue {
 	PP_API std::string GetTypeStr() const;
 
 	PP_API void PrintValue(int inIndent=0) const;
-	PP_API std::string GetValueString(int inIndent) const;
+	PP_API std::string GetValueString(int inIndent=-1) const;
 
 	PP_API void Dump() const;
 };
@@ -447,6 +592,7 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 		case kTypeAddress:
 		case kTypeThreshold:
 		case kTypeMiscInt:
+		case kTypeLVOP:
 		case kTypeInt: return inTV1.intValue==inTV2.intValue;
 
 		case kTypeLong:		return inTV1.longValue==inTV2.longValue;
@@ -456,7 +602,9 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 		case kTypeBigFloat:	return *inTV1.bigFloatPtr==*inTV2.bigFloatPtr;
 
 		case kTypeSymbol:
-		case kTypeString:	return *inTV1.stringPtr.get()==*inTV2.stringPtr.get();
+		case kTypeString:
+		case kTypeMayBeAWord:
+							return *inTV1.stringPtr.get()==*inTV2.stringPtr.get();
 
 		case kTypeArray:
 			if(!(inTV1.arrayPtr->length==inTV2.arrayPtr->length)) {
@@ -500,4 +648,6 @@ typedef std::deque<TypedValue> List;
 
 #define MutexSize (sizeof(Mutex)%sizeof(Word*)==0 \
 					? sizeof(Mutex)/sizeof(Word*) : sizeof(Mutex)/sizeof(Word*)+1)
+
+PP_API TypedValue FullClone(TypedValue& inTV);
 

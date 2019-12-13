@@ -16,20 +16,20 @@ const int ES_InitialStackSize=1024;
 static std::vector< std::vector<int> > gStackForLeave;
 static std::vector< std::vector<int> > gStackForBreak;
 
-bool Error(const Context& inContext,const NoParamErrorID inErrorID);
-bool ErrorWithStr(const Context& inContext,
-				  const InvalidTypeErrorID,const std::string& inStr);
-bool Error(const Context& inContext,const InvalidTypeTosSecondErrorID inErrorID,
+bool Error(Context& inContext,const NoParamErrorID inErrorID);
+bool Error(Context& inContext,
+		   const InvalidTypeErrorID,const std::string& inStr);
+bool Error(Context& inContext,const InvalidTypeTosSecondErrorID inErrorID,
 		   const TypedValue& inTos,const TypedValue& inSecond);
-bool Error(const Context& inContext,const InvalidTypeStrTvTvErrorID inErrorID,
+bool Error(Context& inContext,const InvalidTypeStrTvTvErrorID inErrorID,
 		   const std::string& inStr,const TypedValue inTV1,const TypedValue& inTV2);
-bool Error(const Context& inContext,const ErrorID_withInt inErrorID,
+bool Error(Context& inContext,const ErrorID_withInt inErrorID,
 		   const int inIntValue);
-bool Error(const Context& inContext,const ErrorID_withString inErrorID,
+bool Error(Context& inContext,const ErrorID_withString inErrorID,
 		   const char *inStr);
-bool Error(const Context& inContext,
+bool Error(Context& inContext,
 		   const ErrorID_withString inErrorID,const char *inStr);
-bool Error(const Context& inContext,const ErrorID_with2int inErrorID,
+bool Error(Context& inContext,const ErrorID_with2int inErrorID,
 		   const int inIntValue1,const int inIntValue2);
 
 PP_API Context *GlobalContext=new Context(NULL,kInterpretLevel,NULL,NULL,NULL);
@@ -73,12 +73,20 @@ PP_API bool Context::Exec(const TypedValue& inTV) {
 	if(inTV.dataType!=kTypeDirectWord
 	  && inTV.dataType!=kTypeNewWord
 	  && inTV.dataType!=kTypeWord) {
-		return Error_InvalidType(E_TOS_WP,inTV);
+		return Error(E_TOS_WP,inTV);
 	}
 	const Word **ipBackup=ip;
-		const Word *tmpThread[2]={inTV.wordPtr,NULL};
+		const Word *wordToExec=inTV.wordPtr;
+		const Word *tmpThread[2]={wordToExec,NULL};
+		bool needLVEnv = wordToExec->numOfLocalVar>0;
+		if(needLVEnv) {
+			Env.push_back(LocalVarSlot(wordToExec->numOfLocalVar,TypedValue()));
+		}
 		ip=tmpThread;
 		bool ret=InnerInterpreter(*this);
+		if(needLVEnv) {
+			Env.pop_back();
+		}
 	ip=ipBackup;
 	return ret;
 }
@@ -132,12 +140,13 @@ PP_API bool Context::EndControlBlock() {
 	if(RS.size()<1) { return Error(E_RS_BROKEN); }
 	TypedValue tvThreshold=Pop(RS);
 	if(tvThreshold.dataType!=kTypeThreshold) {
-		return Error_InvalidType(E_RS_TOS_THRESHOLD,tvThreshold);
+		return Error(E_RS_TOS_THRESHOLD,tvThreshold);
 	}
 	if(tvThreshold.intValue==kInterpretLevel) {
 		Compile(std::string("_semis"));
+		Word *newWordBackup=newWord;
 		FinishNewWord();
-		TypedValue elementToExec(newWord);
+		TypedValue elementToExec(newWordBackup);
 		newWord=NULL;
 		ExecutionThreshold=tvThreshold.intValue;
 		return Exec(elementToExec);
@@ -157,11 +166,11 @@ PP_API bool Context::EndNoNameWordBlock() {
 	if(RS.size()<2) { return Error(E_RS_AT_LEAST_2); }
 	TypedValue tvThreshold=Pop(RS);
 	if(tvThreshold.dataType!=kTypeThreshold) {
-		return Error_InvalidType(E_RS_TOS_THRESHOLD,tvThreshold);
+		return Error(E_RS_TOS_THRESHOLD,tvThreshold);
 	}
 	TypedValue newWordElement=Pop(RS);
 	if(newWordElement.dataType!=kTypeNewWord) {
-		return Error_InvalidType(E_RS_SECOND_WP,newWordElement);
+		return Error(E_RS_SECOND_WP,newWordElement);
 	}
 	
 	newWord=(Word *)newWordElement.wordPtr;
@@ -184,12 +193,12 @@ PP_API bool Context::EndListBlock() {
 	if(RS.size()<2) { return Error(E_RS_AT_LEAST_2); }
 	TypedValue tvThreshold=Pop(RS);
 	if(tvThreshold.dataType!=kTypeThreshold) {
-		return Error_InvalidType(E_RS_TOS_THRESHOLD,tvThreshold);
+		return Error(E_RS_TOS_THRESHOLD,tvThreshold);
 	}
 
 	TypedValue newWordElement=Pop(RS);
 	if(newWordElement.dataType!=kTypeNewWord) {
-		return Error_InvalidType(E_RS_SECOND_WP,newWordElement);
+		return Error(E_RS_SECOND_WP,newWordElement);
 	}
 
 	newWord=(Word *)newWordElement.wordPtr;
@@ -204,7 +213,7 @@ int Context::ReadThresholdBackup() {
 	}
 	TypedValue& tvThreshold=ReadTOS(RS);
 	if(tvThreshold.dataType!=kTypeThreshold) {
-		Error_InvalidType(E_RS_TOS_THRESHOLD,tvThreshold);
+		Error(E_RS_TOS_THRESHOLD,tvThreshold);
 		return -1;
 	}
 	return tvThreshold.intValue;
@@ -221,7 +230,7 @@ PP_API int Context::GetMarkPosition() {
 	}
 	TypedValue tvMark=Pop(RS);
 	if(tvMark.dataType!=kTypeAddress) {
-		Error_InvalidType(E_TOS_ADDRESS,tvMark);
+		Error(E_TOS_ADDRESS,tvMark);
 		return -1;
 	}
 	return tvMark.intValue;
@@ -334,13 +343,12 @@ PP_API bool Context::Error(const ErrorID_withString inErrorID,const std::string&
 	return ::Error(*this,inErrorID,inStr.c_str());
 }
 
-PP_API bool Context::Error_InvalidType(const InvalidTypeErrorID inErrorID,
-								const TypedValue& inTV) {
-	return ::ErrorWithStr(*this,inErrorID,inTV.GetTypeStr());
+PP_API bool Context::Error(const InvalidTypeErrorID inErrorID,const TypedValue& inTV) {
+	return ::Error(*this,inErrorID,inTV.GetTypeStr());
 }
 
-PP_API bool Context::Error_InvalidType(const InvalidTypeTosSecondErrorID inErrorID,
-								const TypedValue& inTos,const TypedValue& inSecond) {
+PP_API bool Context::Error(const InvalidTypeTosSecondErrorID inErrorID,
+						   const TypedValue& inTos,const TypedValue& inSecond) {
 	return ::Error(*this,inErrorID,inTos,inSecond);
 }
 
@@ -354,6 +362,7 @@ PP_API bool Context::Error_InvalidType(const InvalidTypeStrTvTvErrorID inErrorID
 static int getParamSize(const std::vector<TypedValue> *inTmpParam);
 PP_API void Context::FinishNewWord() {
 	Optimize(newWord->tmpParam);
+	ReplaceTailRecursionToJump(newWord,newWord->tmpParam);
 
 	int paramSize=getParamSize(newWord->tmpParam);
 
@@ -393,6 +402,7 @@ PP_API void Context::FinishNewWord() {
 	newWord->param=wordPtrArray;
 	newWord->isForgetable=true;
 	lastDefinedWord=newWord;
+	newWord=NULL;
 }
 
 static int getParamSize(const std::vector<TypedValue> *inTmpParam) {

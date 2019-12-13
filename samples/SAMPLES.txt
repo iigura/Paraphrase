@@ -1,72 +1,137 @@
-Paraphrase sample programs' README (ver.0.92.0)  by K.Iigura
+Paraphrase sample programs' README (ver.0.93.0)  by K.Iigura 
 
-===========================================================
-単体で実行できる系
-===========================================================
-test_PE21mt60k (Windows の場合は test_PE21mt60k.bat)
-	PE21mt-short.pp を使用し、Project Euler の No.21 の問題（友愛数を求める問題）
-	を処理します。オリジナルの問題は 10,000 までの友愛数を求めるものですが、すぐ
-	に計算が終わってしまうので、60,000 までの友愛数を求めるように変更してあります。
-	samples ディレクトリにて本ファイルを実行して下さい。
+　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
+い（\ は円マークを表します）。
 
-test_countPrimeMT (Windows の場合は test_countPrimeMT.bat)
-	countPrimeMT-short.pp を用いて、1 から 1,000 万までに存在する素数を数え上げる
-    プログラムです。samples ディレクトリにて本ファイルは実行して下さい。
+　samples ディレクトリにある各ファイルは、samples ディレクトリに移動後
 
-===========================================================
-インタプリタで読み込んで実行する系
-===========================================================
+		../para サンプルプログラムファイル名
+
+として実行して下さい（例： ../para 99.pp run など）。
+
+-----
+
 99.pp
     いわゆる九九を表示します。
+	実行方法： ../para 99.pp run
 
-FizzBuzz.pp
-	samples ディレクトリにて "FizzBuzz.pp" load とすると、いわゆる FizzBuzz 問題を
-    処理する FizzBuzz ワードが定義されます。この状態で、 1 10 for+ i FizzBuzz next
-    とすると、
-		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz ok.
-	という出力が得られます。
+check-scriptFile-args.pp
+	samples ディレクトリにて
 
-PE21mt-short.pp
-	test_PE21mt60k{.bat} から読み込まれるファイルですが、その役割は 2 から TOS に
-	積まれた N までの友愛数を求める printAmicableNubers/mt というワードを定義する
-	ところにあります。samples ディレクトリにて "PE21mt-short.pp" load として、
-		1000 printAmicableNumbers/mt
-	とすれば、220 と 284 という 1000 以下の友愛数が表示されると共に、その合計であ
-	る 504 という値が表示されます。
+		../para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.pp
 
-PE25.pp
-	Project Euler No.25 を解く、PE25 というワードが定義されています。このワードは、
-	1 1 から始まるフィボナッチ数列に対し、TOS に有る桁数を超える最初のフィボナッ
-	チ数列の項数を表示するものです。Project Euler No.25 では、1000 桁を超える最初
-	の項数を表示せよ、というのが問題ですので、
-		1000 PE25
-	にて、解くことができます（4782 と表示されるはずです）。
+	とすると、オプション E で指定された文字列を評価した上で、check-scrptFile-args.pp
+	が読み込まれて実行されます。check-scriptFile-args.pp は、スタックの様子を show す
+	るスクリプトですので、上記のように入力すると、引数がスタックに積まれている様子を
+	確認できます。
+
+	Paraphrase は Forth 系なので、引数は実行されるスクリプトファイルよりも前に配置さ
+	れる方が自然です。しかし、一般的には引数はプログラムファイルの後に配置されます。
+	E オプションは、スクリプトファイルの後に記述しても、指定されたスクリプトファイル
+	よりも前に評価されますので、
+
+		../para check-scriptFile-args.pp -E "1 2.3 'str' ( a ( b c ) )" 
+
+	と書くこともできます。
 
 countPrimeMT-short.pp
 	1 から 1,000 万までの素数を並列処理を用いて数えるプログラムです。samples ディ
-    レクトリにて、"countPrimeMT-short.pp" load とすると、計算か開始されます。計算
-    が終了すると、
+    レクトリにて、
+
+		../para countPrimeMT-short.pp run
+
+	とすると、計算か開始され
+
 		numOfPrime=664579 (2 ... 9999991)
+
 	という出力が得られます。
 
 dumpMPmt.pp
-	samples ディレクトリにて、"dumpMPmt.pp" load とすると、1 から 5000 までのメルセン
-	ヌ数のうち素数であるものを求めます。printf などの使い方の参考にして下さい。
+	samples ディレクトリにて、
+
+		../para dumpMPmt.pp
+
+	とすると、1 から 5000 までのメルセンヌ数のうち素数であるものを求めます。printf 
+	などの使い方の参考にして下さい。
+
+fact-tr.pp
+    ver. 0.93.0 より導入された末尾再帰（tail recursion）における最適化を示すプログ
+    ラムです。詳細については、samples ディレクトリにて
+
+        ../para fact-tr.pp
+
+    としてみて下さい。
+
+FizzBuzz.pp
+	いわゆる FizzBuzz 問題を処理するワード FizzBuzz を定義します。samples ディレク
+	トリにて、
+
+		../para FizzBuzz.pp 1 10 for+ i FizzBuzz . next cr
+
+    とすると、
+
+		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 
+
+	という出力が得られます。
+
+Mersenne.pp
+    メルセンヌ数の素数性を判定します。詳細は
+
+        ../para Mersenne.pp help
+
+    として、表示される使用方法を御覧ください。
+
+PE21mt-short.pp
+    samples ディレクトリにおいて、
+
+        ../para PE21mt-short.pp 10000 run
+
+    などとします。
+    引数の 10000 ですが、これは 2 から 10,000 までの友愛数とその総和を求めるという
+    意味です。例えば、1000 を指定した場合は、220 と 284 という 1000 以下の友愛数が
+    表示されるとともに、その合計である 504 という値が表示されます。
+
+PE25.pp
+	Project Euler No.25 を解く、PE25 というワードが定義されています。このワードは、
+	1, 1 から始まるフィボナッチ数列に対し、TOS にある桁数を超える最初のフィボナッ
+	チ数列の項数を表示するものです。Project Euler No.25 では、1000 桁を超える最初
+	の項数を表示せよ、というのが問題ですので、samples ディレクトリにて
+
+		../para PE25.pp 1000 PE25 cr
+
+	とし、解くことができます（4782 と表示されるはずです）。
 
 zdk.pp
 	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディレ
-	クトリにて "zdk.pp2 load とし、ワード zdk を実行すると、ズンドコキヨシ問題が処理
-	される様子が表示されます。
+	クトリにて
 
-===========================================================
-コマンドラインのパラメータとしてファイルを指定する系
-===========================================================
-check-scriptFile-args.pp
-	samples ディレクトリにて
-		../para check-scriptFile-args.pp 1 2.3 '"-456"' string-value '"( a ( b c ) )"'
-	とすると、check-scrptFile-args.pp が読み込まれて実行されます。
-	Paraphrase インタプリタ para では、最初の引数はスクリプトファイルとして認識され、
-	指定されたファイルを読み込み、そして実行します。2 番目以降の引数はスタックに積ま
-	れます。check-scriptFile-args.pp は、スタックの様子を show するスクリプトですので、
-	上記のように入力すると、引数がスタックに積まれている様子を見ることができます。
+		../para zdk.pp zdk
+
+	とすると、ズンドコキヨシ問題の処理の様子が表示されます。
+
+-----
+
+次のサンプルファイルは Windows で実行する場合に関係するファイルです。
+
+pseudo_shebang.bat
+    Unix 系の OS - 例えば Linux や MacOS では、シェルスクリプトの冒頭に
+        #!../para
+    と書き、それ以降に Paraphrase のプログラムを書いていけば、
+        1) まず 1 行目に書いてある ../para が実行され、
+        2) 2 行目以降に書かれているものは、1 行目により起動された para に入力され
+           てゆきます。 
+	この仕組を shebang というそうです。Windows でも、このような仕組みで para へプ
+    ログラムを読み込ませる例として、このバッチファイルは提供されています。
+
+    このバッチファイルは、para を起動し、かつ、バッチファイル内に FizzBuzz プログ
+    ラムが記述されています。本バッチファイルを起動すると、記述されている FizzBuzz 
+    プログラムが実行され、その結果を表示します。
+
+---
+
+次のサンプルファイルは Linux や MacOS にて実行する場合に関係するファイルです。
+
+shebang_example
+    実行可能なスクリプトファイルを作成する例です。
+    Windows 版の pseudo_shebang.bat に相当するものです。
 

@@ -5,7 +5,7 @@
 #include "context.h"
 
 static bool colon(const char *inName,Context& inContext,bool inDefineShortend);
-static bool compileValue(Context& inContext,TypedValue& inLambda);
+static bool compileLambda(Context& inContext,TypedValue& inLambda);
 static bool constant(const char *inName,Context& inContext,bool inOverwriteCheck);
 static bool isInCStyleComment(Context& inContext);
 static bool isInCppStyleComment(Context& inContext);
@@ -22,6 +22,7 @@ void InitDict_Word() {
 		if(inContext.IS.size()<1) { return inContext.Error(E_IS_BROKEN); }
 		inContext.ip=inContext.IS.back();
 		inContext.IS.pop_back();
+		if((*inContext.ip)->numOfLocalVar>0) { inContext.Env.pop_back(); }
 		NEXT;
 	}));
 	
@@ -36,9 +37,96 @@ void InitDict_Word() {
 	}));
 
 	Install(new Word(";",WordLevel::Immediate,WORD_FUNC {
+		if(inContext.SS.size()>0) {
+			TypedValue& tv=ReadTOS(inContext.SS);
+			if(tv.dataType!=kTypeMiscInt) {
+				inContext.Error(E_SS_MISCINT,tv);
+				exit(-1);
+			}
+			switch(tv.intValue) {
+				case kSyntax_FOR_PLUS:
+				case kSyntax_FOR_MINUS:
+					inContext.Error(E_SYNTAX_OPEN_FOR);		goto onError;
+				case kSyntax_WHILE:
+				case kSyntax_WHILE_COND: 
+					inContext.Error(E_SYNTAX_OPEN_WHILE);	goto onError;
+				case kSyntax_DO:
+					inContext.Error(E_SYNTAX_OPEN_DO);		goto onError;
+				case kSyntax_IF:
+					inContext.Error(E_SYNTAX_OPEN_IF);		goto onError;
+				case kSyntax_SWITCH:
+					inContext.Error(E_SYNTAX_OPEN_SWITCH);	goto onError;
+				default:
+					inContext.Error(E_SS_MISCINT_INVALID);
+					exit(-1);
+			}
+		}
+		if(inContext.newWord==NULL) {
+			return inContext.Error(E_SHOULD_BE_EXECUTED_IN_DEFINITION);
+		}
+		inContext.newWord->numOfLocalVar=(int)inContext.newWord->localVarDict.size();
 		inContext.Compile(std::string("_semis"));
 		inContext.FinishNewWord();
 		inContext.SetInterpretMode();
+		NEXT;
+onError:
+		inContext.SS.clear();
+		return false;
+	}));
+
+	// string lambda --
+	// or
+	// lambda string --
+	Install(new Word("def",WORD_FUNC {
+		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		TypedValue tos=Pop(inContext.DS);
+		TypedValue second=Pop(inContext.DS);
+
+		std::string name;
+		const Word *srcWord;
+		if(tos.dataType==kTypeString
+		   && (second.dataType==kTypeNewWord
+			   || second.dataType==kTypeWord
+			   || second.dataType==kTypeDirectWord)) {
+			name=*tos.stringPtr;
+			srcWord=second.wordPtr;
+		} else if((tos.dataType==kTypeNewWord
+				   || tos.dataType==kTypeWord
+				   || tos.dataType==kTypeDirectWord) && second.dataType==kTypeString) {
+			name=*second.stringPtr;
+			srcWord=tos.wordPtr;
+		} else {
+			return inContext.Error(E_INVALID_DATA_TYPE_TOS_SECOND,tos,second);
+		}
+		Word *newWord=new Word(name.c_str(),srcWord->code);
+		newWord->level=srcWord->level;
+		newWord->isForgetable=srcWord->isForgetable;
+		newWord->type=srcWord->type;
+		newWord->numOfLocalVar=srcWord->numOfLocalVar;
+		newWord->param=srcWord->param;
+		newWord->tmpParam=srcWord->tmpParam;
+		newWord->localVarDict=srcWord->localVarDict;
+		newWord->LVOpHint=srcWord->LVOpHint;
+		Install(newWord);
+		NEXT;
+	}));
+
+	// string ---
+	Install(new Word("forget",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
+		auto iter=Dict.find(*tos.stringPtr);
+		if(iter==Dict.end()) { 
+			return inContext.Error(E_CAN_NOT_FIND_THE_WORD,*tos.stringPtr);
+		}
+		const Word *word=iter->second;
+		Dict.erase(iter);
+		auto iterByShort=Dict.find(word->shortName);
+		auto iterByLong=Dict.find(word->longName);
+		if(iterByShort==Dict.end() && iterByLong==Dict.end()) {
+			delete word;
+		}
 		NEXT;
 	}));
 
@@ -59,7 +147,7 @@ void InitDict_Word() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
+			return inContext.Error(E_TOS_STRING,tos);
 		}
 		SetCurrentVocName(*tos.stringPtr.get());
 		NEXT;
@@ -90,9 +178,7 @@ void InitDict_Word() {
 	Install(new Word("var",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 
 		auto iter=Dict.find(*tos.stringPtr);
 		if(iter!=Dict.end()) {
@@ -166,7 +252,7 @@ void InitDict_Word() {
 		}
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=kTypeParamDest) {
-			return inContext.Error_InvalidType(E_TOS_PARAMDEST,tos);
+			return inContext.Error(E_TOS_PARAMDEST,tos);
 		}
 		
 		Mutex *mutex=(Mutex *)(((Word**)tos.ipValue)+TvSize);
@@ -183,7 +269,7 @@ void InitDict_Word() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=kTypeParamDest) {
-			return inContext.Error_InvalidType(E_TOS_PARAMDEST,tos);
+			return inContext.Error(E_TOS_PARAMDEST,tos);
 		}
 
 		Mutex *mutex=(Mutex *)(((Word**)tos.ipValue)+TvSize);
@@ -202,9 +288,11 @@ void InitDict_Word() {
 
 	Install(new Word("}",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
+		inContext.newWord->numOfLocalVar=(int)inContext.newWord->localVarDict.size();
 		inContext.Compile(std::string("_semis"));
+		Word *newWordBackup=inContext.newWord;
 		inContext.FinishNewWord();
-		TypedValue tvWord(kTypeWord,inContext.newWord);
+		TypedValue tvWord(kTypeWord,newWordBackup);
 		if(inContext.EndNoNameWordBlock()==false) { return false; }
 		switch(inContext.ExecutionThreshold) {
 			case kInterpretLevel:
@@ -213,11 +301,11 @@ void InitDict_Word() {
 			case kCompileLevel:
 				assert(inContext.newWord!=NULL);
 				inContext.Compile(std::string("_lit"));
-				if(compileValue(inContext,tvWord)==false) { return false; }
+				if(compileLambda(inContext,tvWord)==false) { return false; }
 				break;
 			case kSymbolLevel:
 				assert(inContext.newWord!=NULL);
-				if(compileValue(inContext,tvWord)==false) { return false; }
+				if(compileLambda(inContext,tvWord)==false) { return false; }
 				break;
 			default:
 				inContext.Error(E_SYSTEM_ERROR);
@@ -226,22 +314,83 @@ void InitDict_Word() {
 		NEXT;
 	}));
 
-	Install(new Word("${",WordLevel::Level2,WORD_FUNC {
+	Install(new Word("{{",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
+		inContext.RS.emplace_back((int)inContext.DS.size());
 		inContext.BeginNoNameWordBlock();
-		inContext.newWord->level=WordLevel::Immediate;
 		NEXT;
 	}));
 
-	Install(new Word("{{",WordLevel::Level2,Dict["{"]->code));
-
 	Install(new Word("}}",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
+		if(inContext.CheckCompileMode()==false) {
+			return inContext.Error(E_SHOULD_BE_COMPILE_MODE);
+		}
 		inContext.Compile(std::string("_semis"));
+		Word *newWordBackup=inContext.newWord;
 		inContext.FinishNewWord();
-		TypedValue tvWord(kTypeWord,inContext.newWord);
+		TypedValue tvWord(kTypeWord,newWordBackup);
 		if(inContext.EndNoNameWordBlock()==false) { return false; }
 		if(inContext.Exec(tvWord)==false) { return false; }
+		TypedValue tv=Pop(inContext.RS);
+		if(tv.dataType!=kTypeInt) {
+			return inContext.Error(E_RS_BROKEN_TOS_SHOULD_BE_INT);
+		}
+		NEXT;
+	}));
+
+/*---
+	Install(new Word("{{>",WordLevel::Level2,WORD_FUNC {
+		if( inContext.IsInComment() ) { NEXT; }
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		inContext.RS.emplace_back((int)inContext.DS.size()-1);
+		inContext.BeginNoNameWordBlock();
+		NEXT;
+	}));
+---*/
+
+	Install(new Word("}},",WordLevel::Level2,WORD_FUNC {
+		if( inContext.IsInComment() ) { NEXT; }
+		if(inContext.CheckCompileMode()==false) {
+			return inContext.Error(E_SHOULD_BE_COMPILE_MODE);
+		}
+		inContext.Compile(std::string("_semis"));
+		Word *newWordBackup=inContext.newWord;
+		inContext.FinishNewWord();
+		TypedValue tvWord(kTypeWord,newWordBackup);
+		if(inContext.EndNoNameWordBlock()==false) { return false; }
+		if(inContext.Exec(tvWord)==false) { return false; }
+		TypedValue tv=Pop(inContext.RS);
+		if(tv.dataType!=kTypeInt) {
+			return inContext.Error(E_RS_BROKEN_TOS_SHOULD_BE_INT);
+		}
+		if(inContext.DS.size()>tv.intValue) {
+			switch(inContext.ExecutionThreshold) {
+				case kInterpretLevel:
+					// do nothing
+					break;
+				case kCompileLevel:
+					assert(inContext.newWord!=NULL);
+					for(int i=tv.intValue; i<inContext.DS.size(); i++) {
+						inContext.Compile(std::string("_lit"));
+						inContext.Compile(inContext.DS[i]);
+					}
+					inContext.DS.erase(inContext.DS.begin()+tv.intValue,
+									   inContext.DS.end());
+					break;
+				case kSymbolLevel:
+					assert(inContext.newWord!=NULL);
+					for(int i=tv.intValue; i<inContext.DS.size(); i++) {
+						inContext.Compile(inContext.DS[i]);
+					}
+					inContext.DS.erase(inContext.DS.begin()+tv.intValue,
+									   inContext.DS.end());
+					break;
+			default:
+				inContext.Error(E_SYSTEM_ERROR);
+				exit(-1);
+			}
+		}
 		NEXT;
 	}));
 
@@ -279,14 +428,12 @@ void InitDict_Word() {
 			return inContext.Error(E_DS_AT_LEAST_2);
 		}
 		TypedValue tvNW=Pop(inContext.DS);
-		if(tvNW.dataType!=kTypeNewWord) {
-			return inContext.Error_InvalidType(E_TOS_NEW_WORD,tvNW);
-		}
+		if(tvNW.dataType!=kTypeNewWord) { return inContext.Error(E_TOS_NEW_WORD,tvNW); }
  		inContext.newWord=(Word *)tvNW.wordPtr;
 
 		TypedValue tvThreshold=Pop(inContext.DS);
 		if(tvThreshold.dataType!=kTypeThreshold) {
-			return inContext.Error_InvalidType(E_SECOND_THRESHOLD,tvThreshold);
+			return inContext.Error(E_SECOND_THRESHOLD,tvThreshold);
 		}
 		inContext.ExecutionThreshold=tvThreshold.intValue;
 		NEXT;
@@ -314,7 +461,7 @@ void InitDict_Word() {
 			if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
 			TypedValue tvNW=Pop(inContext.DS);
 			if(tvNW.dataType!=kTypeNewWord) {
-				return inContext.Error_InvalidType(E_TOS_NEW_WORD,tvNW);
+				return inContext.Error(E_TOS_NEW_WORD,tvNW);
 			}
 	 		inContext.newWord=(Word *)tvNW.wordPtr;
 
@@ -322,7 +469,7 @@ void InitDict_Word() {
 
 			TypedValue tvThreshold=Pop(inContext.DS);
 			if(tvThreshold.dataType!=kTypeThreshold) {
-				return inContext.Error_InvalidType(E_SECOND_THRESHOLD,tvThreshold);
+				return inContext.Error(E_SECOND_THRESHOLD,tvThreshold);
 			}
 			inContext.ExecutionThreshold=tvThreshold.intValue;
 		}
@@ -333,9 +480,7 @@ void InitDict_Word() {
 	Install(new Word(">word",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 		auto iter=Dict.find(*tos.stringPtr);
 		if(iter==Dict.end()) {
 			return inContext.Error(E_CAN_NOT_FIND_THE_WORD,*tos.stringPtr);
@@ -353,8 +498,11 @@ void InitDict_Word() {
 		NEXT;
 	}));
 
-	Install(new Word(">sym",WORD_FUNC {
+	Install(new Word(">here",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if( inContext.IsInterpretMode() ) {
+			return inContext.Error(E_SHOULD_BE_COMPILE_MODE);
+		}
 		TypedValue tos=Pop(inContext.DS);
 		inContext.Compile(tos);
 		NEXT;
@@ -366,7 +514,7 @@ void InitDict_Word() {
 		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
 		TypedValue tvSrcWordName=Pop(inContext.DS);
 		if(tvSrcWordName.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_SECOND_STRING,tvSrcWordName);
+			return inContext.Error(E_SECOND_STRING,tvSrcWordName);
 		}
 		auto iter=Dict.find(*tvSrcWordName.stringPtr);
 		if(iter==Dict.end()) {
@@ -374,7 +522,7 @@ void InitDict_Word() {
 		}
 		TypedValue tvNewWordName=Pop(inContext.DS);
 		if(tvNewWordName.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tvNewWordName);
+			return inContext.Error(E_TOS_STRING,tvNewWordName);
 		}
 		const Word *srcWord=iter->second;
 		const char *newWordName=strdup(tvNewWordName.stringPtr.get()->c_str());
@@ -390,7 +538,7 @@ void InitDict_Word() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=kTypeWord && tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_WP,tos);
+			return inContext.Error(E_TOS_WP,tos);
 		}
 		const Word *word=NULL;
 		if(tos.dataType==kTypeWord) {
@@ -405,12 +553,7 @@ void InitDict_Word() {
 		if(word->isForgetable==false) {
 			printf("the word '%s' is internal.\n",word->longName.c_str());
 		} else {
-			printf("the word '%s' is:\n",word->longName.c_str());
-			const size_t n=word->tmpParam->size();
-			for(size_t i=0; i<n; i++) {
-				printf("[%zu] ",i);
-				word->tmpParam->at(i).Dump();
-			}
+			word->Dump();
 		}
 		NEXT;
 	}));
@@ -419,7 +562,8 @@ void InitDict_Word() {
 static bool colon(const char *inName,Context& inContext,bool inDefineShortend) {
 	if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 	TypedValue tos=Pop(inContext.DS);
-	if(tos.dataType!=kTypeString) { inContext.Error_InvalidType(E_TOS_STRING,tos); }
+	if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
+	if(tos.stringPtr->at(0)=='$') { return inContext.Error(E_INVALID_WORD_NAME); }
 	Word *newWord=new Word(tos.stringPtr.get());
 	if(Install(newWord,inDefineShortend)==false) {
 		delete newWord;
@@ -432,7 +576,7 @@ static bool colon(const char *inName,Context& inContext,bool inDefineShortend) {
 	return true;
 }
 
-static bool compileValue(Context& inContext,TypedValue& inLambda) {
+static bool compileLambda(Context& inContext,TypedValue& inLambda) {
 	if(inLambda.wordPtr->level==WordLevel::Immediate) {
 		// the case of '${'
 		if(inContext.Exec(inLambda)==false) { return false; }
@@ -450,7 +594,7 @@ static bool constant(const char *inName,Context& inContext,bool inOverwriteCheck
 	TypedValue tos=Pop(inContext.DS);
 	TypedValue second=Pop(inContext.DS);
 	if(second.dataType!=kTypeString) {
-		return inContext.Error_InvalidType(E_SECOND_STRING,second);
+		return inContext.Error(E_SECOND_STRING,second);
 	}
 
 	if( inOverwriteCheck ) {

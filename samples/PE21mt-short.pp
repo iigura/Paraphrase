@@ -1,3 +1,11 @@
+"usage" :
+	"../para PE21mt-short.pp 10000 run" .cr
+;
+
+interactive? not if
+	args size 0? if usage then
+then
+
 "d-func" : // n --- d-func-value  see https://projecteuler.net/problem=21
 	1 swap  dup 2 /  2 swap  	// result n 2 n/2
 	for+	// result n
@@ -61,4 +69,6 @@
 	0 swap while{ @not-empty-list? }-> pop-front rot + swap repeat
 	drop . cr
 ;
+
+"run" "printAmicableNumbers/mt" alias
 

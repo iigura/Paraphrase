@@ -16,15 +16,19 @@ LANG_OBJS=$(OBJ)/para.o
 LIB_OBJS= $(OBJ)/outer.o $(OBJ)/inner.o \
 		  $(OBJ)/context.o $(OBJ)/typedValue.o \
 		  $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
-		  $(OBJ)/optimizer.o
+		  $(OBJ)/optimizer.o $(OBJ)/stack.o \
+		  $(OBJ)/langSys.o
 
-DICT_OBJS=$(OBJ)/dictWord.o $(OBJ)/dictObject.o $(OBJ)/dictStack.o \
+DICT_OBJS=$(OBJ)/dictWord.o $(OBJ)/dictLangSys.o \
+		  $(OBJ)/dictObject.o $(OBJ)/dictStack.o \
 		  $(OBJ)/dictControl.o $(OBJ)/dictIO.o $(OBJ)/dictMath.o \
 		  $(OBJ)/dictString.o $(OBJ)/dictArray.o $(OBJ)/dictList.o \
 		  $(OBJ)/dictParallel.o \
 		  $(OBJ)/dictOptimize.o
 
 objs=$(LANG_OBJS) $(DICT_OBJS)
+
+ICU4C_OPT=$(shell icu-config --cppflags --ldflags --ldflags-icuio)
 
 .PHONY: macos linux
 .PHONY: all lang dict clean
@@ -39,8 +43,10 @@ no_target:
 	@echo "for Linux:   make linux"
 	@echo "for Windows: please open windows/paraphrase.sln by VisualStudio."
 
-macos: export CPPFLAGS=-std=c++1z -O3 -fno-rtti \
-		-D NDEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE
+macos: export CPPFLAGS=-std=c++1z -fomit-frame-pointer -O3 \
+		-D NDEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE \
+		-D FOR_MACOS \
+		-I/usr/local/opt/icu4c/include
 macos: export LIB_NAME=libPP.so
 macos: export SO_OPT  =-install_name @executable_path/./$(LIB_NAME)
 macos: all $(PPDIR)/$(PROG_NAME)
@@ -48,16 +54,16 @@ macos: all $(PPDIR)/$(PROG_NAME)
 	@echo "|   Paraphrase : BUILD SUCCESS! (^^)v   |"
 	@echo "+---------------------------------------+"
 
-macos-debug: export CPPFLAGS=-std=c++1z -g -O0 -fno-rtti \
-		-D DEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE
+macos-debug: export CPPFLAGS=-std=c++1z -g -O0 \
+		-D DEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE -D FOR_MACOS
 macos-debug: export LIB_NAME=libPP.a
 macos-debug:  all $(PPDIR)/$(PROG_NAME)
 	@echo "+---------------------------------------+"
 	@echo "|   Paraphrase : BUILD SUCCESS! (@@)v   |"
 	@echo "+---------------------------------------+"
 
-macos-std_thread: export CPPFLAGS=-std=c++1z -O3 -fno-rtti \
-		-D NDEBUG -D USE_NOEXCEPT -D USE_READLINE
+macos-std_thread: export CPPFLAGS=-std=c++1z -O3 \
+		-D NDEBUG -D USE_NOEXCEPT -D USE_READLINE -D FOR_MACOS
 macos-std_thread: export LIB_NAME=libPP.so
 macos-std_thread: export SO_OPT  =-install_name @executable_path/./$(LIB_NAME)
 macos-std_thread: all $(PPDIR)/$(PROG_NAME)
@@ -65,8 +71,8 @@ macos-std_thread: all $(PPDIR)/$(PROG_NAME)
 	@echo "|   Paraphrase : BUILD SUCCESS! (std::thread)   |"
 	@echo "+-----------------------------------------------+"
 
-linux: export CPPFLAGS=-std=c++1z -O3 -fPIC -fno-rtti \
-		-D NDEBUG -D USE_PTHREAD -D USE_READLINE
+linux: export CPPFLAGS=-std=c++1z -O3 -fPIC \
+		-D NDEBUG -D USE_PTHREAD -D USE_READLINE -D FOR_LINUX
 linux: export LIB_NAME=libPP.so
 linux: export RUNPATH_OPT=-Wl,-rpath,'$$ORIGIN'
 linux: MDEP_LOPT=-ldl
@@ -75,8 +81,8 @@ linux: all $(PPDIR)/$(PROG_NAME)
 	@echo "|   Paraphrase : BUILD SUCCESS! (^^)v   |"
 	@echo "+---------------------------------------+"
 
-linux-debug: export CPPFLAGS=-std=c++1z -g -O0 -fPIC -fno-rtti \
-		-D DEBUG -D USE_PTHREAD -D USE_READLINE
+linux-debug: export CPPFLAGS=-std=c++1z -g -O0 -fPIC \
+		-D DEBUG -D USE_PTHREAD -D USE_READLINE -D FOR_LINUX
 linux-debug: export RUNPATH_OPT=-Wl,-rpath,'$$ORIGIN'
 linux-debug: MDEP_LOPT=-ldl
 linux-debug: all $(PPDIR)/$(PROG_NAME)
@@ -84,8 +90,8 @@ linux-debug: all $(PPDIR)/$(PROG_NAME)
 	@echo "|   Paraphrase : BUILD SUCCESS! (@@)v   |"
 	@echo "+---------------------------------------+"
 
-linux-std_thread: export CPPFLAGS=-std=c++1z -O3 -fPIC -fno-rtti \
-		-D NDEBUG -D USE_READLINE
+linux-std_thread: export CPPFLAGS=-std=c++1z -O3 -fPIC \
+		-D NDEBUG -D USE_READLINE -D FOR_LINUX
 linux-std_thread: export RUNPATH_OPT=-Wl,-rpath,'$$ORIGIN'
 linux-std_thread: MDEP_LOPT=-ldl
 linux-std_thread: all $(PPDIR)/$(PROG_NAME)
@@ -95,12 +101,14 @@ linux-std_thread: all $(PPDIR)/$(PROG_NAME)
 
 all: lang dict $(PPDIR)/$(PROG_NAME)
 
+
 $(PPDIR)/$(PROG_NAME): $(objs)
 	$(CC) $(LANG_OBJS) $(DICT_OBJS) \
 	-lreadline -lpthread $(MDEP_LOPT) \
 	-lboost_program_options -lboost_system -lboost_timer \
-	-L$(PPDIR) -lPP $(PROFILER_OPT) -o $(PPDIR)/$(PROG_NAME) $(RUNPATH_OPT)
-
+	-L$(PPDIR) -lPP $(PROFILER_OPT) \
+	$(ICU4C_OPT) \
+	-o $(PPDIR)/$(PROG_NAME) $(RUNPATH_OPT) 
 lang:
 	make -C lang
 

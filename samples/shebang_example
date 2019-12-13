@@ -1,4 +1,4 @@
 #!../para
 "PE21mt-short.pp" load
-60000 printAmicableNumbers/mt
+10000 printAmicableNumbers/mt
 

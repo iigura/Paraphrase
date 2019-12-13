@@ -21,19 +21,15 @@ extern "C" PP_API void InitDict() {
 	Install(new Word("if",WORD_FUNC {
 		if(inContext.DS.size()<3) { return inContext.Error(E_DS_AT_LEAST_3); }
 		TypedValue elsePart=Pop(inContext.DS);
-		if(elsePart.dataType!=kTypeWord) {
-			return inContext.Error_InvalidType(E_TOS_WP,elsePart);
-		}
+		if(elsePart.dataType!=kTypeWord) { return inContext.Error(E_TOS_WP,elsePart); }
 
 		TypedValue truePart=Pop(inContext.DS);
 		if(truePart.dataType!=kTypeWord) {
-			return inContext.Error_InvalidType(E_SECOND_WP,truePart);
+			return inContext.Error(E_SECOND_WP,truePart);
 		}
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=kTypeBool) {
-			return inContext.Error_InvalidType(E_THIRD_BOOL,tv);
-		}
+		if(tv.dataType!=kTypeBool) { return inContext.Error(E_THIRD_BOOL,tv); }
 
 		if( tv.boolValue ) {
 			if(inContext.Exec(truePart)==false) {

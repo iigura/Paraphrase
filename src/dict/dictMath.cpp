@@ -38,23 +38,96 @@ void InitDict_Math() {
 		NEXT;
 	}));
 
-	Install(new Word("+",WORD_FUNC { TwoOp(+); }));
-	Install(new Word("-",WORD_FUNC { TwoOp(-); }));
+	Install(new Word("+",WORD_FUNC { TwoOp(+); },LVOP::LVOpSupported2args| LVOP::ADD));
+	Install(new Word("-",WORD_FUNC { TwoOp(-); },LVOP::LVOpSupported2args| LVOP::SUB));
+	Install(new Word("*",WORD_FUNC { TwoOp(*); },LVOP::LVOpSupported2args| LVOP::MUL));
+	Install(new Word("/",WORD_FUNC {
+		TypedValue& tos=ReadTOS(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeInt:
+				if(tos.intValue==0) { goto divideByZero; }
+				break;
+			case kTypeLong:
+				if(tos.longValue==0) { goto divideByZero; }
+				break;
+			case kTypeBigInt:
+				if(*(tos.bigIntPtr)==0) { goto divideByZero; }
+				break;
+			case kTypeFloat:
+				if(tos.floatValue==0.0f) { goto divideByZero; }
+				break;
+			case kTypeDouble:
+				if(tos.doubleValue==0.0) { goto divideByZero; }
+				break;
+			case kTypeBigFloat:
+				if(*(tos.bigFloatPtr)==0.0) { goto divideByZero; }
+				break;
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
+divideByZero:
+			return inContext.Error(E_TOS_SHOULD_BE_NONZERO);
+		}
+		TwoOp(/);
+	},LVOP::LVOpSupported2args| LVOP::DIV));
 
-	Install(new Word("*",WORD_FUNC { TwoOp(*); }));
-	Install(new Word("/",WORD_FUNC { TwoOp(/); }));
+	Install(new Word("2*",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_AT_LEAST_2); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeInt:		tos.intValue	   *= 2;	break;
+			case kTypeLong:		tos.longValue	   *= 2L;	break;
+			case kTypeBigInt:	*(tos.bigIntPtr)   *= 2;	break;
+			case kTypeFloat:	tos.floatValue	   *= 2.0f;	break;
+			case kTypeDouble:	tos.doubleValue	   *= 2.0;	break;
+			case kTypeBigFloat:	*(tos.bigFloatPtr) *= 2;	break;
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
+		}
+		NEXT;
+	},LVOP::LVOpSupported1args | LVOP::TWC));
+
+	Install(new Word("@+",WORD_FUNC { RefTwoOp(inContext.DS,+); }));
+	Install(new Word("@-",WORD_FUNC { RefTwoOp(inContext.DS,-); }));
+	Install(new Word("@*",WORD_FUNC { RefTwoOp(inContext.DS,*); }));
+	Install(new Word("@/",WORD_FUNC { RefTwoOp(inContext.DS,/); }));
 
 	Install(new Word("%",WORD_FUNC {
-		Stack& ds=inContext.DS;
-		if(ds.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
-
-		TypedValue tos=Pop(ds);
-		TypedValue& second=ds.back();
-
+		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		TypedValue tos=Pop(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeInt:
+				if(tos.intValue==0) { goto divideByZero; }
+				break;
+			case kTypeLong:
+				if(tos.longValue==0) { goto divideByZero; }
+				break;
+			case kTypeBigInt:
+				if(*(tos.bigIntPtr)==0) { goto divideByZero; }
+				break;
+			case kTypeFloat:
+				if(tos.floatValue==0.0f) { goto divideByZero; }
+				break;
+			case kTypeDouble:
+				if(tos.doubleValue==0.0) { goto divideByZero; }
+				break;
+			case kTypeBigFloat:
+				if(*(tos.bigFloatPtr)==0.0) { goto divideByZero; }
+				break;
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
+divideByZero:
+			return inContext.Error(E_TOS_SHOULD_BE_NONZERO);
+		}
+		TypedValue& second=ReadTOS(inContext.DS);
 		// second %= tos;
 		ModAssign(second,tos);
 		NEXT;
-   }));
+	}));
+
+	Install(new Word("@%",WORD_FUNC {
+		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		TypedValue& second=ReadSecond(inContext.DS);
+		RefMod(inContext.DS,second,tos);
+		NEXT;
+	}));
 
 	Install(new Word("&",WORD_FUNC { BitOp(&); }));
 	Install(new Word("|",WORD_FUNC { BitOp(|); }));
@@ -62,149 +135,79 @@ void InitDict_Math() {
 	Install(new Word(">>",WORD_FUNC { BitShiftOp(>>); }));
 	Install(new Word("<<",WORD_FUNC { BitShiftOp(<<); }));
 
+	Install(new Word("@&",WORD_FUNC { RefBitOp(&); }));
+	Install(new Word("@|",WORD_FUNC { RefBitOp(|); }));
+	Install(new Word("@^",WORD_FUNC { RefBitOp(^); }));
+	Install(new Word("@>>",WORD_FUNC { RefBitShiftOp(>>); }));
+	Install(new Word("@<<",WORD_FUNC { RefBitShiftOp(<<); }));
+
 	// bitwise NOT.
 	Install(new Word("~",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_AT_LEAST_2); }
-
 		TypedValue& tos=ReadTOS(inContext.DS);
 		switch(tos.dataType) {
 			case kTypeInt: 		tos.intValue=~tos.intValue;		break;
 			case kTypeLong:		tos.longValue=~tos.longValue;	break;
 			case kTypeBigInt:	*tos.bigIntPtr=~*tos.bigIntPtr;	break;
 			default:
-				return inContext.Error_InvalidType(E_TOS_INT_OR_LONG_OR_BIGINT,tos);
+				return inContext.Error(E_TOS_INT_OR_LONG_OR_BIGINT,tos);
+		}
+		NEXT;
+	}));
+
+	Install(new Word("@~",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_AT_LEAST_2); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeInt: 		inContext.DS.emplace_back(~tos.intValue);	break;
+			case kTypeLong:		inContext.DS.emplace_back(~tos.longValue);	break;
+			case kTypeBigInt:	inContext.DS.emplace_back(~*tos.bigIntPtr);	break;
+			default: 
+				return inContext.Error(E_TOS_INT_OR_LONG_OR_BIGINT,tos);
 		}
 		NEXT;
 	}));
 
 	Install(new Word(">",WORD_FUNC { CmpOp(>); }));
 	Install(new Word("<",WORD_FUNC { CmpOp(<); }));
-	
 	Install(new Word(">=",WORD_FUNC { CmpOp(>=); }));
 	Install(new Word("<=",WORD_FUNC { CmpOp(<=); }));
-
 	Install(new Word("==",WORD_FUNC { CmpOp(==); }));
 	Install(new Word("!=",WORD_FUNC { CmpOp(!=); }));
 
-	Install(new Word("and",WORD_FUNC { BoolOp(&&); }));
-	Install(new Word("or",WORD_FUNC { BoolOp(||); }));
+	Install(new Word("@>",WORD_FUNC { RefCmpOp(>); }));
+	Install(new Word("@<",WORD_FUNC { RefCmpOp(<); }));
+	Install(new Word("@>=",WORD_FUNC { RefCmpOp(>=); }));
+	Install(new Word("@<=",WORD_FUNC { RefCmpOp(<=); }));
+	Install(new Word("@==",WORD_FUNC { RefCmpOp(==); }));
+	Install(new Word("@!=",WORD_FUNC { RefCmpOp(!=); }));
+
+	Install(new Word("&&",WORD_FUNC { BoolOp(&&); }));
+	Install(new Word("||",WORD_FUNC { BoolOp(||); }));
 	Install(new Word("xor",WORD_FUNC { BoolOp(!=); }));
 	Install(new Word("not",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_AT_LEAST_2); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeBool) {
-			return inContext.Error_InvalidType(E_TOS_BOOL,tos);
-		}
+		if(tos.dataType!=kTypeBool) { return inContext.Error(E_TOS_BOOL,tos); }
 		tos.boolValue = tos.boolValue != true;
 		NEXT;
 	}));
 
-	Install(new Word("&&",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
-
-		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeBool && tos.dataType!=kTypeWord) {
-			return inContext.Error_InvalidType(E_TOS_BOOL_OR_WP,tos);
-		}
-
-		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=kTypeBool && second.dataType!=kTypeWord) {
-			return inContext.Error_InvalidType(E_SECOND_BOOL_OR_WP,second);
-		}
-
-		if(tos.dataType==kTypeBool) {
-			if(tos.boolValue==false) {
-				inContext.DS.emplace_back(false);
-				goto next;
-			}
-		} else {
-			if(inContext.Exec(tos)==false) { return false; }
-			tos=Pop(inContext.DS);
-			if(tos.dataType!=kTypeBool) {
-				return inContext.Error(E_WP_AT_TOS_SHOULD_PUSH_A_BOOL);
-			}
-			if(tos.boolValue==false) {
-				inContext.DS.emplace_back(false);
-				goto next;
-			}
-		}
-
-		if(second.dataType==kTypeBool) {
-			if(second.boolValue==false) {
-				inContext.DS.emplace_back(false);
-				goto next;
-			}
-		} else {
-			if(inContext.Exec(second)==false) {
-				return false;
-			}
-			second=Pop(inContext.DS);
-			if(second.dataType!=kTypeBool) {
-				return inContext.Error(E_WP_AT_SECOND_SHOULD_PUSH_A_BOOL);
-			}
-			if(second.boolValue==false) {
-				inContext.DS.emplace_back(false);
-				goto next;
-			}
-		}
-		inContext.DS.emplace_back(true);
-next:
-		NEXT;
-	}));
-	Install(new Word("||",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
-
-		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeBool && tos.dataType!=kTypeWord) {
-			return inContext.Error_InvalidType(E_TOS_BOOL_OR_WP,tos);
-		}
-
-		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=kTypeBool && second.dataType!=kTypeWord) {
-			return inContext.Error_InvalidType(E_SECOND_BOOL_OR_WP,tos);
-		}
-
-		if(tos.dataType==kTypeBool) {
-			if(tos.boolValue==true) {
-				inContext.DS.emplace_back(true);
-				goto next;
-			}
-		} else {
-			if(inContext.Exec(tos)==false) { return false; }
-			tos=Pop(inContext.DS);
-			if(tos.dataType!=kTypeBool) {
-				return inContext.Error(E_WP_AT_TOS_SHOULD_PUSH_A_BOOL);
-			}
-			if(tos.boolValue==true) {
-				inContext.DS.emplace_back(true);
-				goto next;
-			}
-		}
-
-		if(second.dataType==kTypeBool) {
-			if(second.boolValue==true) {
-				inContext.DS.emplace_back(true);
-				goto next;
-			}
-		} else {
-			if(inContext.Exec(second)==false) {
-				return false;
-			}
-			second=Pop(inContext.DS);
-			if(second.dataType!=kTypeBool) {
-				return inContext.Error(E_WP_AT_SECOND_SHOULD_PUSH_A_BOOL);
-			}
-			if(second.boolValue==true) {
-				inContext.DS.emplace_back(true);
-				goto next;
-			}
-		}
-		inContext.DS.emplace_back(false);
-next:
-		NEXT;
-	}));
-
 	Install(new Word("sqrt",WORD_FUNC { OneArgFloatingFunc(sqrt); }));
+	Install(new Word("square",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeInt:		tos.intValue	   *= tos.intValue;			break;
+			case kTypeLong:		tos.longValue	   *= tos.longValue;		break;
+			case kTypeBigInt:	*(tos.bigIntPtr)   *= *(tos.bigIntPtr);		break;
+			case kTypeFloat:	tos.floatValue	   *= tos.floatValue;		break;
+			case kTypeDouble:	tos.doubleValue	   *= tos.doubleValue;		break;
+			case kTypeBigFloat:	*(tos.bigFloatPtr) *= *(tos.bigFloatPtr);	break;
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
+		}
+		NEXT;
+	}));
 	Install(new Word("exp", WORD_FUNC { OneParamFunc(exp);  }));
 	Install(new Word("log", WORD_FUNC { OneParamFunc(log);  }));
 	Install(new Word("log10", WORD_FUNC { OneParamFunc(log10);  }));
@@ -216,6 +219,26 @@ next:
 	Install(new Word("asin",WORD_FUNC { OneParamFunc(asin); }));
 	Install(new Word("acos",WORD_FUNC { OneParamFunc(acos); }));
 	Install(new Word("atan",WORD_FUNC { OneParamFunc(atan); }));
+
+	Install(new Word("abs",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue tos=Pop(inContext.DS);
+		switch(tos.dataType) {
+			case kTypeInt:	inContext.DS.emplace_back(abs(tos.intValue));	break;
+			case kTypeLong:	inContext.DS.emplace_back(abs(tos.longValue));	break;
+			case kTypeBigInt:
+				inContext.DS.emplace_back(abs(*(tos.bigIntPtr)));
+				break;
+			case kTypeFloat:  inContext.DS.emplace_back(abs(tos.floatValue));	break;
+			case kTypeDouble: inContext.DS.emplace_back(abs(tos.doubleValue));	break;
+			case kTypeBigFloat:
+				inContext.DS.emplace_back(abs(*(tos.bigIntPtr)));
+				break;
+			default:
+				return inContext.Error(E_TOS_NUMBER,tos);
+		}
+		NEXT;
+	}));
 
 	Install(new Word("floor",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
@@ -299,8 +322,7 @@ next:
 					}
 					break;
 				case kTypeBigInt: /* bigInt x bigInt -> bigInt */
-					return inContext.Error_InvalidType(E_OUT_OF_SUPPORT_TOS_SECOND,
-													   tos,second);
+					return inContext.Error(E_OUT_OF_SUPPORT_TOS_SECOND,tos,second);
 				case kTypeBigFloat: { /* bigInt x bigFloat -> bigFloat */
 						BigFloat *bigFloat=new BigFloat();
 						*bigFloat=pow(BigFloat(*second.bigIntPtr),*tos.bigFloatPtr);
@@ -358,8 +380,7 @@ next:
 					second.dataType=kTypeDouble;
 					break;
 				case kTypeBigInt: /* int x bigInt -> OutOfSupport */
-					return inContext.Error_InvalidType(E_OUT_OF_SUPPORT_TOS_SECOND,
-													   tos,second);
+					return inContext.Error(E_OUT_OF_SUPPORT_TOS_SECOND,tos,second);
 				case kTypeBigFloat: { /* int x bigFloat -> bigFloat */
 						BigFloat *bigFloat=new BigFloat();
 						*bigFloat=pow(BigFloat(second.intValue),*tos.bigFloatPtr);
@@ -388,8 +409,7 @@ next:
 					second.dataType=kTypeDouble;
 					break;
 				case kTypeBigInt: /* long x bigInt -> OutOfSupport */
-					return inContext.Error_InvalidType(E_OUT_OF_SUPPORT_TOS_SECOND,
-													   tos,second);
+					return inContext.Error(E_OUT_OF_SUPPORT_TOS_SECOND,tos,second);
 				case kTypeBigFloat: { /* long x bigFloat -> bigFloat */
 						BigFloat *bigFloat=new BigFloat();
 						*bigFloat=pow(BigFloat(second.longValue),*tos.bigFloatPtr);
@@ -436,8 +456,7 @@ next:
 			}
 		} else { 
 onError: 
-			return inContext.Error_InvalidType(E_INVALID_DATA_TYPE_TOS_SECOND,
-											   tos,second);
+			return inContext.Error(E_INVALID_DATA_TYPE_TOS_SECOND,tos,second);
 		} 
 		NEXT;
 	}));
@@ -477,7 +496,7 @@ onError:
 				}
 				break;
 			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+				return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		NEXT;
 	}));
@@ -489,15 +508,15 @@ onError:
 		TypedValue& tos=ReadTOS(inContext.DS);
 		switch(tos.dataType) {
 			case kTypeInt:		tos.intValue+=1;		break;
+			case kTypeLong:		tos.longValue+=1;		break;
 			case kTypeFloat:	tos.floatValue+=1;		break;
 			case kTypeDouble:	tos.doubleValue+=1;		break;
 			case kTypeBigInt:	*tos.bigIntPtr+=1;		break;
 			case kTypeBigFloat:	*tos.bigFloatPtr+=1;	break;
-			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		NEXT;
-	}));
+	},LVOP::LVOpSupported1args | LVOP::INC));
 
 	// equivalent to '1 -'.
 	Install(new Word("1-",WORD_FUNC {
@@ -506,14 +525,15 @@ onError:
 		TypedValue& tos=ReadTOS(inContext.DS);
 		switch(tos.dataType) {
 			case kTypeInt:		tos.intValue-=1;	break;
+			case kTypeLong:		tos.longValue-=1;	break;
 			case kTypeFloat:	tos.floatValue-=1;	break;
 			case kTypeDouble:	tos.doubleValue-=1;	break;
 			case kTypeBigInt:	*tos.bigIntPtr-=1;	break;
-			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+			case kTypeBigFloat:	*tos.bigFloatPtr-=1;break;
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		NEXT;
-	}));
+	},LVOP::LVOpSupported1args | LVOP::DEC));
 
 	Install(new Word("2/",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
@@ -521,11 +541,12 @@ onError:
 		TypedValue& tos=ReadTOS(inContext.DS);
 		switch(tos.dataType) {
 			case kTypeInt:		tos.intValue/=2;		break;
+			case kTypeLong:		tos.longValue/=2;		break;
 			case kTypeFloat:	tos.floatValue/=2.0f;	break;
 			case kTypeDouble:	tos.doubleValue/=2.0;	break;
 			case kTypeBigInt:	*tos.bigIntPtr/=2;		break;
-			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+			case kTypeBigFloat:	*tos.bigFloatPtr/=2.0;	break;
+			default: 			return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		NEXT;
 	}));
@@ -559,9 +580,7 @@ onError:
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_INT,tos);
-		}
+		if(tos.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tos); }
 
 		const int n=tos.intValue;
 		if(n<0 || RAND_MAX<n) { return inContext.Error(E_TOS_POSITIVE_INT,n); }
@@ -602,7 +621,7 @@ onError:
 		} else if(tos.dataType==kTypeAddress) {
 			tos.dataType=kTypeInt;
 		} else if(tos.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+			return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		tos.dataType=kTypeInt;
 		NEXT;
@@ -629,7 +648,7 @@ onError:
 			}
 			tos.longValue=static_cast<long>(*tos.bigIntPtr);
 		} else if(tos.dataType!=kTypeLong) {
-			return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+			return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		tos.dataType=kTypeLong;
 		NEXT;
@@ -650,7 +669,7 @@ onError:
 				break;
 			case kTypeBigFloat: bigInt=static_cast<BigInt>(*tos.bigFloatPtr); break;
 			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER_OR_STRING,tos);
+				return inContext.Error(E_TOS_NUMBER_OR_STRING,tos);
 		}
 		if(tos.dataType!=kTypeBigInt) {
 			inContext.DS.emplace_back(bigInt);
@@ -706,7 +725,7 @@ onError:
 				}
 				break;
 			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+				return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		NEXT;
 	}));
@@ -754,7 +773,7 @@ onError:
 				}
 				break;
 			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER,tos);
+				return inContext.Error(E_TOS_NUMBER,tos);
 		}
 		NEXT;
 	}));
@@ -771,8 +790,7 @@ onError:
 			case kTypeString: bigFloat=BigFloat(*tos.stringPtr); break;
 			case kTypeBigInt: bigFloat=static_cast<BigFloat>(*tos.bigIntPtr); break;
 			case kTypeBigFloat: /* do nothing */ 		break;
-			default:
-				return inContext.Error_InvalidType(E_TOS_NUMBER_OR_STRING,tos);
+			default: 		  return inContext.Error(E_TOS_NUMBER_OR_STRING,tos);
 		}
 		if(tos.dataType!=kTypeBigFloat) {
 			inContext.DS.emplace_back(bigFloat);
@@ -786,7 +804,7 @@ onError:
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
 		if(tos.dataType!=kTypeInt && tos.dataType!=kTypeAddress) {
-			return inContext.Error_InvalidType(E_TOS_INT,tos);
+			return inContext.Error(E_TOS_INT,tos);
 		}
 		tos.dataType=kTypeAddress;
 		NEXT;

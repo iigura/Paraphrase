@@ -41,7 +41,7 @@ void InitDict_Parallel() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=kTypeDirectWord && tos.dataType!=kTypeNewWord) {
-			return inContext.Error_InvalidType(E_TOS_WP_OR_NW,tos);
+			return inContext.Error(E_TOS_WP_OR_NW,tos);
 		}
 		execParallel(inContext,tos,1);
 		NEXT;
@@ -51,7 +51,7 @@ void InitDict_Parallel() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=kTypeDirectWord && tos.dataType!=kTypeNewWord) {
-			return inContext.Error_InvalidType(E_TOS_WP_OR_NW,tos);
+			return inContext.Error(E_TOS_WP_OR_NW,tos);
 		}
 		execParallel(inContext,tos);
 		NEXT;
@@ -219,9 +219,7 @@ void InitDict_Parallel() {
 	Install(new Word("_initChildDSByList",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) {
-			return inContext.Error_InvalidType(E_TOS_LIST,tos);
-		}
+		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
 		if(tos.listPtr->size()<1) { return inContext.Error(E_TOS_LIST_NO_ELEMENT); }
 		if(tos.listPtr->size()<(size_t)G_NumOfCores) {
 			return inContext.Error(E_TOS_LIST_AT_LEAST_CORES);
@@ -285,9 +283,7 @@ void InitDict_Parallel() {
 	Install(new Word("set-num-of-threads",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_INT,tos);
-		}
+		if(tos.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tos); }
 		if(tos.intValue<1) {
 			G_NumOfCores=std::thread::hardware_concurrency();
 		} else {
@@ -304,8 +300,9 @@ void InitDict_Parallel() {
 
 static bool closeParallelBlock(Context& inContext,int inNumOfParallels) {
 	inContext.Compile(std::string("_semis"));
+	Word *newWordBackup=inContext.newWord;
 	inContext.FinishNewWord();
-	TypedValue tvExec(kTypeNewWord,inContext.newWord);
+	TypedValue tvExec(kTypeNewWord,newWordBackup);
 	if(inContext.EndNoNameWordBlock()==false) { return false; }
 	if(inContext.ExecutionThreshold!=kInterpretLevel) {
 		inContext.Compile(std::string("_lit"));

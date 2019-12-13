@@ -14,7 +14,7 @@ void InitDict_String() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tvScriptSource=Pop(inContext.DS);
 		if(tvScriptSource.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tvScriptSource);
+			return inContext.Error(E_TOS_STRING,tvScriptSource);
 		}
 		OuterInterpreter(inContext,*tvScriptSource.stringPtr);
 		NEXT;
@@ -23,9 +23,7 @@ void InitDict_String() {
 	Install(new Word("to-hex-str",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeInt) {
-			return inContext.Error_InvalidType(E_TOS_INT,tos);
-		}
+		if(tos.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tos); }
 
 		std::stringstream ss;
 		ss << std::hex << tos.intValue;
@@ -39,9 +37,7 @@ void InitDict_String() {
 	Install(new Word("empty-str?",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 		inContext.DS.emplace_back(tos.stringPtr->length()==0);
 		NEXT;
 	}));
@@ -50,9 +46,7 @@ void InitDict_String() {
 	Install(new Word("not-empty-str?",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 		inContext.DS.emplace_back(tos.stringPtr->length()>0);
 		NEXT;
 	}));
@@ -61,23 +55,41 @@ void InitDict_String() {
 	Install(new Word(">upper",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 		std::transform(tos.stringPtr->cbegin(),tos.stringPtr->cend(),
 					   tos.stringPtr->begin(),toupper);
 		NEXT;
 	}));
-	//
+	
 	// s --- s
 	Install(new Word(">lower",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 		std::transform(tos.stringPtr->cbegin(),tos.stringPtr->cend(),
 					   tos.stringPtr->begin(),tolower);
+		NEXT;
+	}));
+
+	// X --- s
+	Install(new Word(">str",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue tos=Pop(inContext.DS);
+		inContext.DS.emplace_back(tos.GetValueString());
+		NEXT;
+	}));
+
+	// S --- symbol
+	Install(new Word(">symbol",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue tos=Pop(inContext.DS);
+		std::string s=tos.GetValueString();
+		char c=s[0];
+		if(('A'<=c && c<='Z') || ('a'<=c && c<='z') || c=='_') {
+			inContext.DS.emplace_back(s,kTypeSymbol);
+		} else {
+			return inContext.Error(E_CAN_NOT_CONVERT_TO_SYMBOL);
+		}
 		NEXT;
 	}));
 }

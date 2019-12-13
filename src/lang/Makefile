@@ -9,7 +9,8 @@ LANG_OBJS=$(OBJ)/para.o
 LIB_OBJS=$(OBJ)/outer.o $(OBJ)/inner.o \
 		 $(OBJ)/word.o $(OBJ)/context.o $(OBJ)/typedValue.o \
 		 $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
-		 $(OBJ)/optimizer.o
+		 $(OBJ)/optimizer.o $(OBJ)/stack.o \
+		 $(OBJ)/langSys.o
 
 objs=$(LANG_OBJS) $(LIB_OBJS)
 
@@ -35,7 +36,7 @@ $(PPDIR)/libPP.a: $(LIB_OBJS)
 
 $(OBJ)/para.o: 			$(COMMON_HEADER) \
 						$(INC)/stack.h $(INC)/context.h $(INC)/chan.h \
-						$(INC)/optimizer.h
+						$(INC)/lvop.h $(INC)/optimizer.h
 
 $(OBJ)/outer.o: 		$(COMMON_HEADER) \
 						$(INC)/stack.h $(INC)/context.h $(INC)/chan.h
@@ -48,12 +49,19 @@ $(OBJ)/word.o:		$(COMMON_HEADER)
 
 $(OBJ)/context.o:		$(COMMON_HEADER) \
 						$(INC)/stack.h $(INC)/context.h $(INC)/chan.h \
-						$(INC)/optimizer.h \
+						$(INC)/lvop.h $(INC)/optimizer.h \
 						$(INC)/inner.h
 
 $(OBJ)/typedValue.o:	$(COMMON_HEADER)
 
 $(OBJ)/dictMan.o:		$(COMMON_HEADER)
+
+$(OBJ)/stack.o:			$(COMMON_HEADER)
+
+$(OBJ)/optimizer.o:		$(COMMON_HEADER) \
+						$(INC)/lvop.h $(INC)/optimizer.h 
+
+$(OBJ)/langSys.o:		$(COMMON_HEADER)
 
 clean:
 	rm -f $(objs)

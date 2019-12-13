@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <boost/format.hpp>
+#include <unicode/unistr.h>
 
 #include "externals.h"
 #include "typedValue.h"
@@ -15,36 +16,76 @@
 	#include <dlfcn.h>
 #endif
 
+enum CharCodeConv {
+	kCCC_THRU,
+	kUTF8_to_SJIS,
+	kSJIS_to_UTF8,
+};
+
+static CharCodeConv gCCC=kCCC_THRU;
+
+static void printValue(TypedValue& inTV);
+static void printStr(std::string& inStr);
+
 void InitDict_IO() {
+	Install(new Word("thru",WORD_FUNC {
+		gCCC=kCCC_THRU;
+		NEXT;
+	}));
+
+	Install(new Word("utf8>sjis",WORD_FUNC {
+		gCCC=kUTF8_to_SJIS;
+		NEXT;
+	}));
+
+	Install(new Word("sjis>utf8",WORD_FUNC {
+		gCCC=kSJIS_to_UTF8;
+		NEXT;
+	}));
+
+	Install(new Word("ccc-str",WORD_FUNC {
+		std::string s;
+		switch(gCCC) {
+			case kCCC_THRU:		s="TRHU"; 		break;
+			case kUTF8_to_SJIS: s="utf8>sjis"; 	break;
+			case kSJIS_to_UTF8: s="sjis>utf8";	break;
+		}
+		inContext.DS.emplace_back(s);
+		NEXT;
+	}));
+
 	Install(new Word(".",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tv=Pop(inContext.DS);
-		printf(" ");
-		tv.PrintValue();
+		putc(' ',stdout); printValue(tv);
+		NEXT;
+	}));
+
+	Install(new Word(".cr",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		TypedValue tv=Pop(inContext.DS);
+		putc(' ',stdout); printValue(tv); putc('\n',stdout);
 		NEXT;
 	}));
 
 	Install(new Word("@.",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue& tv=ReadTOS(inContext.DS);
-		printf(" ");
-		tv.PrintValue();
+		printf(" "); printValue(tv);
 		NEXT;
 	}));
 
 	Install(new Word("write",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 		TypedValue tv=Pop(inContext.DS);
-		tv.PrintValue();
+		printValue(tv);
 		NEXT;
 	}));
 
 	Install(new Word("putf",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_AT_LEAST_2); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 		try {
 			boost::format fmt(tos.stringPtr->c_str());
 			TypedValue second=Pop(inContext.DS);
@@ -59,7 +100,8 @@ void InitDict_IO() {
 					const int kNoIndent=0;
 					fmt=fmt%second.GetValueString(kNoIndent).c_str();
 			}
-			std::cout << fmt;
+			std::string s=fmt.str();
+			printStr(s);
 		} catch(...) {
 			return inContext.Error(E_FORMAT_DATA_MISMATCH);
 		}
@@ -67,7 +109,7 @@ void InitDict_IO() {
 	}));
 
 	Install(new Word("cr",WORD_FUNC {
-		printf("\n");
+		putc('\n',stdout);
 		NEXT;
 	}));
 
@@ -80,9 +122,7 @@ void InitDict_IO() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tv);
-		}
+		if(tv.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tv); }
 		File *file=new File();
 		if(file->Open(tv.stringPtr->c_str(),"a+")==false) {
 			return inContext.Error(E_CAN_NOT_OPEN_FILE,*tv.stringPtr);
@@ -95,9 +135,7 @@ void InitDict_IO() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tv);
-		}
+		if(tv.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tv); }
 
 		File *file=new File();
 		if(file->Open(tv.stringPtr->c_str(),"w")==false) {
@@ -111,9 +149,7 @@ void InitDict_IO() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=kTypeFile) {
-			return inContext.Error_InvalidType(E_TOS_FILE,tv);
-		}
+		if(tv.dataType!=kTypeFile) { return inContext.Error(E_TOS_FILE,tv); }
 
 		File *file=tv.filePtr.get();
 		if(file->fp==NULL) { return inContext.Error(E_FILE_IS_ALREADY_CLOSED); }
@@ -125,9 +161,7 @@ void InitDict_IO() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeFile) {
-			return inContext.Error_InvalidType(E_TOS_FILE,tos);
-		}
+		if(tos.dataType!=kTypeFile) { return inContext.Error(E_TOS_FILE,tos); }
 
 		File *file=tos.filePtr.get();
 		if(file->fp==NULL) { return inContext.Error(E_FILE_IS_ALREADY_CLOSED); }
@@ -142,9 +176,7 @@ void InitDict_IO() {
 
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue& tvFile=ReadTOS(inContext.DS);
-		if(tvFile.dataType!=kTypeFile) {
-			return inContext.Error_InvalidType(E_SECOND_FILE,tvFile);
-		}	
+		if(tvFile.dataType!=kTypeFile) { return inContext.Error(E_SECOND_FILE,tvFile); }	
 		File *file=tvFile.filePtr.get();
 		fprintf(file->fp,"%s",tos.GetValueString(0).c_str());
 		NEXT;
@@ -154,9 +186,7 @@ void InitDict_IO() {
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeFile) {
-			return inContext.Error_InvalidType(E_TOS_FILE,tos);
-		}
+		if(tos.dataType!=kTypeFile) { return inContext.Error(E_TOS_FILE,tos); }
 
 		File *file=tos.filePtr.get();
 		if(file->fp==NULL) { return inContext.Error(E_FILE_IS_ALREADY_CLOSED); }
@@ -199,9 +229,7 @@ next:
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeFile) {
-			return inContext.Error_InvalidType(E_TOS_FILE,tos);
-		}
+		if(tos.dataType!=kTypeFile) { return inContext.Error(E_TOS_FILE,tos); }
 
 		File *file=tos.filePtr.get();
 		if(file->fp==NULL) { return inContext.Error(E_FILE_IS_ALREADY_CLOSED); }
@@ -225,7 +253,7 @@ next:
 
 		TypedValue tvFileName=Pop(inContext.DS);
 		if(tvFileName.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tvFileName);
+			return inContext.Error(E_TOS_STRING,tvFileName);
 		}
 
 		std::ifstream inputStream;
@@ -257,9 +285,7 @@ next:
 		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeString) {
-			return inContext.Error_InvalidType(E_TOS_STRING,tos);
-		}
+		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
 
 		typedef void(*FuncPtr)(void);
 
@@ -313,3 +339,44 @@ next:
 		NEXT;
 	}));
 }
+
+static void printValue(TypedValue& inTV) {
+	const char *kSJIS="shift_jis";
+	const char *kUTF8="utf8";
+	const char *encodeFrom=NULL;
+	const char *encodeTo=NULL;
+	switch(gCCC) {
+		case kCCC_THRU:
+			inTV.PrintValue();
+			return;
+		case kUTF8_to_SJIS: encodeFrom=kUTF8; encodeTo=kSJIS; break;
+		case kSJIS_to_UTF8: encodeFrom=kSJIS; encodeTo=kUTF8; break;
+	}
+	icu::UnicodeString src(inTV.GetValueString().c_str(),encodeFrom);
+   	int len=src.extract(0,(int)src.length(),NULL,encodeTo);
+	char *tmp=new char[len+1];
+		src.extract(0,src.length(),tmp,encodeTo);
+		printf("%s",tmp);
+	delete[] tmp;
+}
+
+static void printStr(std::string& inStr) {
+	const char *kSJIS="shift_jis";
+	const char *kUTF8="utf8";
+	const char *encodeFrom=NULL;
+	const char *encodeTo=NULL;
+	switch(gCCC) {
+		case kCCC_THRU:
+			printf("%s",inStr.c_str());
+			return;
+		case kUTF8_to_SJIS: encodeFrom=kUTF8; encodeTo=kSJIS; break;
+		case kSJIS_to_UTF8: encodeFrom=kSJIS; encodeTo=kUTF8; break;
+	}
+	icu::UnicodeString src(inStr.c_str(),encodeFrom);
+   	int len=src.extract(0,src.length(),NULL,encodeTo);
+	char *tmp=new char[len+1];
+		src.extract(0,src.length(),tmp,encodeTo);
+		printf("%s",tmp);
+	delete[] tmp;
+}
+

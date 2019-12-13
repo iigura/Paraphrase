@@ -3,7 +3,7 @@ OBJ=../obj
 
 INCLUDE_PATHS=-I $(INC)
 
-objs=$(OBJ)/dictWord.o $(OBJ)/dictObject.o $(OBJ)/dictStack.o \
+objs=$(OBJ)/dictWord.o $(OBJ)/dictLangSys.o $(OBJ)/dictObject.o $(OBJ)/dictStack.o \
 	 $(OBJ)/dictControl.o $(OBJ)/dictIO.o $(OBJ)/dictMath.o \
 	 $(OBJ)/dictString.o $(OBJ)/dictArray.o $(OBJ)/dictList.o \
 	 $(OBJ)/dictParallel.o  $(OBJ)/dictOptimize.o
@@ -18,7 +18,8 @@ DICT_DEPS=$(INC)/externals.h \
 		  $(INC)/word.h $(INC)/array.h \
 		  $(INC)/context.h $(INC)/outer.h \
 		  $(INC)/chan.h \
-		  $(INC)/mathMacro.h
+		  $(INC)/mathMacro.h \
+		  $(INC)/lvop.h
 
 $(OBJ)/%.o: %.cpp $(DICT_DEPS)
 	@if [ ! -d $(OBJ) ]; then \

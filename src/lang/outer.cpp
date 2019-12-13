@@ -18,7 +18,6 @@ static TypedValue gTvEOL;
 static int findChar(std::string& inLine,const char inTargetChar,size_t inStartPos);
 
 static std::string getToken(std::string& inLine,int *inScanPos);
-static TypedValue getTypedValue(Context& inContext,std::string inToken);
 
 static bool doInterpretLevel(Context& inContext,TypedValue& inTV);
 static bool doCompileLevel(Context& inContext,TypedValue& inTV);
@@ -36,7 +35,10 @@ PP_API bool OuterInterpreter(Context& inContext,std::string& inLine) {
 	int scanPos=0;
 	for(std::string tokVal=getToken(inLine,&scanPos);
 	  tokVal!=""; tokVal=getToken(inLine,&scanPos)) {
-		TypedValue tv=getTypedValue(inContext,tokVal);
+		TypedValue tv=GetTypedValue(tokVal);
+		if(tv.dataType==kTypeInvalid && inContext.IsSymbolMode()==false) {
+			return inContext.Error(E_INVALID_TOKEN,tokVal);
+		}
 		if(tokVal!="\"\"" && tokVal!="''" 
 		  && tv.dataType==kTypeString && tv.stringPtr.get()->size()==0) {
 			// escape seq. error
@@ -166,7 +168,15 @@ static int findChar(std::string& inLine,const char inTargetChar,size_t inStartPo
 	return -1;
 }
 
-static TypedValue getTypedValue(Context& inContext,std::string inToken) {
+static bool checkHasDot(const std::string& inToken,const size_t inTokenLength) {
+	assert(inToken.length()==inTokenLength);
+	for(int i=0; i<inTokenLength; i++) {
+		if(inToken[i]=='.') { return true; }
+	}
+	return false;
+}
+
+PP_API TypedValue GetTypedValue(std::string inToken) {
 	// word?
 	auto iter=Dict.find(inToken);
 	if(iter!=Dict.end()) {
@@ -184,11 +194,20 @@ static TypedValue getTypedValue(Context& inContext,std::string inToken) {
 		return ret;
 	}
 	
-	bool hasDot=false;
-	for(int i=0; i<len; i++) {
-		if(inToken[i]=='.') { hasDot=true; break; }
+	// symbol?
+	if(inToken[0]=='`') {
+		if(inToken.length()<2) { goto invalid; }
+		char c=inToken[1];
+		if(('A'<=c && c<='Z') || ('a'<=c && c<='z') || c=='_') {
+			std::string s=inToken.substr(1,len-1);
+			TypedValue ret(s,kTypeSymbol);
+			return ret;
+		} else {
+			goto invalid;
+		}
 	}
-	if(hasDot==false) {
+
+	if(checkHasDot(inToken,len)==false) {
 		// note:
 		// 	0x100f は 0x100F と同じだから float にはならない
 		// 	0x100d も同様（0x100D)
@@ -252,9 +271,7 @@ bigInt:
 		} catch(...) {
 			goto invalid;
 		}
-	}
-
-	if( hasDot ) {
+	} else { // hasDot==true
 		try {
 			size_t sz;
 			float f=std::stof(inToken,&sz);

@@ -1,4 +1,5 @@
-// usage: para check-scriptFile-args.pp 1 2.3 '"-456"' string-value '"( a ( b c ) )"'
+// usage: para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.pp
 depth 0? if
-	"usage: para check-scriptFile-args.pp 1 2.3 \'\"-456\"\' string-value \'\"( a ( b c ) )\"\'" . cr
-	else show then
+	"usage: para -E \"1 2.3 'str' ( a ( b c ) )\" check-scriptFile-args.pp" .cr
+else show then
+

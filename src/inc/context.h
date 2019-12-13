@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 
 #include "thread.h"
 #include "typedValue.h"
@@ -14,6 +15,9 @@ enum {
 	kSymbolLevel	=2,
 };
 
+typedef std::vector<TypedValue> LocalVarSlot;
+typedef std::vector<LocalVarSlot> EnvVector;
+
 struct Context {
 	const Word **ip=NULL;
 
@@ -21,6 +25,7 @@ struct Context {
 
 	Stack DS,RS,SS,ES;	// SS = Syntax Stack
 	std::vector<const Word**> IS;	// IP Stack
+	EnvVector Env;
 
 	int ExecutionThreshold;
 
@@ -56,6 +61,10 @@ struct Context {
 	PP_API void Compile(const TypedValue& inTypedValue);
 	PP_API bool Compile(int inAddress,const TypedValue& inTypedValue);
 
+	const Word *GetCurrentWord() {
+		return *ip;
+	}
+
 	void SetInterpretMode() {
 		newWord=NULL;
 		ExecutionThreshold=kInterpretLevel;
@@ -63,7 +72,8 @@ struct Context {
 	void SetCompileMode() { ExecutionThreshold=kCompileLevel; }
 	void SetSymbolMode() { ExecutionThreshold=kSymbolLevel; }
 
-	bool IsInterpretMode() const { return ExecutionThreshold==kInterpretLevel; }
+	bool IsInterpretMode()	const { return ExecutionThreshold==kInterpretLevel; }
+	bool IsSymbolMode() 	const { return ExecutionThreshold==kSymbolLevel; }
 	bool CheckCompileMode() const { return ExecutionThreshold!=kInterpretLevel; }
 
 	void PushThreshold() {
@@ -112,15 +122,73 @@ struct Context {
 
 	const char *GetExecutingWordName() const;
 
+	inline bool SetCurrentLocalVar(int inSlotIndex,TypedValue& inValue) {
+		assert(Env.size()>0);
+		LocalVarSlot& localVarSlot=Env.back();
+		if(localVarSlot.size()<=inSlotIndex) { return false; /* inalid index */ }
+		// needs full clone for list or array.
+		localVarSlot[inSlotIndex]=FullClone(inValue);
+		return true;
+	}
+
+	inline bool GetLocalVarValue(int inSlotIndex,Stack& ioStack) {
+		if(Env.size()<1) { return false; }
+		LocalVarSlot& localVarSlot=Env.back();
+		// if(localVarSlot.size()<=inSlotIndex) { return false; /* inalid index */ }
+		ioStack.emplace_back(localVarSlot[inSlotIndex]);
+		return true;
+	}
+
+	inline TypedValue GetLocalVarValue(int inSlotIndex) {
+		if(Env.size()<1) { return TypedValue(); }
+		LocalVarSlot& localVarSlot=Env.back();
+		//if(localVarSlot.size()<=inSlotIndex) { return TypedValue(); }
+		return localVarSlot[inSlotIndex];
+	}
+
+	inline TypedValue GetLocalVarValue(std::string inVarName) {
+		Word *word=(Word*)GetCurrentWord();
+		if(word==NULL) {
+			Error(E_SYSTEM_ERROR);
+			exit(-1);
+		}
+		if(word->localVarDict.find(inVarName)==word->localVarDict.end()) {
+			Error(E_NO_SUCH_LOCAL_VAR,inVarName);
+			return TypedValue();	// invalid value.
+		}
+		LocalVarSlot& localVarSlot=Env.back();
+		return localVarSlot[word->localVarDict[inVarName]];
+	}
+
+	inline bool GetLocalVarValueByDynamic(std::string& inVarName,Stack& ioStack) {
+		if(Env.size()<1) { return false; }
+		int start;
+		for(start=(int)IS.size()-1; (*IS[start])->numOfLocalVar==0; start--) {
+			// empty
+		}
+		if(start<0) { return false; }
+		int offset = (*ip)->numOfLocalVar==0 ? 0 : 1;
+		for(int w=start,t=(int)Env.size()-1-offset; w>=0; w--) {
+			Word *word=(Word *)(*IS[w]);
+			int slotPos=word->GetLocalVarSlotPos(inVarName);
+			if(slotPos>=0) {
+				ioStack.emplace_back(Env[t][slotPos]);
+				return true;
+			}
+			if(word->numOfLocalVar==0) { continue; }
+			t--;
+		}
+		return false;
+	}
+
 	PP_API bool Error(const NoParamErrorID inErrorID);
 	PP_API bool Error(const ErrorID_withInt inErrorID,const int inIntValue);
 	PP_API bool Error(const ErrorID_with2int inErrorID,
 			   const int inIntValue1,const int inIntValue2);
 	PP_API bool Error(const ErrorID_withString inErrorID,const std::string& inStr);
-	PP_API bool Error_InvalidType(const InvalidTypeErrorID inErrorID,
-								  const TypedValue& inTV);
-	PP_API bool Error_InvalidType(const InvalidTypeTosSecondErrorID inErrorID,
-						   const TypedValue& inTos,const TypedValue& inSecond);
+	PP_API bool Error(const InvalidTypeErrorID inErrorID,const TypedValue& inTV);
+	PP_API bool Error(const InvalidTypeTosSecondErrorID inErrorID,
+					  const TypedValue& inTos,const TypedValue& inSecond);
 	PP_API bool Error_InvalidType(const InvalidTypeStrTvTvErrorID inErrorID,
 								  const std::string& inStr,
 								  const TypedValue inTV1,const TypedValue& inTV2);

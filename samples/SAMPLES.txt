@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.93.0)  by K.Iigura 
+Paraphrase sample programs' README (ver.0.93.1)  by K.Iigura 
 
 　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
 い（\ は円マークを表します）。

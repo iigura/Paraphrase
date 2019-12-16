@@ -56,7 +56,7 @@
 * j, foreach
 * replace, 2drop, 3drop, 
 * size, square, quit, exit
-* hru, utf8&gt;sjis, sjis&gt;utf8, ccc-str
+* thru, utf8&gt;sjis, sjis&gt;utf8, ccc-str
 
 ## 処理系 para について
 

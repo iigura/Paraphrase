@@ -17,18 +17,19 @@ LIB_OBJS= $(OBJ)/outer.o $(OBJ)/inner.o \
 		  $(OBJ)/context.o $(OBJ)/typedValue.o \
 		  $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
 		  $(OBJ)/optimizer.o $(OBJ)/stack.o \
-		  $(OBJ)/langSys.o
+		  $(OBJ)/langSys.o $(OBJ)/util.o
 
 DICT_OBJS=$(OBJ)/dictWord.o $(OBJ)/dictLangSys.o \
 		  $(OBJ)/dictObject.o $(OBJ)/dictStack.o \
 		  $(OBJ)/dictControl.o $(OBJ)/dictIO.o $(OBJ)/dictMath.o \
-		  $(OBJ)/dictString.o $(OBJ)/dictArray.o $(OBJ)/dictList.o \
-		  $(OBJ)/dictParallel.o \
-		  $(OBJ)/dictOptimize.o
+		  $(OBJ)/dictString.o $(OBJ)/dictArray.o $(OBJ)/dictList.o $(OBJ)/dictAssoc.o \
+		  $(OBJ)/dictParallel.o $(OBJ)/dictLocalVar.o \
+		  $(OBJ)/dictOptimize.o \
+		  $(OBJ)/dictAOP.o $(OBJ)/dictDebug.o
 
 objs=$(LANG_OBJS) $(DICT_OBJS)
 
-ICU4C_OPT=$(shell icu-config --cppflags --ldflags --ldflags-icuio)
+SAMPLES_DIR=../samples
 
 .PHONY: macos linux
 .PHONY: all lang dict clean
@@ -39,24 +40,28 @@ no_target:
 	@echo "please specify the target operating system as argument of the make command,"
 	@echo "for example: make macos."
 	@echo ---
-	@echo "for MacOS:   make macos"
-	@echo "for Linux:   make linux"
+	@echo "for MacOS:   make macos  or  make macos-debug"
+	@echo "for Linux:   make linux  or  make linux-debug"
 	@echo "for Windows: please open windows/paraphrase.sln by VisualStudio."
+	@echo "for test:    make test"
 
-macos: export CPPFLAGS=-std=c++1z -fomit-frame-pointer -O3 \
+macos: export CPPFLAGS=-std=c++1z -fomit-frame-pointer  -fno-stack-check -O3 \
 		-D NDEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE \
 		-D FOR_MACOS \
 		-I/usr/local/opt/icu4c/include
 macos: export LIB_NAME=libPP.so
 macos: export SO_OPT  =-install_name @executable_path/./$(LIB_NAME)
+macos: ICU4C_OPT=$(shell icu-config --cppflags --ldflags --ldflags-icuio)
 macos: all $(PPDIR)/$(PROG_NAME)
 	@echo "+---------------------------------------+"
 	@echo "|   Paraphrase : BUILD SUCCESS! (^^)v   |"
 	@echo "+---------------------------------------+"
 
 macos-debug: export CPPFLAGS=-std=c++1z -g -O0 \
-		-D DEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE -D FOR_MACOS
+		-D DEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE -D FOR_MACOS \
+		-I/usr/local/opt/icu4c/include
 macos-debug: export LIB_NAME=libPP.a
+macos-debug: ICU4C_OPT=$(shell icu-config --cppflags --ldflags --ldflags-icuio)
 macos-debug:  all $(PPDIR)/$(PROG_NAME)
 	@echo "+---------------------------------------+"
 	@echo "|   Paraphrase : BUILD SUCCESS! (@@)v   |"
@@ -66,33 +71,37 @@ macos-std_thread: export CPPFLAGS=-std=c++1z -O3 \
 		-D NDEBUG -D USE_NOEXCEPT -D USE_READLINE -D FOR_MACOS
 macos-std_thread: export LIB_NAME=libPP.so
 macos-std_thread: export SO_OPT  =-install_name @executable_path/./$(LIB_NAME)
+macos-std_thread: ICU4C_OPT=$(shell icu-config --cppflags --ldflags --ldflags-icuio)
 macos-std_thread: all $(PPDIR)/$(PROG_NAME)
 	@echo "+-----------------------------------------------+"
 	@echo "|   Paraphrase : BUILD SUCCESS! (std::thread)   |"
 	@echo "+-----------------------------------------------+"
 
-linux: export CPPFLAGS=-std=c++1z -O3 -fPIC \
+linux: export CPPFLAGS=-std=c++1z -O3 -fPIC -Wno-psabi \
 		-D NDEBUG -D USE_PTHREAD -D USE_READLINE -D FOR_LINUX
 linux: export LIB_NAME=libPP.so
 linux: export RUNPATH_OPT=-Wl,-rpath,'$$ORIGIN'
 linux: MDEP_LOPT=-ldl
+linux: ICU4C_OPT=$(shell pkg-config --libs --cflags icu-uc icu-io)
 linux: all $(PPDIR)/$(PROG_NAME)
 	@echo "+---------------------------------------+"
 	@echo "|   Paraphrase : BUILD SUCCESS! (^^)v   |"
 	@echo "+---------------------------------------+"
 
-linux-debug: export CPPFLAGS=-std=c++1z -g -O0 -fPIC \
+linux-debug: export CPPFLAGS=-std=c++1z -g -O0 -fPIC -Wno-psabi \
 		-D DEBUG -D USE_PTHREAD -D USE_READLINE -D FOR_LINUX
 linux-debug: export RUNPATH_OPT=-Wl,-rpath,'$$ORIGIN'
+linux-debug: ICU4C_OPT=$(shell pkg-config --libs --cflags icu-uc icu-io)
 linux-debug: MDEP_LOPT=-ldl
 linux-debug: all $(PPDIR)/$(PROG_NAME)
 	@echo "+---------------------------------------+"
 	@echo "|   Paraphrase : BUILD SUCCESS! (@@)v   |"
 	@echo "+---------------------------------------+"
 
-linux-std_thread: export CPPFLAGS=-std=c++1z -O3 -fPIC \
+linux-std_thread: export CPPFLAGS=-std=c++1z -O3 -fPIC -Wno-psabi \
 		-D NDEBUG -D USE_READLINE -D FOR_LINUX
 linux-std_thread: export RUNPATH_OPT=-Wl,-rpath,'$$ORIGIN'
+linux-std_thread: ICU4C_OPT=$(shell pkg-config --libs --cflags icu-uc icu-io)
 linux-std_thread: MDEP_LOPT=-ldl
 linux-std_thread: all $(PPDIR)/$(PROG_NAME)
 	@echo "+-----------------------------------------------+"
@@ -120,4 +129,18 @@ clean:
 	make -C dict clean
 	rm -f $(PPDIR)/$(PROG_NAME)
 	rm -f $(PPDIR)/libPP.so
+
+test:
+	../para $(SAMPLES_DIR)/99.pp test
+	../para -E "1 2.3 'str' ( a ( b c ) )" $(SAMPLES_DIR)/check-scriptFile-args.pp test
+	../para $(SAMPLES_DIR)/countPrimeMT-short.pp test
+	../para $(SAMPLES_DIR)/dumpMPmt.pp test
+	../para $(SAMPLES_DIR)/fact-tr.pp test
+	../para $(SAMPLES_DIR)/FizzBuzz.pp test
+	../para $(SAMPLES_DIR)/Mersenne.pp test
+	../para $(SAMPLES_DIR)/PE21mt.pp test
+	../para $(SAMPLES_DIR)/PE25.pp test
+	../para $(SAMPLES_DIR)/PE56.pp test
+	../para $(SAMPLES_DIR)/zdk.pp test
+	@echo "===== The all test passed. ====="
 

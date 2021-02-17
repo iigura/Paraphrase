@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="ext.css">
+	<style type="text/css"> <!-- .VERSION:before{content:"0.94.0";} --> </style>
+	<style type="text/css"> <!-- .DATE:before{content:"2021.2.17";} --> </style>
+	<title>extLP for ver. 0.94.0</title>
+</head>
+<body>
+<div id=main>
+<h1>extAOP for ver. <span class="VERSION"></span></h1>
+<div id=author><span class="DATE"></span> 飯倉宏治</div>
+<p>
+extAOP は、アスペクト指向プログラミング（AOP=Aspect Oriented Programming）の
+動的織込み（dynamic weaving）のサンプルプログラムで使用する動的ライブラリファイルです。
+使用方法は、ワード set-code のワードリファレンスを参照して下さい。
+</p>
+<p>
+extAOP では標準コード形式で docolWrapperExample という C で書かれた関数が
+定義されています：
+<div class=example>
+	<code>
+<pre>
+#ifdef _MSVC_LANG
+	#pragma comment(lib,"libPP.lib")
+#endif
+
+#include "externals.h"
+#include "typedValue.h"
+#include "stack.h"
+#include "word.h"
+#include "context.h"
+
+#include "inner.h"
+
+extern "C" PP_API bool docolWrapperExample(Context& inContext) {
+    printf("IN:docolWrapperExample\n");
+    const Word *word=(*inContext.ip);
+    printf("word name: %s\n",word->longName.c_str());
+
+        Docol(inContext);
+        InnerInterpreter(inContext);
+
+    printf("OUT:docolWrapperExample\n");
+    return true;
+}
+</pre>
+	</code>
+</div>
+</p>
+<p>
+Docol という関数は、Paraphrase 標準の Docol を処理するものです。
+この Docol という関数を実行すると、コロン定義されたワード
+（つまり標準的なユーザー定義ワード）が実行されます。
+ちなみに、Docol という名前は、Forth 由来のものです。
+</p>
+<p>
+docolWrapperExample では、Docol の実行前後に
+対象のワードについての名前や、docolWrapperExample の処理終了を示す
+メッセージを表示しています。
+これらの出力は（当たり前ですが）docolWrapperExample が出力している
+ものであり、織込まれるユーザー定義ワードの機能ではありません。
+詳しくは AOP の解説書に譲りますが、
+このように AOP を用いると、プログラムの定義や実装を修正することなく、
+プログラムの挙動を変化させることができます。
+</p>
+<p>
+Paraphrase ではこれら AOP の機能を活用して、
+デバッガを実現しています。
+</p>
+
+</div>
+</body>
+</html>
+

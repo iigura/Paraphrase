@@ -5,9 +5,10 @@
 #include "context.h"
 #include "word.h"
 
-PP_API bool InnerInterpreter(Context& inContext) {
+PP_API bool InnerInterpreter(Context& inContext) NOEXCEPT {
 	do {
 		if((**(WordFunc **)inContext.ip)(inContext)==false) { return false; }
 	} while(*inContext.ip!=NULL);
 	return true;
 }
+

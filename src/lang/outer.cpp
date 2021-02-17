@@ -16,6 +16,7 @@
 static TypedValue gTvEOL;
 
 static int findChar(std::string& inLine,const char inTargetChar,size_t inStartPos);
+static int findCharForRawString(std::string& inLine,size_t inStartPos);
 
 static std::string getToken(std::string& inLine,int *inScanPos);
 
@@ -23,67 +24,65 @@ static bool doInterpretLevel(Context& inContext,TypedValue& inTV);
 static bool doCompileLevel(Context& inContext,TypedValue& inTV);
 static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inToken);
 
-static bool execute(Context& inContext,TypedValue inTypedValue);
+static bool execute(Context& inContext,const TypedValue& inTypedValue);
 
-static std::string evalEscapeSeq(std::string inString);
+static std::string evalEscapeSeqForRawString(std::string inString,bool *outIsSuccess);
 
 PP_API void InitOuterInterpreter() {
 	gTvEOL=TypedValue(Dict[EOL_WORD]);
 }
 
-PP_API bool OuterInterpreter(Context& inContext,std::string& inLine) {
+PP_API OIResult OuterInterpreter(Context& inContext,std::string& inLine) {
+	inContext.line=inLine;
 	int scanPos=0;
 	for(std::string tokVal=getToken(inLine,&scanPos);
 	  tokVal!=""; tokVal=getToken(inLine,&scanPos)) {
 		TypedValue tv=GetTypedValue(tokVal);
-		if(tv.dataType==kTypeInvalid && inContext.IsSymbolMode()==false) {
-			return inContext.Error(E_INVALID_TOKEN,tokVal);
+		if(tv.dataType==DataType::kTypeInvalid && inContext.IsSymbolMode()==false) {
+			inContext.Error(ErrorIdWithString::E_INVALID_TOKEN,tokVal);
+			return OIResult::OI_E_INVALID_TOKEN;
 		}
-		if(tokVal!="\"\"" && tokVal!="''" 
-		  && tv.dataType==kTypeString && tv.stringPtr.get()->size()==0) {
-			// escape seq. error
-			continue;
-		} else {
-			const int theta=inContext.ExecutionThreshold;
-			switch(theta) {
-				case kInterpretLevel:
-					if(tv.dataType==kTypeInvalid) {
-						inContext.ip=NULL;
-						return inContext.Error(E_CAN_NOT_FIND_THE_WORD,tokVal);
-					} else {
-						if(doInterpretLevel(inContext,tv)==false) {
-							return false;
-						}
+		const Level theta=inContext.ExecutionThreshold;
+		switch(theta) {
+			case Level::kInterpret:
+				if(tv.dataType==DataType::kTypeInvalid) {
+					inContext.ip=NULL;
+					inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_WORD,tokVal);
+					return OIResult::OI_E_NO_SUCH_WORD;
+				} else {
+					if(doInterpretLevel(inContext,tv)==false) {
+						return OIResult::OI_E_WORD;
 					}
-					break;
-				case kCompileLevel:
-					if(tv.dataType==kTypeInvalid) {
-						return inContext.Error(E_CAN_NOT_FIND_THE_WORD,tokVal);
-					} else {
-						if(doCompileLevel(inContext,tv)==false) {
-							return false;
-						}
+				}
+				break;
+			case Level::kCompile:
+				if(tv.dataType==DataType::kTypeInvalid) {
+					inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_WORD,tokVal);
+					return OIResult::OI_E_NO_SUCH_WORD;
+				} else {
+					if(doCompileLevel(inContext,tv)==false) {
+						return OIResult::OI_E_WORD;
 					}
-					break;
-				case kSymbolLevel:
-					if(tv.dataType==kTypeInvalid) {
-						tv=TypedValue(tokVal,kTypeSymbol);
-					}
-					if(doSymbolLevel(inContext,tv,tokVal)==false) {
-						return false;
-					}
-					break;
-				default:
-					fprintf(stderr,"SYSTEM ERROR at OuterInterpreter.\n");
-					return false;	
-			}
+				}
+				break;
+			case Level::kSymbol:
+				if(tv.dataType==DataType::kTypeInvalid) {
+					tv=TypedValue(tokVal,DataType::kTypeSymbol);
+				}
+				if(doSymbolLevel(inContext,tv,tokVal)==false) {
+					return OIResult::OI_E_WORD;
+				}
+				break;
+			default:
+				fprintf(stderr,"SYSTEM ERROR at OuterInterpreter.\n");
+				return OIResult::OI_E_SYSTEM_ERROR;	
 		}
 	}
 	execute(inContext,gTvEOL);
-	return true;
+	return OIResult::OI_NO_ERROR;
 }
 static bool doInterpretLevel(Context& inContext,TypedValue& inTV) {
-	if(inTV.dataType==kTypeDirectWord) {
+	if(inTV.dataType==DataType::kTypeDirectWord) {
 		if(inContext.Exec(inTV)==false) {
 			return false;
 		}
@@ -93,11 +92,11 @@ static bool doInterpretLevel(Context& inContext,TypedValue& inTV) {
 	return true;
 }
 static bool doCompileLevel(Context& inContext,TypedValue& inTV) {
-	if(inTV.dataType==kTypeDirectWord
-	  && (int)inTV.wordPtr->level>=inContext.ExecutionThreshold) {
+	if(inTV.dataType==DataType::kTypeDirectWord
+	  && (int)inTV.wordPtr->level>=(int)inContext.ExecutionThreshold) {
 		if(inContext.Exec(inTV)==false) { return false; }
 	} else {
-		if(inTV.dataType!=kTypeDirectWord) {
+		if(inTV.dataType!=DataType::kTypeDirectWord) {
 			inContext.Compile(std::string("_lit"));
 		}
 		inContext.Compile(inTV);
@@ -105,11 +104,11 @@ static bool doCompileLevel(Context& inContext,TypedValue& inTV) {
 	return true;
 }
 static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inToken) {
-	if(inTV.dataType==kTypeDirectWord) {
-		if((int)inTV.wordPtr->level>=inContext.ExecutionThreshold) {
+	if(inTV.dataType==DataType::kTypeDirectWord) {
+		if((int)inTV.wordPtr->level>=(int)inContext.ExecutionThreshold) {
 			if(inContext.Exec(inTV)==false) { return false; }
 		} else {
-			inContext.Compile(TypedValue(inToken,kTypeSymbol));
+			inContext.Compile(TypedValue(inToken,DataType::kTypeSymbol));
 		}
 	} else {
 		inContext.Compile(inTV);
@@ -117,8 +116,8 @@ static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inTok
 	return true;
 }
 
-static bool execute(Context& inContext,TypedValue inTypedValue) {
-	if(inTypedValue.dataType==kTypeDirectWord) {
+static bool execute(Context& inContext,const TypedValue& inTypedValue) {
+	if(inTypedValue.dataType==DataType::kTypeDirectWord) {
 		return inContext.Exec(inTypedValue);
 	} else {
 		inContext.DS.push_back(inTypedValue);
@@ -135,14 +134,14 @@ static std::string getToken(std::string& inLine,int *ioScanPos) {
 	if(inLine[start]=='\"') {
 		end=findChar(inLine,'\"',start+1);
 		if(end<0) {
-			GlobalContext->Error(E_OPEN_DOUBLE_QUOTE);
+			GlobalContext->Error(NoParamErrorID::E_OPEN_DOUBLE_QUOTE);
 			return "";
 		}
 		end=(int)inLine.find_first_of(whiteSpaceChar,end+1);
 	} else if(inLine[start]=='\'') {
-		end=findChar(inLine,'\'',(size_t)start+1);
+		end=findCharForRawString(inLine,(size_t)start+1);
 		if(end<0) {
-			GlobalContext->Error(E_OPEN_SINGLE_QUOTE);
+			GlobalContext->Error(NoParamErrorID::E_OPEN_SINGLE_QUOTE);
 			return "";
 		}
 		end=(int)inLine.find_first_of(whiteSpaceChar,end+1);
@@ -150,7 +149,8 @@ static std::string getToken(std::string& inLine,int *ioScanPos) {
 		end=(int)inLine.find_first_of(whiteSpaceChar,start+1);
 	}
 	*ioScanPos = end>=0 ? end : (int)inLine.length();
-	return inLine.substr(start,end-start);
+	std::string ret=inLine.substr(start,end-start);
+	return ret;
 }
 
 static int findChar(std::string& inLine,const char inTargetChar,size_t inStartPos) {
@@ -162,6 +162,21 @@ static int findChar(std::string& inLine,const char inTargetChar,size_t inStartPo
 			i++;
 			continue;
 		} else if(c==inTargetChar) {
+			return (int)i;
+		}
+	}
+	return -1;
+}
+
+static int findCharForRawString(std::string& inLine,size_t inStartPos) {
+	const size_t n=inLine.size();
+	for(size_t i=inStartPos; i<n; i++) {
+		const char c=inLine[i];
+		if(c=='\\') {
+			if(i==n-1) { return -1; }
+			if(inLine[i+1]=='\'' || inLine[i+1]=='0') { i++; }
+			continue;
+		} else if(c=='\'') {
 			return (int)i;
 		}
 	}
@@ -187,20 +202,25 @@ PP_API TypedValue GetTypedValue(std::string inToken) {
 
 	// string?
 	const size_t len=inToken.length();
-	if((inToken[0]=='\"' && inToken[len-1]=='\"')
-	|| (inToken[0]=='\'' && inToken[len-1]=='\'')) {
-		std::string s=evalEscapeSeq(inToken.substr(1,len-2));
-		TypedValue ret(s);
-		return ret;
+	if(inToken[0]=='\"' && inToken[len-1]=='\"') {
+		bool isSuccess=false;
+		std::string s=inToken.substr(1,len-2);
+		s=EvalEscapeSeq(s,&isSuccess);
+		return isSuccess ? TypedValue(s) : TypedValue();
 	}
-	
+	if(inToken[0]=='\'' && inToken[len-1]=='\'') {
+		bool isSuccess=false;
+		std::string s=evalEscapeSeqForRawString(inToken.substr(1,len-2),&isSuccess);
+		return isSuccess ? TypedValue(s) : TypedValue();
+	}
+		
 	// symbol?
 	if(inToken[0]=='`') {
 		if(inToken.length()<2) { goto invalid; }
 		char c=inToken[1];
 		if(('A'<=c && c<='Z') || ('a'<=c && c<='z') || c=='_') {
 			std::string s=inToken.substr(1,len-1);
-			TypedValue ret(s,kTypeSymbol);
+			TypedValue ret(s,DataType::kTypeSymbol);
 			return ret;
 		} else {
 			goto invalid;
@@ -325,12 +345,12 @@ invalid:
 	return ret;
 }
 
-static std::string evalEscapeSeq(std::string inString) {
+PP_API std::string EvalEscapeSeq(std::string& inString,bool *outIsSuccess) {
 	std::string ret;
 	const size_t n=inString.size();
 	char *buf=(char *)malloc(sizeof(char)*(n+1));
 	if(buf==NULL) {
-		fprintf(stderr,"SYSTEM ERROR: can not malloc at evalEscapeLiteral().\n");
+		fprintf(stderr,"SYSTEM ERROR: can not malloc at EvalEscapeSeq().\n");
 		exit(-1);
 	}
 	int destIndex=0;
@@ -346,6 +366,7 @@ static std::string evalEscapeSeq(std::string inString) {
 				case 'r':	buf[destIndex]='\r';	break;
 				case 't':	buf[destIndex]='\t';	break;
 				case 'n':	buf[destIndex]='\n';	break;
+				case ' ':	buf[destIndex]=' ';		break;
 				default:
 					goto escSeqError;
 			}
@@ -357,12 +378,86 @@ static std::string evalEscapeSeq(std::string inString) {
 	buf[destIndex]='\0';
 	ret=std::string(buf);
 	free(buf);
+	*outIsSuccess=true;
 	return ret;
 
 escSeqError:
 	fprintf(stderr,"escape sequence error.\n");
 	free(buf);
+	*outIsSuccess=false;
 	return std::string();
 }
 
+static std::string evalEscapeSeqForRawString(std::string inString,bool *outIsSuccess) {
+	std::string ret;
+	const size_t n=inString.size();
+	char *buf=(char *)malloc(sizeof(char)*(n+1));
+	if(buf==NULL) {
+		fprintf(stderr,
+				"SYSTEM ERROR: can not malloc at evalEscapeSeqForRawString().\n");
+		exit(-1);
+	}
+
+	int destIndex=0;
+	for(size_t srcIndex=0; srcIndex<n; srcIndex++,destIndex++) {
+		if(inString[srcIndex]=='\\') {
+			if(srcIndex==n-1) { goto escSeqError; }
+			if(inString[srcIndex+1]=='\'') {
+				buf[destIndex]='\'';
+				srcIndex++;
+			} else if(inString[srcIndex+1]=='0') {
+				// '\0' == empty char.
+				// ex: '\\\0' express two backslash.
+				srcIndex++;
+				destIndex--;
+			} else {
+				goto justCopy;
+			}
+		} else {
+justCopy:
+			buf[destIndex]=inString[srcIndex];
+		}
+	}
+	buf[destIndex]='\0';
+	ret=std::string(buf);
+
+	free(buf);
+	*outIsSuccess=true;
+	return ret;
+
+escSeqError:
+	fprintf(stderr,"escape sequence error.\n");
+	free(buf);
+	*outIsSuccess=false;
+	return std::string();
+}
+
+#ifdef USE_READLINE
+std::string gLastLine="";
+PP_API std::string ReadFromStdin(bool *outIsEOF,const char *inPrompt) {
+	std::string ret;
+	char *line=readline(inPrompt);
+		if(line!=NULL) {
+			std::string s=std::string(line);
+			if(strlen(line)>0 && s!=gLastLine) {
+				add_history(line);
+				gLastLine=s;
+			}
+		} else {
+			*outIsEOF=true;
+			return "";
+		}
+		ret=std::string(line);
+		*outIsEOF=false;
+	free(line);
+	return ret;
+}
+#else
+PP_API std::string ReadFromStdin(bool *outIsEOF,const char *inPrompt) {
+	printf(inPrompt);
+	std::string ret;
+	*outIsEOF=std::getline(std::cin,ret).eof();
+	return ret;
+}
+#endif
 

@@ -34,7 +34,7 @@ PP_API bool Install(Word *inWord,const bool inUseShortendForm) {
 	
 	auto dictIter=Dict.find(inWord->longName);
 	if(dictIter!=Dict.end() && dictIter->second->isForgetable==false) {
-		return GlobalContext->Error(E_CAN_NOT_INSTALL_UNOVERWRITABLE,inWord->longName);
+		return GlobalContext->Error(ErrorIdWithString::E_CAN_NOT_INSTALL_UNOVERWRITABLE,inWord->longName);
 	}
 	Dict[inWord->longName]=inWord;
 
@@ -65,7 +65,7 @@ PP_API bool Install(Word *inWord,const bool inUseShortendForm) {
 			} else {
 				const Word *shortendWord=dictIter->second;
 				if(shortendWord->isForgetable==false) {
-					GlobalContext->Error(E_CAN_NOT_MAKE_SHORTEN_NAME_UNOVERWRITABLE,
+					GlobalContext->Error(ErrorIdWithString::E_CAN_NOT_MAKE_SHORTEN_NAME_UNOVERWRITABLE,
 										shortendWord->shortName);
 				} else {
 					delete shortendWord;
@@ -78,6 +78,8 @@ PP_API bool Install(Word *inWord,const bool inUseShortendForm) {
 			Dict[inWord->shortName]=inWord;
 		}
 	}
+	inWord->vocabulary=currentVocName;
+
 	return true;
 }
 
@@ -115,11 +117,11 @@ PP_API void Alias(const char *inNewName,const char *inSrcName) {
 
 static bool ambigous(Context& inContext) NOEXCEPT {
 	const Word *self=(*inContext.ip);
-	inContext.Error(E_AMBIGOUS_WORD_NAME,self->shortName);
+	inContext.Error(ErrorIdWithString::E_AMBIGOUS_WORD_NAME,self->shortName);
 
 	auto iter=gNameToVocName.find(self->shortName);
 	if(iter==gNameToVocName.end()) {
-		inContext.Error(E_SYSTEM_ERROR);
+		inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
 		exit(-1);
 	}
 	auto vector=iter->second;

@@ -19,17 +19,23 @@ extern "C" PP_API void InitDict() {
 	// ex:
 	//	2 even? { "OK" } { "FALSE" } factor:if .
 	Install(new Word("if",WORD_FUNC {
-		if(inContext.DS.size()<3) { return inContext.Error(E_DS_AT_LEAST_3); }
+		if(inContext.DS.size()<3) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_3);
+		}
 		TypedValue elsePart=Pop(inContext.DS);
-		if(elsePart.dataType!=kTypeWord) { return inContext.Error(E_TOS_WP,elsePart); }
+		if(elsePart.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,elsePart);
+		}
 
 		TypedValue truePart=Pop(inContext.DS);
-		if(truePart.dataType!=kTypeWord) {
-			return inContext.Error(E_SECOND_WP,truePart);
+		if(truePart.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_WP,truePart);
 		}
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=kTypeBool) { return inContext.Error(E_THIRD_BOOL,tv); }
+		if(tv.dataType!=DataType::kTypeBool) {
+			return inContext.Error(InvalidTypeErrorID::E_THIRD_BOOL,tv);
+		}
 
 		if( tv.boolValue ) {
 			if(inContext.Exec(truePart)==false) {

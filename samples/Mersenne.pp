@@ -1,14 +1,29 @@
 windows? if utf8>sjis then
 
-"help" :
-	"与えられた数 N に対するメルセンヌ数（2^N-1）が素数か否かを計算します。" .cr
-	"usage: ../para Mersenne.pp N prime-test" .cr
-	"ex1: M26 = 2^23209-1" .cr
-	"     ../para Mersenne.pp 23209 prime-test" .cr
-	"ex2: M27 = 2^44497-1" .cr
-	"     ../para Mersenne.pp 44497 prime-test" .cr
-	"ex3: M28 = 2^86243-1" .cr
-	"     ../para Mersenne.pp 86243 prime-test" .cr
+"help" : <<<
+	----------
+	Calculates whether the Mersenne number (2^N-1) for a given number N is
+	prime or not. Depending on your computing environment, it may take a few
+	minutes to run.
+
+		usage: ../para Mersenne.pp N prime-test
+
+		ex1: M26 = 2^23209-1
+		\    ../para Mersenne.pp 23209 prime-test
+
+		ex2: M27 = 2^44497-1
+	    \    ../para Mersenne.pp 44497 prime-test
+
+	    ex3: M28 = 2^86243-1" .cr
+	    \    ../para Mersenne.pp 86243 prime-test
+
+		ex4: Perform a check around M28 (=2^86243-1).
+	    \    ../para Mersenne.pp run
+
+		ex5: test this sample program.
+	    \    ../para Mersenne.pp test
+	----------
+	>>> write
 ;
 
 interactive? not if
@@ -21,9 +36,9 @@ then
 // n --- t/f
 "lucas-lehmer-test" :
 	1 over mersenne	// n 1 Mn
-	rot	2 - 		// 1 Mn n-2
-	rot swap		// Mn 1 n-2
-	4 >INT inv-rot		// Mn 4 1 n-2
+	rot	1 - 		// 1 Mn n-1
+	rot swap		// Mn 1 n-1
+	4 >INT inv-rot		// Mn 4 1 n-1
 	for+				// Mn 4
 		dup * 2 - over %
 	next
@@ -35,9 +50,9 @@ then
 // n --- t/f
 "lucas-lehmer-test-fast" :
 	dup 1 over mersenne	// n n 1 Mn
-	rot	2 - 			// n 1 Mn n-2
-	rot swap			// n Mn 1 n-2
-	4 >INT inv-rot		// n Mn 4 1 n-2
+	rot	1 - 			// n 1 Mn n-1
+	rot swap			// n Mn 1 n-1
+	4 >INT inv-rot		// n Mn 4 1 n-1
 	for+			// n Mn 4(=Sk)
 		dup *		// n Mn sqrt(=Sk*Sk)
 		dup 		// n Mn sqrt sqrt
@@ -61,11 +76,11 @@ then
 
 // n --- t/f
 "lucas-lehmer-test-fast2" :
-	dup `p local-with
-	1LL swap << 1 - `m local-with
-	4LL `s local-with
-	2 `p , 1 - for+
-		`s , dup * `sqrt local-with
+	dup `p local
+	1LL swap << 1 - `m local
+	4LL `s local
+	2 `p , for+
+		`s , dup * `sqrt local
 		`sqrt , `m , & `sqrt , `p , >> + `s let
 		`s , `m , >= if `s , `m , - `s let then
 		`s , 2 - `s let
@@ -77,6 +92,31 @@ then
 	"just a moment, please..." .cr
 	dup lucas-lehmer-test-fast2
 	swap "2^%d-1 is " putf
-	if "prime" else "not prime" then "%s.\n" putf
+	if "PRIME" else "NOT prime" then "%s.\n" putf
+;
+
+"prime?" :
+	dup lucas-lehmer-test-fast2 swap "2^%d-1 is " putf
+	if "PRIME" else "NOT prime" then "%s.\n" putf
+;
+
+"run" :
+	"Perform a check around M28." .cr
+	"just a moment, please..." .cr
+	86241 prime?
+	"(M28=) " . 86243 prime?
+	86247 prime?
+;
+
+"print-checking" : dup "checking N=%d ... " putf flush-stdout ;
+
+"check" : != if "NG" .cr -1 exit then ;
+
+"test" :
+	"just a moment, please.\n" write
+	19935 print-checking lucas-lehmer-test-fast2 false check "ok." .cr
+	19937 print-checking lucas-lehmer-test-fast2 true  check "ok." .cr
+	19939 print-checking lucas-lehmer-test-fast2 false check "ok." .cr
+	"GOOD" .cr
 ;
 

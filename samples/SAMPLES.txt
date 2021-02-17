@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.93.1)  by K.Iigura 
+Paraphrase sample programs' README (ver.0.94.0)  by K.Iigura 
 
 　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
 い（\ は円マークを表します）。
@@ -14,6 +14,20 @@ Paraphrase sample programs' README (ver.0.93.1)  by K.Iigura
 99.pp
     いわゆる九九を表示します。
 	実行方法： ../para 99.pp run
+
+aop.pp
+    アスペクト指向プログラミングの例を示すものです。
+    samples ディレクトリにて ../para などとして Paraphrase インタプリタを起動し、
+
+        "aop.pp" load
+
+    とし、aop.pp を読み込みます。
+    次にワード hello を実行すると、様々な情報が表示されますが、hello の実体は
+
+        "hello" : "HELLO" .cr ;
+
+    です。つまり HELLO という表示以外はウィーブされたアドバイスによりなされている
+    ものであり、その実体は myDocol ワードです。詳しくは aop.pp の中身を御覧ください。
 
 check-scriptFile-args.pp
 	samples ディレクトリにて
@@ -49,7 +63,7 @@ countPrimeMT-short.pp
 dumpMPmt.pp
 	samples ディレクトリにて、
 
-		../para dumpMPmt.pp
+		../para dumpMPmt.pp run
 
 	とすると、1 から 5000 までのメルセンヌ数のうち素数であるものを求めます。printf 
 	などの使い方の参考にして下さい。
@@ -60,7 +74,7 @@ fact-tr.pp
 
         ../para fact-tr.pp
 
-    としてみて下さい。
+    としてみて下さい（引数に run と与えれば 100 の階乗を末尾再帰を使って求めます）。
 
 FizzBuzz.pp
 	いわゆる FizzBuzz 問題を処理するワード FizzBuzz を定義します。samples ディレク
@@ -73,6 +87,7 @@ FizzBuzz.pp
 		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 
 
 	という出力が得られます。
+	../para FizzBuzz.pp run とすると 1 から 19 までの数値に対して処理が行われます。
 
 Mersenne.pp
     メルセンヌ数の素数性を判定します。詳細は
@@ -81,13 +96,13 @@ Mersenne.pp
 
     として、表示される使用方法を御覧ください。
 
-PE21mt-short.pp
-    samples ディレクトリにおいて、
+PE21mt.pp
+    2 から指定された数までの友愛数の和を並列処理にて求めます。samples ディレクト
+    リにおいて、
 
-        ../para PE21mt-short.pp 10000 run
+        ../para PE21mt.pp 10000 run
 
-    などとします。
-    引数の 10000 ですが、これは 2 から 10,000 までの友愛数とその総和を求めるという
+    などとします。この例では 2 から 10,000 までの友愛数とその総和を求めるという
     意味です。例えば、1000 を指定した場合は、220 と 284 という 1000 以下の友愛数が
     表示されるとともに、その合計である 504 という値が表示されます。
 
@@ -97,17 +112,26 @@ PE25.pp
 	チ数列の項数を表示するものです。Project Euler No.25 では、1000 桁を超える最初
 	の項数を表示せよ、というのが問題ですので、samples ディレクトリにて
 
-		../para PE25.pp 1000 PE25 cr
+		../para PE25.pp 1000 PE25 .cr
 
 	とし、解くことができます（4782 と表示されるはずです）。
 
+PE56.pp
+    Project Euler No.56 を解くサンプルプログラムです。Project Euler No.56 は、
+    0<a,b<100 において a^b を 10 進数で表示したとき、各桁を表す数字の和のうち最大
+    となるものを示せ - というものです。
+
+        ../para PE56.pp run
+
+    にて計算できます。
+
 zdk.pp
-	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディレ
-	クトリにて
+	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディ
+    レクトリにて
 
-		../para zdk.pp zdk
+		../para zdk.pp run
 
-	とすると、ズンドコキヨシ問題の処理の様子が表示されます。
+	とすると、ズンドコキヨシ問題を処理する様子が表示されます。
 
 -----
 

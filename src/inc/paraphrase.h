@@ -31,3 +31,5 @@ PP_API void Alias(const char *inNewName,const char *inSrcName);
 PP_API const std::string& GetCurrentVocName();
 PP_API void SetCurrentVocName(const std::string& inStr);
 
+PP_API std::string EvalEscapeSeq(std::string& inString,bool *outIsSuccess);
+

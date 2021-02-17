@@ -20,5 +20,11 @@ inline TypedValue& ReadSecond(Stack& inStack) {
 	return inStack[inStack.size()-2];
 }
 
+inline int GetAddress(Stack& inStack,int inPos) {
+	TypedValue& tv=inStack.at(inPos);
+	if(tv.dataType!=DataType::kTypeAddress) { return -1; }
+	return tv.intValue;
+}
+
 PP_API void ShowStack(Stack& inStack,const char *inStackName);
 

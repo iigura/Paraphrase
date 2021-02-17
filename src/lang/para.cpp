@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.93.0"
+#define VERSION "0.94.0"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -50,9 +50,6 @@
 
 const char *kVersion=VERSION;
 
-PP_API TypedValue G_ARGS;
-PP_API unsigned int G_NumOfCores;
-
 TypedValue G_InvalidTV = TypedValue();
 
 BigInt G_BI_DBL_MAX(DBL_MAX);
@@ -97,8 +94,12 @@ void InitDict_Control();
 void InitDict_String();
 void InitDict_Array();
 void InitDict_List();
+void InitDict_Assoc();
 void InitDict_Parallel();
+void InitDict_LocalVar();
 void InitDict_Optimize();
+void InitDict_AOP();
+void InitDict_Debug();
 
 void RunningOnInteractive();
 
@@ -113,6 +114,27 @@ int main(int argc,char *argv[]) {
 	#endif
 #endif
 
+// check data size for TypedValue optimize hack.
+static_assert(sizeof(double)>=sizeof(Word*) 
+		   && sizeof(double)>=sizeof(Word**)
+		   && sizeof(double)>=sizeof(bool)
+		   && sizeof(double)>=sizeof(int) 
+		   && sizeof(double)>=sizeof(long)
+		   && sizeof(double)>=sizeof(float)
+		   && sizeof(double)>=sizeof(WordFunc),
+			  "SYSTEM ERROR: unexpected compile system. sizeof(double) is not max.");
+#if 0
+	fprintf(stderr,"sizeof(Word*)  =%lu\n",sizeof(Word*));
+	fprintf(stderr,"sizeof(Word**) =%lu\n",sizeof(Word**));
+	fprintf(stderr,"sizeof(bool)   =%lu\n",sizeof(bool));
+	fprintf(stderr,"sizeof(int)    =%lu\n",sizeof(int));
+	fprintf(stderr,"sizeof(long)   =%lu\n",sizeof(long));
+	fprintf(stderr,"sizeof(float)  =%lu\n",sizeof(float));
+	fprintf(stderr,"sizeof(double) =%lu\n",sizeof(double));
+	fprintf(stderr,"sizeof(WordFunc)=%lu\n",sizeof(WordFunc));
+	exit(-1);
+#endif
+
 	boost::timer::cpu_timer timer; 
 
 	if(parseOption(argc,argv)==false) { return -1; }
@@ -125,39 +147,40 @@ int main(int argc,char *argv[]) {
 	SetCurrentVocName("user");
 	
 	if(gToEvalStr!="") {
-		bool result=OuterInterpreter(*GlobalContext,gToEvalStr);
-		if(result==false) { return -1; }
+		OIResult result=OuterInterpreter(*GlobalContext,gToEvalStr);
+		if(result!=OIResult::OI_NO_ERROR) { return -1; }
 	}
 	if(gInputFilePath==NULL && gEvalAndExit ) { return 0; }
 
 	for(int i=0; i<gArgsToExec.size(); i++) {
 		std::string token=gArgsToExec[i];
 		TypedValue tv=GetTypedValue(token);
-		if(tv.dataType==kTypeInvalid) {
+		if(tv.dataType==DataType::kTypeInvalid) {
 			tv=TypedValue(token);
-			tv.dataType=kTypeMayBeAWord;
+			tv.dataType=DataType::kTypeMayBeAWord;
 		}
 		gTvListForArgs->emplace_back(tv);
 	}
 	G_ARGS=TypedValue(gTvListForArgs);
 
 	if(gSimpleOneLiner==false) {
+		if(gInputFilePath==NULL) { printVersion(); }
 		while(gIsEOF==false) {
 			std::string line=gReadLineFunc();
-			if(line=="") { continue; }
-			bool result=OuterInterpreter(*GlobalContext,line);
+			OIResult result=OuterInterpreter(*GlobalContext,line);
 			if(gInputFilePath==NULL) {
-				if(result==false) {
+				if(result!=OIResult::OI_NO_ERROR) {
 					if(GlobalContext->IsInterpretMode()==false) {
 						GlobalContext->RemoveDefiningWord();
 						GlobalContext->SetInterpretMode();
+						GlobalContext->IS.clear();
 					}
 				} else {
 					if(gUseOkDisplay && GlobalContext->IsInterpretMode()) {
 						puts(" ok.");
 					}
 				}
-			} else if(result==false) {
+			} else if(result!=OIResult::OI_NO_ERROR) {
 				break;
 			}
 		}
@@ -167,8 +190,8 @@ int main(int argc,char *argv[]) {
 		const size_t n=gArgsToExec.size();	
 		for(size_t i=0; i<n; i++) {
 			std::string s=gArgsToExec[i];	
-			bool result=OuterInterpreter(*GlobalContext,s);	
-			if(result==false) { return -1; }	
+			OIResult result=OuterInterpreter(*GlobalContext,s);	
+			if(result!=OIResult::OI_NO_ERROR) { return -1; }	
 		}
 	}
 
@@ -201,8 +224,12 @@ static void initDict() {
 	InitDict_String();
 	InitDict_Array();
 	InitDict_List();
+	InitDict_Assoc();
 	InitDict_Parallel();
+	InitDict_LocalVar();
 	InitDict_Optimize();
+	InitDict_AOP();
+	InitDict_Debug();
 }
 
 static bool parseOption(int argc,char *argv[]) {
@@ -302,7 +329,7 @@ static bool initReadLineFunc() {
 		} else {
 			gFileStream.open(gInputFilePath);
 			if(gFileStream.fail()) {
-				return GlobalContext->Error(E_CAN_NOT_OPEN_FILE,
+				return GlobalContext->Error(ErrorIdWithString::E_CAN_NOT_OPEN_FILE,
 											std::string(gInputFilePath));
 			}
 			if(gFileStream.peek()=='#') {
@@ -315,28 +342,12 @@ static bool initReadLineFunc() {
 	return true;
 }
 
-#ifdef USE_READLINE
 static std::string readFromStdin() {
-	char *line=readline(gUsePrompt ? getPrompt() : "");
-		if(line!=NULL) {
-			if(strlen(line)>0) {
-				add_history(line);
-			}
-		} else {
-			gIsEOF=true;
-		}
-		std::string ret=std::string(line==NULL ? "" : line);
-	free(line);
+	bool isEOF;
+	std::string ret=ReadFromStdin(&isEOF,gUsePrompt ? getPrompt() : "");
+	gIsEOF=isEOF;
 	return ret;
 }
-#else
-static std::string readFromStdin() {
-	if( gUsePrompt ) { printf(getPrompt()); }
-	std::string ret;
-	gIsEOF=std::getline(std::cin,ret).eof();
-	return ret;
-}
-#endif
 
 static const char *getPrompt() {
 	return GlobalContext->IsInterpretMode() ? " > " : ">> ";
@@ -357,6 +368,8 @@ static void printUsage() {
 				   "N should be a positive integer.\n");
 	fprintf(stderr,"  -e (--eval) S    "
 				   "evaluate the string S before executing the given script file.\n");
+	fprintf(stderr,"  -E (--eval-and-exit) S  "
+				   "evaluate the string S and exit.\n");
 	fprintf(stderr,"  -q (--quiet)     "
 				   "suppress prompt and 'ok'. (equivalent to -nk)\n");
 	fprintf(stderr,"  -n (--noprompt)  suppress prompt.\n");
@@ -368,6 +381,7 @@ static void printUsage() {
 }
 
 static void printVersion() {
-	printf("para: Paraphrase interpreter version %s by Koji Iigura.\n",kVersion);
+	// printf("para: Paraphrase interpreter version %s by Koji Iigura.\n",kVersion);
+	printf("Paraphrase %s  Copyright (C) 2018-2021 Koji Iigura\n",kVersion);
 }
 

@@ -1,10 +1,24 @@
-"info" :
-	"This sample program shows factorial calculation by tail recursion." .cr
-	"usage: ../para fact-tr.pp 100LL fact .cr" .cr
+"help" : <<<
+
+	This sample program shows factorial calculation by tail recursion.
+
+	\     usage: ../para fact-tr.pp 100LL fact .cr
+
+    Alternatively, if you just want to calculate the factorial of 100,
+	you can run it with the argument "run" as shown below.
+
+    \            ../para fact-tr.pp run
+
+	To test using the factorial of 100, it is sufficient to give "test"
+	as the argument (if it  success will be displayed  "GOOD").
+
+	\            ../para fact-tr.pp test
+
+    >>> write
 ;
 
 interactive? not if
-	args size 0? if info then
+	args size 0? if help then
 then
 
 "fact-main" : // accum n -- resutl
@@ -16,4 +30,15 @@ then
 ;
 
 "fact" : 1 swap fact-main ;
+
+"run" : 100LL fact .cr ;
+
+"check" : != if "NG" .cr -1 exit then ;
+
+"test" :
+	100LL fact
+	93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
+	check
+	"GOOD" .cr
+;
 

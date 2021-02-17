@@ -1,3 +1,4 @@
+#include <array>
 #include <vector>
 #include <initializer_list>
 
@@ -23,8 +24,36 @@ struct OptPattern {
 	}
 };
 
+struct MathOpOptDB {
+	TypedValue originalOp;
+	std::vector<TypedValue> replaceOp;	// int,long,float,dobule,BigInt,BigFloat
+
+	MathOpOptDB(const TypedValue& inOriginalOp,
+				const std::initializer_list<TypedValue>& inReplaceOp)
+     :originalOp(inOriginalOp),replaceOp(inReplaceOp) {
+		assert(inReplaceOp.size()==6);
+	}
+
+	MathOpOptDB() {
+		// empty
+	}
+};
+
+static OptPattern *gOptDB=NULL;
+static TypedValue gTvLit;	// == getWord("std:_lit");
+static MathOpOptDB *gMathOp=NULL;
+static TypedValue gWordLit[4];
+enum class LitType {
+   	kLitInt   =0,
+	kLitLong  =1,
+	kLitFloat =2,
+	kLitDouble=3,
+};
+
 static TypedValue getWord(const char *inWordName);
 static bool optimize(CodeThread *ioThread,const OptPattern& inPattern);
+static bool mathOpOptimize(CodeThread *ioThread);
+static bool litOptimize(CodeThread *ioThread);
 
 static bool lvopOptimize(CodeThread *ioThread);
 static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP);
@@ -40,8 +69,6 @@ static void updateCode(CodeThread *ioThread,
 					   int inStartPos,
 					   std::vector<TypedValue>& inNewCode,
 					   int inOldSize);
-
-static OptPattern *gOptDB;
 
 PP_API void InitOptPattern() {
 	static OptPattern optDB[]={
@@ -67,6 +94,12 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:_8"),getWord("std:_getValue")},{getWord("std:$8>")}),
 		OptPattern({getWord("std:_9"),getWord("std:_getValue")},{getWord("std:$9>")}),
 
+		// "dup 2 % 0 ==" -> "@even?"
+		OptPattern({getWord("std:dup"),
+					getWord("std:_litInt"),TypedValue(2),getWord("std:%"),
+					getWord("std:_litInt"),TypedValue(0),getWord("std:==")},
+				   {getWord("std:@even?")}),
+
 		OptPattern({getWord("std:>r"),getWord("std:>r")},{getWord("std:>r>r")}),
 		OptPattern({getWord("std:r>"),getWord("std:r>")},{getWord("std:r>r>")}),
 		// "0 ==" convert to "0?"
@@ -74,6 +107,7 @@ PP_API void InitOptPattern() {
 				   {getWord("std:0?")}),
 		OptPattern({getWord("std:_lit"),TypedValue(2),getWord("std:/")},
 				   {getWord("std:2/")}),
+		OptPattern({getWord("std:_2"),getWord("std:/")},{getWord("std:2/")}),
 		OptPattern({getWord("std:dup"),getWord("std:@r>"),getWord("std:%")},
 				   {getWord("std:_dup_@r>%")}),
 		OptPattern({getWord("std:dup"),getWord("std:i"),getWord("std:%")},
@@ -85,8 +119,8 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:i"),getWord("std:%")},{getWord("std:_r>%")}),
 		OptPattern({getWord("std:i"),getWord("std:+")},{getWord("std:_r>+")}),
 		OptPattern({getWord("std:dup"),getWord("std:i")},{getWord("std:_dup_i")}),
-		OptPattern({getWord("std:_repeat?+"),getWord("std:_branch-if-false")},
-				   {getWord("std:_branchWhenLoopEnded")}),
+		//OptPattern({getWord("std:_repeat?+"),getWord("std:_branch-if-false")},
+		//		   {getWord("std:_branchWhenLoopEnded")}),
 		OptPattern({getWord("std:_lit"),TypedValue(2),getWord("std:_step+")},
 				   {getWord("std:_step++")}),
 		OptPattern({getWord("std:swap"),getWord("std:_r>+"),getWord("std:swap")},
@@ -99,19 +133,22 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:dup"),getWord("std:+")},{getWord("std:2*")}),
 		OptPattern({getWord("std:+"),getWord(">r")},{getWord("std:+>r")}),
 
-		OptPattern({getWord("std:_lit"),TypedValue(0)},{getWord("std:_0")}),
-		OptPattern({getWord("std:_lit"),TypedValue(1)},{getWord("std:_1")}),
-		OptPattern({getWord("std:_lit"),TypedValue(2)},{getWord("std:_2")}),
-		OptPattern({getWord("std:_lit"),TypedValue(3)},{getWord("std:_3")}),
-		OptPattern({getWord("std:_lit"),TypedValue(4)},{getWord("std:_4")}),
-		OptPattern({getWord("std:_lit"),TypedValue(5)},{getWord("std:_5")}),
-		OptPattern({getWord("std:_lit"),TypedValue(6)},{getWord("std:_6")}),
-		OptPattern({getWord("std:_lit"),TypedValue(7)},{getWord("std:_7")}),
-		OptPattern({getWord("std:_lit"),TypedValue(8)},{getWord("std:_8")}),
-		OptPattern({getWord("std:_lit"),TypedValue(9)},{getWord("std:_9")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(0)},{getWord("std:_0")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(1)},{getWord("std:_1")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(2)},{getWord("std:_2")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(3)},{getWord("std:_3")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(4)},{getWord("std:_4")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(5)},{getWord("std:_5")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(6)},{getWord("std:_6")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(7)},{getWord("std:_7")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(8)},{getWord("std:_8")}),
+		OptPattern({getWord("std:_litInt"),TypedValue(9)},{getWord("std:_9")}),
 		OptPattern({getWord("std:drop"),getWord("std:drop"),getWord("std:drop")},
 				   {getWord("std:3drop")}),
 		OptPattern({getWord("std:drop"),getWord("std:drop")},{getWord("std:2drop")}),
+
+		OptPattern({getWord("std:_lit"),TypedValue(true)},{getWord("std:true")}),
+		OptPattern({getWord("std:_lit"),TypedValue(false)},{getWord("std:false")}),
 
 		OptPattern({getWord("std:_2"),getWord("std:pick")},{getWord("std:2pick")}),
 		OptPattern({getWord("std:_3"),getWord("std:pick")},{getWord("std:3pick")}),
@@ -131,12 +168,91 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:_4"),getWord("std:replace")},
 				   {getWord("std:4replace")}),
 
+		OptPattern({getWord("std:_1"),getWord("std:+")},{getWord("std:_inc")}),
+		OptPattern({getWord("std:_1"),getWord("std:-")},{getWord("std:_dec")}),
+
+		OptPattern({getWord("std:$0>"),getWord("std:_inc"),getWord("std:>$0")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s0 | LVOP::d0)}),
+		OptPattern({getWord("std:$1>"),getWord("std:_inc"),getWord("std:>$1")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s1 | LVOP::d1)}),
+		OptPattern({getWord("std:$2>"),getWord("std:_inc"),getWord("std:>$2")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s2 | LVOP::d2)}),
+		OptPattern({getWord("std:$3>"),getWord("std:_inc"),getWord("std:>$3")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s3 | LVOP::d3)}),
+		OptPattern({getWord("std:$4>"),getWord("std:_inc"),getWord("std:>$4")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s4 | LVOP::d4)}),
+		OptPattern({getWord("std:$5>"),getWord("std:_inc"),getWord("std:>$5")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s5 | LVOP::d5)}),
+		OptPattern({getWord("std:$6>"),getWord("std:_inc"),getWord("std:>$6")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s6 | LVOP::d6)}),
+		OptPattern({getWord("std:$7>"),getWord("std:_inc"),getWord("std:>$7")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s7 | LVOP::d7)}),
+		OptPattern({getWord("std:$8>"),getWord("std:_inc"),getWord("std:>$8")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s8 | LVOP::d8)}),
+		OptPattern({getWord("std:$9>"),getWord("std:_inc"),getWord("std:>$9")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::INC | LVOP::s9 | LVOP::d9)}),
+
+		OptPattern({getWord("std:$0>"),getWord("std:_dec"),getWord("std:>$0")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s0 | LVOP::d0)}),
+		OptPattern({getWord("std:$1>"),getWord("std:_dec"),getWord("std:>$1")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s1 | LVOP::d1)}),
+		OptPattern({getWord("std:$2>"),getWord("std:_dec"),getWord("std:>$2")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s2 | LVOP::d2)}),
+		OptPattern({getWord("std:$3>"),getWord("std:_dec"),getWord("std:>$3")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s3 | LVOP::d3)}),
+		OptPattern({getWord("std:$4>"),getWord("std:_dec"),getWord("std:>$4")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s4 | LVOP::d4)}),
+		OptPattern({getWord("std:$5>"),getWord("std:_dec"),getWord("std:>$5")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s5 | LVOP::d5)}),
+		OptPattern({getWord("std:$6>"),getWord("std:_dec"),getWord("std:>$6")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s6 | LVOP::d6)}),
+		OptPattern({getWord("std:$7>"),getWord("std:_dec"),getWord("std:>$7")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s7 | LVOP::d7)}),
+		OptPattern({getWord("std:$8>"),getWord("std:_dec"),getWord("std:>$8")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s8 | LVOP::d8)}),
+		OptPattern({getWord("std:$9>"),getWord("std:_dec"),getWord("std:>$9")},
+				   {getWord("std:_lvop"),TypedValue(LVOP::DEC | LVOP::s9 | LVOP::d9)}),
+
+		OptPattern({getWord("std:_0"),getWord("std:==")},{getWord("std:0?")}),
+
+		OptPattern({getWord("std:dup"),getWord("std:_1"),getWord("std:!=")},
+				   {getWord("std:_@1!=")}),
+
 		OptPattern(),	// the sentinel
 	};
+
 	gOptDB=optDB;
+	gTvLit=getWord("std:_lit");
+
+	static MathOpOptDB mathOpDB[]={
+		MathOpOptDB(getWord("std:*"),
+					{getWord("std:_int*"),   getWord("std:_long*"),
+					 getWord("std:_float*"), getWord("std:_double*"),
+					 getWord("std:_bigInt*"),getWord("std:_bigFloat*")}),
+		MathOpOptDB(),
+	};
+	gMathOp=mathOpDB;
+
+	gWordLit[(int)LitType::kLitInt]   =getWord("std:_litInt");
+	gWordLit[(int)LitType::kLitLong]  =getWord("std:_litLong");
+	gWordLit[(int)LitType::kLitFloat] =getWord("std:_litFloat");
+	gWordLit[(int)LitType::kLitDouble]=getWord("std:_litDouble");
+}
+
+int gOptimizeLevel=5;
+
+PP_API void SetOptimizeLevel(int inOptimizeLevel) {
+	gOptimizeLevel=inOptimizeLevel;
+}
+PP_API int GetOptimizeLevel() {
+	return gOptimizeLevel;
 }
 
 void Optimize(CodeThread *ioThread) {
+	if(gOptimizeLevel==0) { return; }	// no optimize
+	while(mathOpOptimize(ioThread)) { /* empty */ }
+	while(litOptimize(ioThread)) { /* empty */ }
+
 	bool changed;
 	do {
 		changed=false;
@@ -145,9 +261,8 @@ void Optimize(CodeThread *ioThread) {
 		}
 	} while( changed );
 
-	do {
-		changed=lvopOptimize(ioThread);
-	} while( changed );
+	while(lvopOptimize(ioThread))   { /* empty */ }
+
 	do {
 		changed=lvopPack(ioThread);
 	} while( changed );
@@ -157,21 +272,21 @@ void ReplaceTailRecursionToJump(Word *inWord,CodeThread *ioThread) {
 	size_t n=ioThread->size();
 	if(n<2) { return; }
 	TypedValue& semis=ioThread->at(n-1);
-	if(semis.dataType!=kTypeDirectWord || semis.wordPtr!=Dict["std:_semis"]) {
+	if(semis.dataType!=DataType::kTypeDirectWord || semis.wordPtr!=Dict["std:_semis"]) {
 		return;
 	}
 	TypedValue& lastCall=ioThread->at(n-2);
-	if(lastCall.dataType!=kTypeDirectWord || lastCall.wordPtr!=inWord) {
+	if(lastCall.dataType!=DataType::kTypeDirectWord || lastCall.wordPtr!=inWord) {
 		return;
 	}
 
 	lastCall.wordPtr=Dict["std:_absolute-jump"];
 	auto insertPos=ioThread->begin()+n-1;
-	ioThread->insert(insertPos,TypedValue(kTypeAddress,0));
+	ioThread->insert(insertPos,TypedValue(DataType::kTypeAddress,0));
 
 	for(size_t i=0; i<n-2; i++) {
 		TypedValue& tv=ioThread->at(i);
-		if(tv.dataType!=kTypeAddress || tv.intValue<=n-2) { continue; }
+		if(tv.dataType!=DataType::kTypeAddress || tv.intValue<=n-2) { continue; }
 		tv.intValue++;	// jump to semis.
 	}
 }
@@ -207,11 +322,63 @@ static bool optimize(CodeThread *ioThread,const OptPattern& inPattern) {
 						   inPattern.replaceTo.end());
 
 		for(int k=0; k<ioThread->size(); k++) {
-			if(ioThread->at(k).dataType==kTypeAddress
+			if(ioThread->at(k).dataType==DataType::kTypeAddress
 			   && ioThread->at(k).intValue>i) {
 				ioThread->at(k).intValue-=inPattern.gap;
 			}
 		}
+		ret=true;
+	}
+	return ret;
+}
+
+static bool mathOpOptimize(CodeThread *ioThread) {
+	bool ret=false;
+	for(int i=0; i<(int)ioThread->size()-3; i++) {	// 3 == sizeof{lit,N,OP}
+		if(!(ioThread->at(i)==gTvLit)) { continue; }
+		TypedValue& tvN=ioThread->at(i+1);
+		if(tvN.IsNumber()==false) { continue; }
+		TypedValue& op=ioThread->at(i+2);
+		int mathOpDB_index=-1;
+		for(int j=0; gMathOp[j].originalOp.dataType==DataType::kTypeDirectWord; j++) {
+			if(op==gMathOp[j].originalOp) { mathOpDB_index=j; break; }
+		}	
+		if(mathOpDB_index<0) { continue; }
+		int replaceIndex=-1;
+		switch(tvN.dataType) {
+			case DataType::kTypeInt:		replaceIndex=0;	break;
+			case DataType::kTypeLong:		replaceIndex=1;	break;
+			case DataType::kTypeFloat:		replaceIndex=2;	break;
+			case DataType::kTypeDouble:		replaceIndex=3; break;
+			case DataType::kTypeBigInt:		replaceIndex=4;	break;
+			case DataType::kTypeBigFloat:	replaceIndex=5; break;
+			default:
+				fprintf(stderr,"SYSTEM ERROR in mathOpOptimise.\n");
+				exit(-1);
+		}
+		ioThread->at(i+2)=gMathOp[mathOpDB_index].replaceOp[replaceIndex];
+		ret=true;
+	}
+	return ret;
+}
+
+static bool litOptimize(CodeThread *ioThread) {
+	bool ret=false;
+	for(int i=0; i<(int)ioThread->size()-2; i++) {	// 3 == sizeof{lit,N}
+		if(!(ioThread->at(i)==gTvLit)) { continue; }
+		TypedValue& tvN=ioThread->at(i+1);
+		if(tvN.IsNumber()==false) { continue; }
+		int index=-1;
+		switch(tvN.dataType) {
+			case DataType::kTypeInt:	index=(int)LitType::kLitInt;	break;
+			case DataType::kTypeLong:	index=(int)LitType::kLitLong;	break;
+			case DataType::kTypeFloat:	index=(int)LitType::kLitFloat;	break;
+			case DataType::kTypeDouble:	index=(int)LitType::kLitDouble;	break;
+			default:
+				;	// empty
+		}
+		if(index<0) { continue; }
+		ioThread->at(i)=gWordLit[index];
 		ret=true;
 	}
 	return ret;
@@ -296,7 +463,7 @@ static bool lvopOptimize(CodeThread *ioThread) {
 static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=kTypeDirectWord) { return false; }
+	if(tv.dataType!=DataType::kTypeDirectWord) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	if((lvop&LVOP::opMask)!=inLVOP) { return false; }
 	return (lvop & LVOP::destMask)==LVOP::dDS;
@@ -305,7 +472,7 @@ static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 static bool fromDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=kTypeDirectWord) { return false; }
+	if(tv.dataType!=DataType::kTypeDirectWord) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	if((lvop&LVOP::opMask)!=inLVOP) { return false; }
 	return (lvop & LVOP::src1Mask)==LVOP::sDS;
@@ -314,7 +481,7 @@ static bool fromDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 static bool isLVOpSupport(CodeThread *inThread,int inTarget,LVOP inArgMask) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=kTypeDirectWord) { return false; }
+	if(tv.dataType!=DataType::kTypeDirectWord) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	return (lvop & inArgMask) !=0;
 }
@@ -322,7 +489,7 @@ static bool isLVOpSupport(CodeThread *inThread,int inTarget,LVOP inArgMask) {
 static bool isPushLVOP(CodeThread *inThread,int inTarget) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=kTypeLVOP) { return false; }
+	if(tv.dataType!=DataType::kTypeLVOP) { return false; }
 	LVOP lvop=static_cast<LVOP>(tv.intValue);
 	return (lvop & LVOP::XPushBase) !=0;
 }
@@ -332,12 +499,14 @@ static bool lvopPack(CodeThread *ioThread) {
 	TypedValue tvLvopWord=getWord("std:_lvop");
 	TypedValue tv_N_LvopWord=getWord("std:_nLVOP");
 	for(int i=0; i<(int)ioThread->size()-4; i++) {
-		if(ioThread->at(i)==tvLvopWord && ioThread->at(i+1).dataType==kTypeLVOP
-		   && ioThread->at(i+2)==tvLvopWord && ioThread->at(i+3).dataType==kTypeLVOP) {
+		if(ioThread->at(i)==tvLvopWord
+		   && ioThread->at(i+1).dataType==DataType::kTypeLVOP
+		   && ioThread->at(i+2)==tvLvopWord
+		   && ioThread->at(i+3).dataType==DataType::kTypeLVOP) {
 			int lvopCount=0;
 			for(int t=0;
 				t<ioThread->size() && ioThread->at(i+t)==tvLvopWord
-				&& ioThread->at(i+t+1).dataType==kTypeLVOP
+				&& ioThread->at(i+t+1).dataType==DataType::kTypeLVOP
 				&& canGrouping(ioThread,i,t+2);
 				t+=2, lvopCount++) {
 				// empty
@@ -366,7 +535,7 @@ static bool canGrouping(const CodeThread *inThread,
 	const int n=(int)inThread->size();
 	for(int i=0; i<n; i++) {
 		const TypedValue& tv=inThread->at(i);
-		if(tv.dataType==kTypeAddress) {
+		if(tv.dataType==DataType::kTypeAddress) {
 			const int addr=tv.intValue;
 			if(inStartAddress<addr && addr<endAddress) {
 				// jump into target block
@@ -387,7 +556,7 @@ static void updateCode(CodeThread *ioThread,
 
 	int offset=inOldSize-(int)inNewCode.size();
 	for(int k=0; k<ioThread->size(); k++) {
-		if(ioThread->at(k).dataType==kTypeAddress
+		if(ioThread->at(k).dataType==DataType::kTypeAddress
 		   && ioThread->at(k).intValue>inStartPos) {
 				ioThread->at(k).intValue-=offset;
 		}

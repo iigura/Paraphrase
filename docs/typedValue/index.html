@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="typedValue.css">
+	<style type="text/css"><!-- .VERSION:before{content:"0.94.0";} --></style>
+	<style type="text/css"><!-- .DATE:before{content:"2021.2.17";} --></style>
+	<title>Paraphrase 値型リファレンス</title>
+</head>
+<body>
+<div id=main>
+<h1>Paraphrase 値型リファレンス ver. <span class="VERSION"></span></h1>
+<div id=author><span class="DATE"></span> 飯倉宏治</div>
+<section>
+<p>
+この文書では、Paraphrase ver. <span class="VERSION"></span> にて
+スタックにプッシ可能な値について説明します。
+最初にユーザが陽にプッシュ可能なものについて、
+後半にてシステム内部で使用されている値の種類について説明を行います。
+</p>
+</section>
+
+<!-- ========== 目次 ========== -->
+<section>
+<span id=context><h2 class=chapt>目次</h2></span>
+<table>
+	<tr>
+		<th class=categGroup>真偽値</th>
+		<td><a href="#bool">bool</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>数値</th>
+		<td><a href="#int">int</a></td>
+		<td><a href="#long">long</a></td>
+		<td><a href="#big-int">big-int</a></td>
+		<td><a href="#float">float</a></td>
+		<td><a href="#double">double</a></td>
+		<td><a href="#big-float">big-float</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>文字列</th>
+		<td><a href="#string">string</a></td>
+		<td><a href="#symbol">symbol</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>コンテナ</th>
+		<td><a href="#array">array</a></td>
+		<td><a href="#list">list</a></td>
+		<td><a href="#assoc">assoc</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>ファイル</th>
+		<td><a href="#file">file</a></td>
+		<td><a href="#eof">eof</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>ワード</th>
+		<td><a href="#word">word</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>標準コード</th>
+		<td><a href="#std-code">std-code</a></td>
+	</tr>
+	<tr>
+		<th class=categGroup>その他</th>
+		<td><a href="#eoc">eoc</a></td>
+		<td><a href="#invalid">invalid</a></td>
+	</tr>
+</table>
+</section>
+<br>
+
+<!-- ========== 値型の詳細 ========== -->
+<h2 class=chapt>値型の詳細</h2>
+<h3 class=groupHeader>真偽値</h3>
+<!-- ========== bool ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=bool>bool</h3>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		真を表す true または偽の値を表す false のいずれかを保持する値です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は C++ における bool にて実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		この値への変換用ワードは特にありません。
+		true または false というワードを実行するか、
+		各種の比較演算用ワード等を実行することにより、
+		状況に応じた真偽値がスタックに積まれます。
+		<p>
+		厳密には変換ではありませんが、強いて言えば
+		ワード eval を用いて、"true" eval などとすると、
+		文字列 true から bool 値である true をスタック上に
+		得ることができます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、真を表す値をワード true を用いて、スタックに
+		真を表す値 true を積んでいます。
+		<div class=example>
+			<code>
+				&gt; <u> true </u><br>
+				&nbsp; ok. <br>
+				&gt; <u> show   // show ワードでスタックの状況を表示させてみると… </u>
+					<br>
+<pre>
+      +-----------+
+TOS--&gt;| bool true |
+DS:-------------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== 数値の詳細 ========== -->
+<h3 class=groupHeader>数値</h3>
+
+<!-- ========== int ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=int>int</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		32 ビットの符号あり整数値を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は C++ における int にて実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;int により、TOS にある値を int に変換可能です
+		（ただし、int に収まりきらない値の場合はエラーとなります）。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		接頭語として 0x を付すと 16 進数として解釈されます。
+		10 進数としての値を入力する場合、接頭語・接尾後はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、123 という int の値をスタックに積んでいます。
+		<div class=example>
+			<code>
+				&gt; <u> 123 </u><br>
+				&nbsp; ok. <br>
+				&gt; <u> show   // show ワードでスタックの状況を表示させてみると… </u>
+					<br>
+<pre>
+      +---------+
+TOS--&gt;| int 123 |
+DS:-----------------
+ ok.
+</pre>
+			</code>
+		</div>
+
+		<p>
+		次の例では、16 進数で FF という int の値をスタックに積んでいます。
+		FF は大文字でも小文字でも構いません（0xFF, 0xFf, 0xfF, 0xFF いずれの
+		形式でも全て同じ値となります）。
+		<div class=example>
+			<code>
+				&gt; <u> 0xFF show </u><br>
+<pre>
+      +---------+
+TOS--&gt;| int 255 |
+DS:-----------------
+ ok.
+</pre>
+			</code>
+		</div>
+		</p>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== long ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=long>long</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		64 ビットの符号あり整数値を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は C++ における long にて実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;long により、TOS にある値を long に変換可能です
+		（ただし、long に収まりきらない値の場合はエラーとなります）。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		接尾詞として L または l を付けることにより、
+		long の値として解釈するよう処理系に指示を出すことができます（使用例を参照）。
+		ただし、数値と L や l との間に空白を入れてはいけません。
+		<p>
+		16 進数を表す場合は int と同様 0x という接頭語を用います。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、123 という long の値をスタックに積んでいます。
+		<div class=example>
+			<code>
+				&gt; <u> 123L </u><br>
+				&nbsp; ok. <br>
+				&gt; <u> show   // show ワードでスタックの状況を表示させてみると… </u>
+					<br>
+<pre>
+      +----------+
+TOS--&gt;| long 123 |
+DS:------------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== big-int ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=big-int>big-int</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		多倍長整数を表します。
+		実際にスタックに積まれる値は、多倍長整数へのポインタとなります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は boost::multiprecision::cpp_int にて実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;INT により、TOS にある値を big-int に変換可能です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		接尾詞として LL または ll を付けることにより、
+		big-int の値として解釈するよう処理系に指示を出すことができます（使用例を参照）。
+		ただし、数値と LL や ll との間に空白を入れてはいけません。
+		<p>
+		16 進数を表す場合は int と同様 0x という接頭語を用います。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、123 という big-int の値をスタックに積んでいます。
+		<div class=example>
+			<code>
+				&gt; <u> 123LL </u><br>
+				&nbsp; ok. <br>
+				&gt; <u> show   // show ワードでスタックの状況を表示させてみると… </u>
+					<br>
+<pre>
+      +------------+
+TOS--&gt;| bigInt 123 |
+DS:--------------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== float ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=float>float</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		32 ビットの浮動小数点数を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は C++ における float にて実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;float により、TOS にある値を float に変換可能です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		小数点を含む値に対し、接尾詞として f を付けることにより、
+		float の値として解釈されるようになります。
+		<p>
+		ただし、接頭語 0x を付けている場合は末尾に f を付した場合でも、
+		float の値にはなりません。
+		例えば 0x10f は 0x10F と同値であり、16 進数で 10f という整数値を
+		表現するものとして解釈されます。
+		これは小数点を表す . （ピリオド） が含まれている場合でも変わりません。
+		FF という 16 進数値は数学的には  0xFF.0 と同値です。
+		であれば、0xFF という値を float で表現しているとして 0xFF.0f と表現したく
+		なりますが、これは 16 進数で FF.0F という値を表していることと解釈されます。
+		</p>
+		<p>
+		接尾詞 f を付けない場合、小数点を表す . （ピリオド）が
+		含まれていると float もしくは double の値となります。
+		入力された値が float に格納できる場合は float の値となりますが、
+		float として格納できない場合は double の値として取り扱われます。
+		</p>
+		<p>
+		なお、.0f という記述は .f とも記述できます
+		（例えば 123.f 等）。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		次の例では 1.23 という float 値と
+		1.23 という double 値をスタックに積んでいます：
+		<div class=example>
+			<code>
+				&gt; <u> 1.23f 1.23 show </u>
+<pre>
+      +-----------------+
+TOS--&gt;| double 1.230000 |
+      | float 1.230000  |
+DS:-------------------------
+ ok.
+</pre>
+			</code>
+		</div>
+		<p>
+			一方、123.0 という値は float に格納可能と判断されるため、
+			接尾詞 f を付けなくとも float と判断されます：
+			<div class=example>
+				<code>
+					&gt; <u> 123.0 show </u>
+<pre>
+      +------------------+
+TOS--&gt;| float 123.000000 |
+DS:--------------------------
+ ok.
+</pre>
+				</code>
+			</div>
+		</p>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== double ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=double>double</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		64 ビットの浮動小数点数を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は C++ における double にて実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;double により、TOS にある値を double に変換可能です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		小数点を含む値に対し、接尾詞として d を付けることにより、
+		double の値として解釈されるようになります。
+		<p>
+		ただし、float 同様、接頭詞 0x が付されている場合は、
+		接尾詞の d は 16 進数の D として解釈されます。
+		詳細は <a href="#float">float</a> の説明を参照して下さい。
+		</p>
+		<p>
+		値に小数点が含まれている場合は float または double として解釈されます。
+		こちらについても詳細は <a href="#float">float</a> の説明を参照して下さい。
+		末尾の .0d を .d と省略できる点も float と同様です。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		次の例では 123 という int 値と、
+		123.0 という double 値をスタックに積んでいます：
+		<div class=example>
+			<code>
+				&gt; <u> 123 123.0d show </u>
+<pre>
+      +-------------------+
+TOS--&gt;| double 123.000000 |
+      |      int 123      |
+DS:---------------------------
+ ok.
+</pre>
+			</code>
+		</div>
+		<p>
+			次の例では、FF.12345 という 16 進数値をスタックに積んでいます：
+			<div class=example>
+				<code>
+					&gt; <u> 0xFF.12345 show </u>
+<pre>
+      +-------------------+
+TOS--&gt;| double 255.071106 |
+DS:---------------------------
+ ok.
+</pre>
+				</code>
+			</div>
+		</p>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== big-float ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=big-float>big-float </h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		10 進 100 桁の浮動小数点数を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		この値は C++ の boost::multiprecision::cpp_dec_float_100 にて
+		実装されています。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;FLOAT により、TOS にある値を big-float に変換可能です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		次男例では、1.23 という値を big-float に変換し、スタックに積んでいます：
+		<div class=example>
+			<code>
+				&gt; <u> 1.23 &gt;FLOAT show </u>
+<pre>
+      +----------------------------------+
+TOS--&gt;| bigFloat 1.230000019073486328125 |
+DS:------------------------------------------
+ ok.
+</pre>
+			</code>
+		</div>
+		※ 正確に 1.23 という値を格納できないため、このような値になっています。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== 文字列値の詳細 ========== -->
+<h3 class=groupHeader>文字列値</h3>
+<!-- ========== string ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=string>string</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		文字列を表します。
+		詳細については、<a href="string.html">string.html</a> も
+		併せて御覧ください。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		C++ の string を活用して実装されています。
+		実体は shared_ptr&lt;string&gt; で実装されているため、
+		dup で複製しても指している文字列の実体は同じです。
+		異なる実体を持つ文字列として複製するためには、
+		ワード clone にて複製して下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;str にて文字列に変換できます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ダブルクォーテーションまたはシングルクォーテーションで
+		くくることで文字列となります。
+		<p>
+		例："123" は数値 123 ではなく、文字列の 123 となります。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、ダブルクォーテーションを用いて、
+		文字列 123 をスタックに積んでいます：
+		<div class=example>
+			<code>
+				&gt; <u> "123" </u><br>
+				&nbsp; ok. <br>
+				&gt; <u> show   // show ワードでスタックの状況を表示させてみると… </u>
+					<br>
+<pre>
+      +--------------+
+TOS--&gt;| string '123' |
+DS:----------------------
+ ok.
+</pre>
+			</code>
+		</div>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== symbol ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=symbol>symbol</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		リストの中などで用いられるシンボルを表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		string 同様、C++ の string を活用して実装されています。
+		実体は shared_ptr&lt;string&gt; で実装されているため、
+		dup で複製しても指しているシンボルの実体は同じです。
+		異なる実体を持つシンボルとして複製するためには、
+		ワード clone にて複製して下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード &gt;symbol にて文字列はシンボルに変換できます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		英字もしくはアンダーバーから始まる文字列に対し、
+		接頭詞としてバッククォート ` を付すことにより、
+		以後の文字列をシンボルとして取り扱います。
+		バッククォートとその後に続く文字列との間には空白を置かないで下さい。
+		<p>
+		また、リストを構成している最中においては、
+		数値として認識されない文字列（例えば 1xy などの文字列）は
+		バッククォートを先頭に付さずともシンボルとなります。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、バッククォートと接頭詞として abc というシンボルを
+		スタックに積んでいます：
+		<div class=example>
+			<code>
+				&gt; <u> `abc show </u>
+<pre>
+      +------------+
+TOS--&gt;| symbol abc |
+DS:--------------------
+ ok.
+</pre>
+			</code>
+		</div>
+		<p>
+		次の例は、リスト中に 1xy というシンボル値を格納しています：
+		<div class=example>
+			<code>
+				&gt; <u> ( 1xy ) car show </u>
+<pre>
+      +------------+
+TOS--&gt;| symbol 1xy |
+DS:--------------------
+ ok.
+</pre>
+			</code>
+		</div>
+		</p>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== コンテナ ========== -->
+<h3 class=groupHeader>コンテナ</h3>
+<!-- ========== array ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=array>array</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		要素数が固定された配列を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		array はほぼ C++ の配列として表現されています
+		（「ほぼ」と書いたのは、配列と配列のサイズを保持する
+		C++ の構造体がその実態だからです）。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		数値の変換のような意味での変換用ワードはありませんが、
+		文字列を空白区切り文字で分解し、
+		それらを要素とする配列を作る &gt;array というワードが存在します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		特にありません。
+		ワード new-array-with の使用例を参照して下さい。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== list ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=list>list</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		リストを表します。
+		array は要素数が固定されていますが、list は可変長です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		list の実態は C++ における deque へのポインタです
+		（具体的には shared_ptr&lt; deque&lt;TypedValue&gt; gt; です ※）。 <br>
+		<br>
+		※ <span id="TypedValue">TypedValue</span> は、
+		本文書で説明している全ての値を格納可能な C++ の共用体です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ワード ( と ワード ) を用いることで、
+		リストの構築が可能です：
+		<div class=example>
+			<code>
+				&gt; <u> ( x y z 123 ) show </u>
+			</code>
+<pre>
+      +--------------------+
+TOS--&gt;| list ( x y z 123 ) |
+DS:----------------------------
+ ok.
+</pre>
+		</div>
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== assoc ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=assoc>assoc</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		連想配列を表します。
+		<a href="#list">list</a> と同様、可変長のコンテナとなります。
+		配列 <a href="#array">array</a> ではインデックス値は整数である必要が
+		ありましたが、連想配列 <a href="#asoc">assoc</a> では
+		インデックスは任意の値となります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		assoc の実態は C++ における unordered_map&lt;
+		<a href="#TypedValue">TypedValue</a>,
+		<a href="#TypedValue">TypedValue</a> &gt;
+		です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。ワード new-assoc の例を参照して下さい。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== file  ========== -->
+<h3 class=groupHeader>ファイル</h3>
+<!-- ========== file ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=file>file</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		ファイルへの入出力対象となるファイルオブジェクトを表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		本質的な実態は C++ における FILE ポインタです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。
+		ワード open の使用例を参照して下さい。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== eof ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=eof>eof</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		ファイルの終端を示す End Of File を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		値としての実体はありません。
+		eof という値の種類を示す情報を保持しているのみです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== ワード ========== -->
+<h3 class=groupHeader>ワード</h3>
+<!-- ========== word ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=word>word</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		（無名）ワードを表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		実態はワードへのポインタです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ワード名から word への変換は、ワード &gt;word で可能です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。
+		ワード &gt;word の使用例を参照して下さい。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== 標準コード ========== -->
+<h3 class=groupHeader>標準コード</h3>
+<!-- ========== ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=std-code>std-code</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		動的ライブラリで提供される標準コード仕様を満たす関数を表します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		実態は C++ の関数へのポインタです。
+		関数は、bool (*)(Context&amp;) noexcept 型である必要があります
+		（ただしインタプリタ para をビルドする時に、noexcept キーワードが
+		サポートされていないコンパイラを用いた場合は
+		noexcept キーワードは不要です）。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。
+		詳細については、ワード exec の仕様例を参照して下さい。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== その他 ========== -->
+<h3 class=groupHeader>その他</h3>
+<!-- ========== EoC: End of Communication ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=eoc>eoc</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		チャネルを通じた情報伝達が終了したことを示す
+		End of Communicatioon を表します。
+		この値を受信したチャネルは、
+		内部に蓄えられている情報が無くなり次第、
+		eoc を返すようになります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		値としての実体はありません。
+		eoc という値の種類を示す情報を保持しているのみです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		変換用ワードはありませんが、
+		eoc という同名のワードを実行することにより
+		スタックに本値を積むことができます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+<!-- ========== invalid ========== -->
+<div class=chunk>
+<h4 class=itemHeader id=invalid>invalid</h4>
+<table>
+<tr>
+	<th class=boldLabel>解説</th>
+	<td class=note>
+		無効な値を示します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>実体</th>
+	<td class=note>
+		値としての実体はありません。
+		invalid という値の種類を示す情報を保持しているのみです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>変換用ワード等</th>
+	<td class=note>
+		変換用ワードはありませんが、
+		invalid という同名のワードを実行することにより
+		スタックに本値を積むことができます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>接頭・接尾詞</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class="boldLabel">使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+</table>
+<br>
+</div><!-- chunk -->
+
+</div><!-- end of main -->
+</body>
+</html>
+

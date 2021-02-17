@@ -1,0 +1,75 @@
+@page { size: A4 }
+@media print {
+	body { font-size: 10pt; }
+	a:link { color: #0000FF; }
+	a:visited { color: #0000FF; }
+}
+.chunk { page-break-inside: avoid; }
+.newPage { page-break-after: always; }
+
+body { text-align: center; }
+h1 { font-size: 180%; }
+
+#main {
+	max-width: 40em;
+	text-align: left;
+	margin: 0 auto;
+}
+
+#author { text-align: right; }
+
+p.noindent { text-indent: 0em; }
+p:not(.noindent) { text-indent: 1em; }
+
+#context { margin-left: 2em; }
+
+h2.chapt {
+	border-top: 2px solid;
+	border-bottom: 2px solid;
+}
+
+.categGroup {
+	font-weight: bold;
+	text-align: left;
+}
+
+h3.groupHeader { 
+	border-bottom: double 5px;
+}
+
+h4.itemHeader { border-bottom: 1px solid; }
+
+th.boldLabel {
+	width: 8em;
+	vertical-align: top;
+}
+
+td.note {
+	vertical-align: top;
+	text-indent: 1em;
+}
+
+div.example {
+	text-indent: 0em;
+	padding-left: 1em;
+	border-radius: 15px;
+	border: solid 2px;
+	border-color: #888888;
+}
+
+#fmtList {
+    border-collapse: separate;
+    border-spacing: 0px 15px;
+}
+
+#fmtList tr {
+	vertical-align: top;
+}
+
+pre {
+    font-family: "Consolas","Courier New", monospace;
+}
+
+th,td {
+	padding-bottom: 1em;
+}

@@ -13,6 +13,15 @@
 static bool hasElement(TypedValue& inTvList,TypedValue& inElement);
 
 void InitDict_List() {
+	Install(new Word("@list?",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
+		TypedValue& tos=ReadTOS(inContext.DS);
+		inContext.DS.emplace_back(tos.dataType==DataType::kTypeList);
+		NEXT;
+	}));
+
 	Install(new Word("(",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
 		inContext.BeginListBlock();
@@ -26,20 +35,20 @@ void InitDict_List() {
 		if(inContext.EndListBlock()==false) { return false; }
 
 		switch(inContext.ExecutionThreshold) {
-			case kInterpretLevel:
+			case Level::kInterpret:
 				inContext.DS.emplace_back(tvList);
 				break;
-			case kCompileLevel:		
+			case Level::kCompile:	
 				if(inContext.newWord==NULL) { goto newWord_is_NULL; }
 				inContext.Compile(std::string("_lit"));
 				inContext.Compile(tvList);
 				break;
-			case kSymbolLevel:
+			case Level::kSymbol:
 				if(inContext.newWord==NULL) { goto newWord_is_NULL; }
 				inContext.Compile(tvList);
 				break;
 			default:
-				inContext.Error(E_SYSTEM_ERROR);
+				inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
 				exit(-1);
 		}
 		NEXT;
@@ -52,7 +61,7 @@ newWord_is_NULL:
 	Install(new Word("()",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
 
-		if(inContext.ExecutionThreshold!=kInterpretLevel) {
+		if(inContext.ExecutionThreshold!=Level::kInterpret) {
 			if(inContext.newWord->type!=WordType::List) {
 				inContext.Compile(std::string("_create-empty-list"));
 			}
@@ -67,48 +76,68 @@ newWord_is_NULL:
 	}));
 
 	Install(new Word("empty-list?",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->size()==0);
 		NEXT;
 	}));
 
 	Install(new Word("@empty-list?",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->size()==0);
 		NEXT;
 	}));
 
 	Install(new Word("not-empty-list?",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->size()!=0);
 		NEXT;
 	}));
 
 	Install(new Word("@not-empty-list?",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->size()!=0);
 		NEXT;
 	}));
 
 	// list x --- list
 	Install(new Word("append",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue& tvList=ReadTOS(inContext.DS);
-		if(tvList.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,tvList); }
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,tvList);
+		}
 
 		tvList.listPtr->push_back(tos);
 		NEXT;	
@@ -117,9 +146,13 @@ newWord_is_NULL:
 	// x list --- list
 	// equivalent to 'swap append'.
 	Install(new Word("add",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tvList=Pop(inContext.DS);
-		if(tvList.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tvList); }
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tvList);
+		}
 		TypedValue tv=Pop(inContext.DS);
 		tvList.listPtr->push_back(tv);
 		inContext.DS.emplace_back(tvList);
@@ -128,29 +161,41 @@ newWord_is_NULL:
 
 	// list --- X
 	Install(new Word("car",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->front());
 		NEXT;
 	}));
 
 	// list --- list X
 	Install(new Word("@car",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->front());
 		NEXT;
 	}));
 
 	Install(new Word("@cdr",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		
 		const List *src=tos.listPtr.get();
 		List *cdr=new List();
@@ -160,10 +205,14 @@ newWord_is_NULL:
 	}));
 
 	Install(new Word("cdr",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		
 		const List *src=tos.listPtr.get();
 		List *cdr=new List();
@@ -174,29 +223,63 @@ newWord_is_NULL:
 
 	// list --- list x
 	Install(new Word("@last",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
-		if(tos.listPtr->size()<=0) { return inContext.Error(E_TOS_LIST_NO_ELEMENT); }
-		inContext.DS.emplace_back(tos.listPtr->back());
+		switch(tos.dataType) {
+			case DataType::kTypeArray:
+				if(tos.arrayPtr->length<=0) {
+					return inContext.Error(NoParamErrorID::E_TOS_ARRAY_NO_ELEMENT);
+				}
+				inContext.DS.emplace_back(tos.arrayPtr->data[tos.arrayPtr->length-1]);
+				break;
+			case DataType::kTypeList:
+				if(tos.listPtr->size()<=0) {
+					return inContext.Error(NoParamErrorID::E_TOS_LIST_NO_ELEMENT);
+				}
+				inContext.DS.emplace_back(tos.listPtr->back());
+				break;
+			default:
+				return inContext.Error(InvalidTypeErrorID::E_TOS_ARRAY_OR_LIST,tos);
+		}
 		NEXT;
 	}));
 
 	// list --- x
 	Install(new Word("last",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
-		if(tos.listPtr->size()<=0) { return inContext.Error(E_TOS_LIST_NO_ELEMENT); }
-		inContext.DS.emplace_back(tos.listPtr->back());
+		switch(tos.dataType) {
+			case DataType::kTypeArray:
+				if(tos.arrayPtr->length<=0) {
+					return inContext.Error(NoParamErrorID::E_TOS_ARRAY_NO_ELEMENT);
+				}
+				inContext.DS.emplace_back(tos.arrayPtr->data[tos.arrayPtr->length-1]);
+				break;
+			case DataType::kTypeList:
+				if(tos.listPtr->size()<=0) {
+					return inContext.Error(NoParamErrorID::E_TOS_LIST_NO_ELEMENT);
+				}
+				inContext.DS.emplace_back(tos.listPtr->back());
+				break;
+			default:
+				return inContext.Error(InvalidTypeErrorID::E_TOS_ARRAY_OR_LIST,tos);
+		}
 		NEXT;
 	}));
 
 	// list --- list x
 	Install(new Word("pop-front",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		inContext.DS.emplace_back(tos.listPtr->front());
 		tos.listPtr->pop_front();
 		NEXT;
@@ -204,7 +287,9 @@ newWord_is_NULL:
 
 	// (x -- list)
 	Install(new Word("en-list",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue tvList=TypedValue(new List());
 		tvList.listPtr->push_back(tos);
@@ -214,9 +299,13 @@ newWord_is_NULL:
 
 	// list -- e1 e2 ... eN
 	Install(new Word("de-list",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		const size_t n=tos.listPtr->size();
 		for(size_t i=0; i<n; i++) {
 			inContext.DS.emplace_back(tos.listPtr->front());
@@ -227,9 +316,13 @@ newWord_is_NULL:
 	
 	// list -- list e1 e2 ... eN
 	Install(new Word("@de-list",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		const size_t n=tos.listPtr->size();
 		for(size_t i=0; i<n; i++) {
 			inContext.DS.emplace_back(tos.listPtr->at(i));
@@ -239,7 +332,9 @@ newWord_is_NULL:
 		
 	// ( a b -- (a b) )
 	Install(new Word("tuple",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tvList=TypedValue(new List());
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue second=Pop(inContext.DS);
@@ -251,15 +346,21 @@ newWord_is_NULL:
 
 	// list n --- list1 list2
 	Install(new Word("split",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tos); }
+		if(tos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tos);
+		}
 		TypedValue& second=ReadTOS(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 		List *list=second.listPtr.get();
 		int n=tos.intValue;
 		if(n<0 || n>=(int)list->size()) {
-			return inContext.Error(E_LIST_INDEX_OUT_OF_RANGE,(int)list->size(),n);
+			return inContext.Error(ErrorIdWith2int::E_LIST_INDEX_OUT_OF_RANGE,(int)list->size(),n);
 		}
 		List *latter=new List();
 		latter->assign(list->begin()+n,list->end());
@@ -270,11 +371,17 @@ newWord_is_NULL:
 
 	// list1 list2 --- list
 	Install(new Word("concat",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		TypedValue& second=ReadTOS(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 
 		second.listPtr->insert(second.listPtr->end(),
 							   tos.listPtr->begin(),tos.listPtr->end());
@@ -283,27 +390,39 @@ newWord_is_NULL:
 
 	// list start length --- list1 list2
 	Install(new Word("slice",WORD_FUNC {
-		if(inContext.DS.size()<3) { return inContext.Error(E_DS_AT_LEAST_3); }
+		if(inContext.DS.size()<3) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_3);
+		}
 		TypedValue tvLength=Pop(inContext.DS);
-		if(tvLength.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tvLength); }
+		if(tvLength.dataType!=DataType::kTypeInt) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tvLength);
+		}
 		const int length=tvLength.intValue;
-		if(length<0) { return inContext.Error(E_TOS_NON_NEGATIVE,length); }
+		if(length<0) {
+			return inContext.Error(ErrorIdWithInt::E_TOS_NON_NEGATIVE,length);
+		}
 
 		TypedValue tvStart=Pop(inContext.DS);
-		if(tvStart.dataType!=kTypeInt) { return inContext.Error(E_SECOND_INT,tvStart); }
+		if(tvStart.dataType!=DataType::kTypeInt) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_INT,tvStart);
+		}
 		const int start=tvStart.intValue;
-		if(start<0) { return inContext.Error(E_SECOND_NON_NEGATIVE,start); }
+		if(start<0) {
+			return inContext.Error(ErrorIdWithInt::E_SECOND_NON_NEGATIVE,start);
+		}
 
 		TypedValue& tvList=ReadTOS(inContext.DS);
-		if(tvList.dataType!=kTypeList) { return inContext.Error(E_THIRD_LIST,tvList); }
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_THIRD_LIST,tvList);
+		}
 
 		List *list=tvList.listPtr.get();
 		if((int)list->size()<=start) {
-			return inContext.Error(E_LIST_START_INDEX_OUT_OF_RANGE,
+			return inContext.Error(ErrorIdWith2int::E_LIST_START_INDEX_OUT_OF_RANGE,
 								   (int)list->size(),start);
 		}
 		if((int)list->size()<start+length) {
-			return inContext.Error(E_LIST_LENGTH_INDEX_OUT_OF_RANGE,
+			return inContext.Error(ErrorIdWith2int::E_LIST_LENGTH_INDEX_OUT_OF_RANGE,
 								   (int)list->size(),start+length);
 		}
 		
@@ -316,13 +435,19 @@ newWord_is_NULL:
 
 	// ex: ( A B ) ( 1 2 3 ) --> ( (A 1) (A 2) (A 3) (B 1) (B 2) (B 3) )
 	Install(new Word("product",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }	
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}	
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 
 		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 
 		List *result=new List();
 
@@ -348,21 +473,25 @@ newWord_is_NULL:
 	// ex: check in [0,10)
 	// 	( { dup 0 >= } { 10 < } ) and
 	Install(new Word("and",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		auto listPtr=tos.listPtr.get();
 		const size_t n=listPtr->size();
 		for(size_t i=0; i<n; i++) {
 			TypedValue& e=listPtr->at(i);
-			if(e.dataType!=kTypeWord) {
-				return inContext.Error(E_TOS_LAMBDA_LIST);
+			if(e.dataType!=DataType::kTypeWord) {
+				return inContext.Error(NoParamErrorID::E_TOS_LAMBDA_LIST);
 			}
 			if(inContext.Exec(e)==false) {
 				return false;
 			}
 			TypedValue result=Pop(inContext.DS);
-			if(result.dataType!=kTypeBool || result.boolValue!=true) {
+			if(result.dataType!=DataType::kTypeBool || result.boolValue!=true) {
 				inContext.DS.emplace_back(false);
 				goto onExit;
 			}
@@ -372,25 +501,29 @@ onExit:
 		NEXT;
 	}));
 
-	// ( { cond1 } { cond2 } ... { condN } ) and
+	// ( { cond1 } { cond2 } ... { condN } ) or
 	// ex: to check tos>10 || tos<0 
 	//	( { dup 10 > } { 0 < } ) or
 	Install(new Word("or",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		auto listPtr=tos.listPtr.get();
 		const size_t n=listPtr->size();
 		for(size_t i=0; i<n; i++) {
 			TypedValue& e=listPtr->at(i);
-			if(e.dataType!=kTypeWord) {
-				return inContext.Error(E_TOS_LAMBDA_LIST);
+			if(e.dataType!=DataType::kTypeWord) {
+				return inContext.Error(NoParamErrorID::E_TOS_LAMBDA_LIST);
 			}
 			if(inContext.Exec(e)==false) {
 				return false;
 			}
 			TypedValue result=Pop(inContext.DS);
-			if(result.dataType==kTypeBool && result.boolValue==true) {
+			if(result.dataType==DataType::kTypeBool && result.boolValue==true) {
 				inContext.DS.emplace_back(true);
 				goto onExit;
 			}
@@ -401,14 +534,23 @@ onExit:
 	}));
 
 	// list lambda --- list
+	// note:
+	// 	In the applicable process, you can get the index value of the element
+	// 	currently being processed by the Word "i". 
 	Install(new Word("map",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeWord) { return inContext.Error(E_TOS_WP,tos); }
+		if(tos.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,tos);
+		}
 
 		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 
 		auto src=second.listPtr.get();
 
@@ -417,7 +559,14 @@ onExit:
 
 		bool suppressErrorBackup=inContext.suppressError;
 		const size_t n=src->size();
+		inContext.RS.emplace_back(-1);
 		for(size_t i=0; i<n; i++) {
+			TypedValue& rsTos=ReadTOS(inContext.RS);
+			if(rsTos.dataType!=DataType::kTypeInt) {
+				return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+			}
+			rsTos.intValue=(int)i;
+
 			inContext.DS.emplace_back(src->at(i));
 			if(inContext.Exec(tos)==false) {
 				inContext.suppressError=true;
@@ -425,6 +574,12 @@ onExit:
 			TypedValue t=Pop(inContext.DS);
 			dest->emplace_back(t);
 		}
+		TypedValue& rsTos=ReadTOS(inContext.RS);
+		if(rsTos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+		}
+		Pop(inContext.RS);
+
 		inContext.DS.emplace_back(result);
 		inContext.suppressError=suppressErrorBackup;
 		NEXT;
@@ -433,21 +588,27 @@ onExit:
 	// list list --- list
 	// ( 1 2 ) ( { 2 * } { 3 * } ) --- ( 2 6 )
 	Install(new Word("vmap",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 		if(second.listPtr->size()!=tos.listPtr->size()) {
-			return inContext.Error(E_LIST_MISMATCH);
+			return inContext.Error(NoParamErrorID::E_LIST_MISMATCH);
 		}
 		auto lambdaList=tos.listPtr.get();
 		auto srcList=second.listPtr.get();
 		const size_t n=srcList->size();
 		for(size_t i=0; i<n; i++) {
-			if(lambdaList->at(i).dataType!=kTypeWord) {
-				return inContext.Error(E_TOS_LAMBDA_LIST);
+			if(lambdaList->at(i).dataType!=DataType::kTypeWord) {
+				return inContext.Error(NoParamErrorID::E_TOS_LAMBDA_LIST);
 			}
 		}
 
@@ -470,13 +631,19 @@ onExit:
 	
 	// list lambda --- list
 	Install(new Word("sort",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 
 		TypedValue lambda=Pop(inContext.DS);
-		if(lambda.dataType!=kTypeWord) { return inContext.Error(E_TOS_WP,lambda); }
+		if(lambda.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,lambda);
+		}
 
 		TypedValue& second=ReadTOS(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 
 		auto src=second.listPtr.get();
 		bool suppressErrorBackup=inContext.suppressError;
@@ -488,7 +655,7 @@ onExit:
 					inContext.suppressError=true;
 				}
 				TypedValue t=Pop(inContext.DS);
-				if(t.dataType!=kTypeBool) {
+				if(t.dataType!=DataType::kTypeBool) {
 					return false;
 				}
 				return t.boolValue;
@@ -499,9 +666,13 @@ onExit:
 
 	// list --- list
 	Install(new Word("sort+",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		auto src=tos.listPtr.get();
 		std::sort(src->begin(),src->end(),
 			  [&inContext](const TypedValue& inA,const TypedValue& inB)->bool {
@@ -514,9 +685,13 @@ onExit:
 
 	// list --- list
 	Install(new Word("sort-",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		auto src=tos.listPtr.get();
 		std::sort(src->begin(),src->end(),
 			  [&inContext](const TypedValue& inA,const TypedValue& inB)->bool {
@@ -528,43 +703,167 @@ onExit:
 	}));
 
 	// list lambda --- list
+	// note:
+	// 	In the applicable process, you can get the index value of the element
+	// 	currently being processed by the Word "i". 
 	Install(new Word("filter",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 
 		TypedValue lambda=Pop(inContext.DS);
-		if(lambda.dataType!=kTypeWord) { return inContext.Error(E_TOS_WP,lambda); }
+		if(lambda.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,lambda);
+		}
 
 		TypedValue tvList=Pop(inContext.DS);
-		if(tvList.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,tvList); }
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,tvList);
+		}
 
 		TypedValue result(new List());
 
 		bool suppressErrorBackup=inContext.suppressError;
 		const size_t n=tvList.listPtr->size();
+		inContext.RS.emplace_back(-1);
 		for(size_t i=0; i<n; i++) {
+			TypedValue& rsTos=ReadTOS(inContext.RS);
+			if(rsTos.dataType!=DataType::kTypeInt) {
+				return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+			}
+			rsTos.intValue=(int)i;
+
 			TypedValue& target=tvList.listPtr->at(i);
 			inContext.DS.emplace_back(target);
 			if(inContext.Exec(lambda)==false) {
 				inContext.suppressError=true;
 			}
 			TypedValue t=Pop(inContext.DS);
-			if(t.dataType==kTypeBool && t.boolValue) {
+			if(t.dataType==DataType::kTypeBool && t.boolValue) {
 				result.listPtr->push_back(target);
 			}
 		}
+		TypedValue& rsTos=ReadTOS(inContext.RS);
+		if(rsTos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+		}
+		Pop(inContext.RS);
+
 		inContext.DS.emplace_back(result);
+		NEXT;
+	}));
+
+	// list lambda --- list
+	// note:
+	// 	In the applicable process, you can get the index value of the element
+	// 	currently being processed by the Word "i". 
+	Install(new Word("find",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
+
+		TypedValue lambda=Pop(inContext.DS);
+		if(lambda.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,lambda);
+		}
+
+		TypedValue tvList=Pop(inContext.DS);
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,tvList);
+		}
+
+		bool suppressErrorBackup=inContext.suppressError;
+		const size_t n=tvList.listPtr->size();
+		inContext.RS.emplace_back(-1);
+		bool find=false;
+		for(size_t i=0; i<n; i++) {
+			TypedValue& rsTos=ReadTOS(inContext.RS);
+			if(rsTos.dataType!=DataType::kTypeInt) {
+				return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+			}
+			rsTos.intValue=(int)i;
+
+			TypedValue& target=tvList.listPtr->at(i);
+			inContext.DS.emplace_back(target);
+			if(inContext.Exec(lambda)==false) {
+				inContext.suppressError=true;
+			}
+			TypedValue t=Pop(inContext.DS);
+			if(t.dataType==DataType::kTypeBool && t.boolValue) {
+				inContext.DS.emplace_back(target);
+				find=true;
+				break;
+			}
+		}
+		TypedValue& rsTos=ReadTOS(inContext.RS);
+		if(rsTos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+		}
+		Pop(inContext.RS);
+
+		if(find==false) { inContext.DS.emplace_back(TypedValue()); }
+		NEXT;
+	}));
+
+	// list lambda --- list
+	// note:
+	// 	In the applicable process, you can get the index value of the element
+	// 	currently being processed by the Word "i". 
+	Install(new Word("reduce",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
+
+		TypedValue lambda=Pop(inContext.DS);
+		if(lambda.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,lambda);
+		}
+
+		TypedValue tvList=Pop(inContext.DS);
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,tvList);
+		}
+
+		bool suppressErrorBackup=inContext.suppressError;
+		const size_t n=tvList.listPtr->size();
+		inContext.RS.emplace_back(-1);
+		for(size_t i=0; i<n; i++) {
+			TypedValue& rsTos=ReadTOS(inContext.RS);
+			if(rsTos.dataType!=DataType::kTypeInt) {
+				return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+			}
+			rsTos.intValue=(int)i;
+
+			TypedValue& target=tvList.listPtr->at(i);
+			inContext.DS.emplace_back(target);
+			if(inContext.Exec(lambda)==false) {
+				inContext.suppressError=true;
+			}
+		}
+		TypedValue& rsTos=ReadTOS(inContext.RS);
+		if(rsTos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(NoParamErrorID::E_RS_BROKEN);
+		}
+		Pop(inContext.RS);
+
 		NEXT;
 	}));
 
 	// list lambda --- ?
 	Install(new Word("foreach",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 
 		TypedValue lambda=Pop(inContext.DS);
-		if(lambda.dataType!=kTypeWord) { return inContext.Error(E_TOS_WP,lambda); }
+		if(lambda.dataType!=DataType::kTypeWord) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_WP,lambda);
+		}
 
 		TypedValue tvList=Pop(inContext.DS);
-		if(tvList.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,tvList); }
+		if(tvList.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,tvList);
+		}
 
 		bool suppressErrorBackup=inContext.suppressError;
 		const size_t n=tvList.listPtr->size();
@@ -581,9 +880,13 @@ onExit:
 
 	// string --- list
 	Install(new Word("make-literal-code-list",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeString) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 
 		const unsigned char *src=(const unsigned char *)tos.stringPtr.get()->c_str();
 		TypedValue tvList=TypedValue(new List());
@@ -600,7 +903,9 @@ onExit:
 				listPtr->emplace_back((int)t);
 			} else if(t<(unsigned long long)ULONG_MAX) {
 				listPtr->emplace_back((long)t);
-			} else { return inContext.Error(E_CAN_NOT_CONVERT_TO_INT); }
+			} else {
+				return inContext.Error(NoParamErrorID::E_CAN_NOT_CONVERT_TO_INT);
+			}
 			i+=j-1;
 		}
 		
@@ -610,9 +915,13 @@ onExit:
 
 	// string --- list
 	Install(new Word("str-to-list-byte",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeString) { return inContext.Error(E_TOS_STRING,tos); }
+		if(tos.dataType!=DataType::kTypeString) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		}
 
 		const char *src=tos.stringPtr.get()->c_str();
 		TypedValue tvList=TypedValue(new List());
@@ -626,14 +935,20 @@ onExit:
 	}));
 
 	Install(new Word("printf",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		const size_t n=tos.listPtr->size();
-		if(n<1) { return inContext.Error(E_TOS_LIST_NO_ELEMENT); }
+		if(n<1) {
+			return inContext.Error(NoParamErrorID::E_TOS_LIST_NO_ELEMENT);
+		}
 		TypedValue first=tos.listPtr->front();
-		if(first.dataType!=kTypeString) {
-			return inContext.Error(E_FIRST_ELEMENT_STRING,first);
+		if(first.dataType!=DataType::kTypeString) {
+			return inContext.Error(InvalidTypeErrorID::E_FIRST_ELEMENT_STRING,first);
 		}
 		try {
 			boost::format fmt(first.stringPtr->c_str());
@@ -641,46 +956,58 @@ onExit:
 			for(size_t i=1; i<n; i++) {
 				TypedValue tv=tos.listPtr->at(i);
 				switch(tv.dataType) {
-					case kTypeInt:		fmt=fmt%tv.intValue;	break;
-					case kTypeLong:		fmt=fmt%tv.longValue;	break;
-					case kTypeFloat:	fmt=fmt%tv.floatValue;	break;
-					case kTypeDouble:	fmt=fmt%tv.doubleValue;	break;
-					case kTypeSymbol: {
+					case DataType::kTypeInt:	fmt=fmt%tv.intValue;	break;
+					case DataType::kTypeLong:	fmt=fmt%tv.longValue;	break;
+					case DataType::kTypeFloat:	fmt=fmt%tv.floatValue;	break;
+					case DataType::kTypeDouble:	fmt=fmt%tv.doubleValue;	break;
+					case DataType::kTypeSymbol: {
 							TypedValue varValue
 								=inContext.GetLocalVarValue(*tv.stringPtr.get());
 							switch(varValue.dataType) {
-								case kTypeInt:	  fmt=fmt%varValue.intValue;    break;
-								case kTypeLong:	  fmt=fmt%varValue.longValue;   break;
-								case kTypeFloat:  fmt=fmt%varValue.floatValue;  break;
-								case kTypeDouble: fmt=fmt%varValue.doubleValue; break;
+								case DataType::kTypeInt:
+								  	fmt=fmt%varValue.intValue;
+								 	break;
+								case DataType::kTypeLong:
+								  	fmt=fmt%varValue.longValue;  
+									break;
+								case DataType::kTypeFloat:
+								   	fmt=fmt%varValue.floatValue; 
+								   	break;
+								case DataType::kTypeDouble:
+									fmt=fmt%varValue.doubleValue;
+									break;
 
-								case kTypeSymbol:	// don't double-reference.
-								case kTypeBigFloat:
-								case kTypeBigInt:
+								case DataType::kTypeSymbol:	// don't double-reference.
+								case DataType::kTypeBigFloat:
+								case DataType::kTypeBigInt:
 								default:
 									fmt=fmt%varValue.GetValueString(kNoIndent).c_str();
 							}
 						}
 						break;
 
-					case kTypeBigFloat:
-					case kTypeBigInt:
+					case DataType::kTypeBigFloat:
+					case DataType::kTypeBigInt:
 					default:
 						fmt=fmt%tv.GetValueString(kNoIndent).c_str();
 				}
 			}
 			std::cout << fmt;
 		} catch(...) {
-			return inContext.Error(E_FORMAT_DATA_MISMATCH);
+			return inContext.Error(NoParamErrorID::E_FORMAT_DATA_MISMATCH);
 		}
 		NEXT;
 	}));
 
 	// X L --- B
 	Install(new Word("has?",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		TypedValue second=Pop(inContext.DS);
 		inContext.DS.emplace_back(hasElement(tos,second));
 		NEXT;
@@ -688,9 +1015,13 @@ onExit:
 
 	// X L --- X L B
 	Install(new Word("@has?",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=kTypeList) { return inContext.Error(E_TOS_LIST,tos); }
+		if(tos.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		}
 		TypedValue& second=ReadSecond(inContext.DS);
 		inContext.DS.emplace_back(hasElement(tos,second));
 		NEXT;
@@ -698,27 +1029,35 @@ onExit:
 	
 	// L X --- B
 	Install(new Word("in?",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 		inContext.DS.emplace_back(hasElement(second,tos));
 		NEXT;
 	}));
 
 	// L X --- L X B
 	Install(new Word("@in?",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
 		TypedValue& second=ReadSecond(inContext.DS);
-		if(second.dataType!=kTypeList) { return inContext.Error(E_SECOND_LIST,second); }
+		if(second.dataType!=DataType::kTypeList) {
+			return inContext.Error(InvalidTypeErrorID::E_SECOND_LIST,second);
+		}
 		inContext.DS.emplace_back(hasElement(second,tos));
 		NEXT;
 	}));
 }
 
 static bool hasElement(TypedValue& inTvList,TypedValue& inElement) {
-	assert(inTvList.dataType==kTypeList);
+	assert(inTvList.dataType==DataType::kTypeList);
 	const size_t n=inTvList.listPtr->size();
 	bool found=false;
 	for(size_t i=0; i<n; i++) {

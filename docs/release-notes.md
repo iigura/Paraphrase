@@ -1,75 +1,124 @@
-# リリースノート：バージョン 0.92 から 0.93 の変更点
+# Release Notes: Changes from version 0.93 to 0.94
 
-## 言語そのものに関する変更点
+## Major changes
+* Added a debugger
+* Added pseudo-standard I/O functions
+* Support for aspect orientation programming
+* Words now have attribute information
+* Added associative array
+* Added invalid values (open to users)
+* Support for cross-references between Words
+* Added support for temporary word arguments
+* 'here-document' supported
 
-* ローカル変数の追加
-* 末尾再帰の最適化を追加
-* バッククォートでのシンボル化に関する制限の追加
-    先頭の文字が半角のアルファベットまたはアンダーバーで始まっていないと、バッククォートにてシンボル化できないようにした。
-    ただし、リスト中においては前バージョンと同様、アンダーバー以外の記号 1 文字でもシンボル化できるようにしている。
-* 構文チェック用のスタック（Syntax Stack = SS）を追加（※ 内部的な仕様の話題）
+## Changes to existing Words
+* Improved consistency of various loop processing
+* Specification change for 'switch - dispatch' blocks  
+     The Word 'case' is now required.
+* Specification change for 'while - repeat' blocks  
+     The Word 'do' is now required  
+     (this 'do' is a different Word with the same name than the previous 'do').
+* Specification change for 'for+' and 'for-' loops  
+     The specification has been changed to not include the end value.
+* Words with added functionality  
+     last, @last - Arrays are now supported.  
+     set, get - Added support for associative arrays.  
+     exec - now supports Standard Code.  
+     map, filter - Added support for the Word i.  
+     i - map, filter, find, and reduce are now supported.
+* Things that have changed and reappeared in function  
+     do
 
-## 既存のワードに対する変更点
+### Name change
+* Name change for word prefixes  
+     valid? to @valid?  
+     'type' to @type
+* Name changes due to frequency of word use  
+     'local' to local-decl  
+     local-with to 'local'
 
-* ワード定義中にエラーが発生した場合、呼び出しているワードの情報表示の実施
-* ワード ; にて、構文チェックを行うように変更
-* 定義できるワード名を、$ 以外から始まるものとするように変更
-    $ で始まるワードは変数アクセス用のワードで使用するため。
-* do および loop の廃止（for+ 〜 next や for- 〜 next に変更）
-* == のリスト対応（完全に一致しているときに限り true を返す） 
-* 比較演算子のデバッグ（比較対象に double や float があった場合のデバッグ）
-* / および % にて 0 除算をエラーとして取り扱うように変更
-* BigInt と BigFloat の比較に関する仕様の明確化
-    BigFloat の上限を超えた BigInt との比較時の挙動については未定義とする。
-    実際には例外処理で落ちる可能性もあるので、比較しないことを推奨する。
-* printf のシンボル対応（ローカル変数対応） 
-* printf のパフォーマンス改善（printf 内でのクローン実施の抑制）
-* pick の動作を Forth と同じに変更
-    新バージョンでは 0 pick にて dup と同値に、1 pick で over と同値になった。
-* ${ の廃止
-    ${ ... } では TOS しかリテラル化されなかったため、場合によっては意図しない結果となってしまった（今回のリリースで追加されたワード }}, の説明も参照されたし）。
+## Newly added Words
+* &lt;&lt;&lt;
+* &gt;&gt;&gt;
+* &gt;&gt;&gt;raw
+* &gt;array
+* &gt;mock-stdin
+* &gt;param
+* ...
+* +@
+* ++
+* -@
+* --
+* &ast;@
+* /@
+* %@
+* &#095;b
+* &#095;c
+* &#095;cb
+* &#095;n
+* &#095;s
+* @even?
+* @has-key?
+* @invalid?
+* @list?
+* @word-name
+* 2drop-rs
+* add-enter-char
+* at
+* clear-breakpoint
+* cont
+* default
+* default-docol
+* defined?
+* docol
+* end-with?
+* enum
+* even?
+* find
+* get-attr
+* get-line-from-mock-stdout
+* get-std-code
+* has-any-attr?
+* has-attr?
+* has-key?
+* invalid
+* invalid?
+* max
+* min
+* new-assoc
+* not-true?
+* raw&lt;&lt;&lt;
+* reduce
+* remove-attr
+* return
+* search
+* set-attr
+* set-breakpoint
+* set-code
+* set-worded-docol-caller
+* show-attr
+* show-trace
+* start-with
+* step-over
+* step-in
+* troff
+* tron
+* update
+* use-mock-stdin
+* use-mock-stdout
+* use-stdin
+* use-stdout
+* valid?
+* word-name
+* worded-docol-caller
 
-### 名称の変更
-* and を && へ、or を || へ
-* var を global へ
-* size を @size へ
-    新バージョンでは文字列やシンボルにも対応するようにした。
-* car を @car へ, cdr を @cdr へ
-* &gt;sym を &gt;here へ
-    なお、旧 &gt;sym では、数値 1 をシンボルに変換するとクラッシュしていたが、新しい名前となった &gt;here ではクラッシュしないようデバッグを行った。 
+## About Language Processing System 'para'
+No specific changes.
 
-## 新たに追加されたワード
-
-* .cr
-* @+, @-, @ast;, @/,
-* @&gt;, @&lt;, @&gt;=, @&lt;=, @==, @!=
-* @&amp;, @|, @^, @&gt;&gt;, @&lt;&lt;, @~ 
-* @de-list, @last
-* -&gt;&gt;, interactive?
-* }}, def, forget
-* abs, vmap, and, or, &gt;str, &gt;symbol
-* local, local-with, let, show-local-vars
-* ,
-* @,
-* filter, sort+, sort-, args, car, cdr
-* has?, @has?, in?, @in?
-* j, foreach
-* replace, 2drop, 3drop, 
-* size, square, quit, exit
-* thru, utf8&gt;sjis, sjis&gt;utf8, ccc-str
-
-## 処理系 para について
-
-* マルチスレッド実行下でもエラーメッセージの混交をなくした
-* コマンドラインパラメータの解釈変更
-    以前のバージョンでは 1 というパラメータは文字列の "1" と解釈されていたが、本バージョンより数値の 1 として解釈するようになった。
-* その他、コマンドラインオプションについての詳細は para.html を参照されたし。
-
-## 同梱されるサンプルプログラムについて
-
-* Project Euler No.56 を計算するサンプルプログラム PE56.pp を追加した。
-    PE56 は、a,b をそれぞれ 1 以上 100 未満の数とし、a^b を 10 進数で表現したとき、各桁の数字の合計が最大になるものを計算するプログラムである。
-* 末尾再帰のサンプルプログラム fact-tr.pp を追加した。
-* Windows 環境下において正常に日本語出力されるよう修正した。
-* test-&lowast; の削除（コマンドラインにプログラムが記述できるようになったので）。
-
+## About the sample programs included in the package
+* PE56.pp, a sample program to calculate Project Euler No.56, was added  
+     PE56 is a sample program that calculates the largest sum of numbers in each digit when a^b is expressed as a decimal number, where a and b are numbers greater than 1 and less than 100, respectively.
+* Change of the file name of the sample program  
+     PE21mt-short.pp was renamed to PE21mt.pp.
+* Support for unit testing of sample programs  
+     Each sample program now supports the argument "test".

@@ -10,7 +10,7 @@ LIB_OBJS=$(OBJ)/outer.o $(OBJ)/inner.o \
 		 $(OBJ)/word.o $(OBJ)/context.o $(OBJ)/typedValue.o \
 		 $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
 		 $(OBJ)/optimizer.o $(OBJ)/stack.o \
-		 $(OBJ)/langSys.o
+		 $(OBJ)/langSys.o $(OBJ)/util.o
 
 objs=$(LANG_OBJS) $(LIB_OBJS)
 
@@ -29,7 +29,7 @@ $(OBJ)/%.o: %.cpp
 	$(CC) $(CPPFLAGS) $(INCLUDE_PATHS) -o $@ -c $*.cpp
 
 $(PPDIR)/libPP.so: $(LIB_OBJS)
-	$(CC) -shared $(CPPFLAGS) $(LIB_OBJS) $(SO_OPT) -o $(PPDIR)/$(LIB_NAME) 
+	$(CC) -shared $(CPPFLAGS) $(LIB_OBJS) -lreadline $(SO_OPT) -o $(PPDIR)/$(LIB_NAME) 
 
 $(PPDIR)/libPP.a: $(LIB_OBJS)
 	ar rcs $(PPDIR)/libPP.a $(LIB_OBJS)
@@ -62,6 +62,8 @@ $(OBJ)/optimizer.o:		$(COMMON_HEADER) \
 						$(INC)/lvop.h $(INC)/optimizer.h 
 
 $(OBJ)/langSys.o:		$(COMMON_HEADER)
+
+$(OBJ)/util.o:			$(COMMON_HEADER)
 
 clean:
 	rm -f $(objs)

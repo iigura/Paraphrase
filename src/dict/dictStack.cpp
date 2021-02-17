@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "externals.h"
 #include "typedValue.h"
 #include "stack.h"
@@ -35,22 +37,32 @@ void InitDict_Stack() {
 	}));
 
 	Install(new Word("dup",WORD_FUNC {
-		if(inContext.DS.size()==0) { return inContext.Error(E_DS_IS_EMPTY); }
-		inContext.DS.emplace_back(inContext.DS.back());
+		if(inContext.DS.size()==0) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
+		TypedValue& tv=inContext.DS.back();
+		inContext.DS.emplace_back(tv);
 		NEXT;
 	}));
 
-	// コンテナのみを clone する。
-	// 全ての要素レベルで clone する場合は full-clone を使うこと。
+	// Clone the container only.
+	// Use full-clone if you want to clone at all element levels.
 	Install(new Word("clone",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
 		switch(tos.dataType) {
-			case kTypeString:
-			case kTypeSymbol:
+			case DataType::kTypeString:
 				inContext.DS.emplace_back(*tos.stringPtr);
 				break;
-			case kTypeArray: {
+			case DataType::kTypeSymbol: {
+					inContext.DS.emplace_back(*tos.stringPtr);
+					TypedValue& tos=ReadTOS(inContext.DS);
+					tos.dataType=DataType::kTypeSymbol;
+				}
+				break;
+			case DataType::kTypeArray: {
 					Array<TypedValue> *srcPtr=tos.arrayPtr.get();
 					Lock(srcPtr->mutex);
 						const int n=srcPtr->length;
@@ -63,7 +75,7 @@ void InitDict_Stack() {
    					inContext.DS.emplace_back(arrayPtr);
 				}
 				break;
-			case kTypeList: {
+			case DataType::kTypeList: {
 					const std::deque<TypedValue> *srcPtr=tos.listPtr.get();
 					std::deque<TypedValue> *destPtr=new std::deque<TypedValue>(*srcPtr);
 					inContext.DS.emplace_back(destPtr);
@@ -76,7 +88,9 @@ void InitDict_Stack() {
 	}));
 
 	Install(new Word("full-clone",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
 		TypedValue tvFullClone=FullClone(tos);
 		inContext.DS.emplace_back(tvFullClone);
@@ -84,35 +98,45 @@ void InitDict_Stack() {
 	}));
 
 	Install(new Word("swap",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		if(swap(inContext.DS)==false) { return false; }
 		NEXT;
 	}));
 
 	Install(new Word("swap-rs",WORD_FUNC {
-		if(inContext.RS.size()<2) { return inContext.Error(E_RS_AT_LEAST_2); }
+		if(inContext.RS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_RS_AT_LEAST_2);
+		}
 		if(swap(inContext.RS)==false) { return false; }
 		NEXT;
 	}));
 
 	// x y --- x y x
 	Install(new Word("over",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue& second=inContext.DS[inContext.DS.size()-2];
 		inContext.DS.emplace_back(second);
 		NEXT;
 	}));	
 
 	Install(new Word("pick",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tos); }
+		if(tos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tos);
+		}
 		const int n=tos.intValue;
 		if(inContext.DS.size()<n+1) {
-			return inContext.Error(E_DEPTH_INDEX_OUT_OF_RANGE,
+			return inContext.Error(ErrorIdWith2int::E_DEPTH_INDEX_OUT_OF_RANGE,
 								   (int)inContext.DS.size(),n+1);
 		}
-		if(n<0) { return inContext.Error(E_TOS_NON_NEGATIVE,n); }
+		if(n<0) { return inContext.Error(ErrorIdWithInt::E_TOS_NON_NEGATIVE,n); }
 		const int size=(int)inContext.DS.size();
 		inContext.DS.emplace_back(inContext.DS[size-n-1]);
 		NEXT;
@@ -121,16 +145,20 @@ void InitDict_Stack() {
 	// a_n ... a2 a1 a0 X k --- a_n ... a_{k+1} X a_{k-1} ... a1 a0
 	// nothing change by 'k pick k replace'
 	Install(new Word("replace",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=kTypeInt) { return inContext.Error(E_TOS_INT,tos); }
+		if(tos.dataType!=DataType::kTypeInt) {
+			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tos);
+		}
 		TypedValue newValue=Pop(inContext.DS);
 		const int n=tos.intValue;
 		if(inContext.DS.size()<n+1) {
-			return inContext.Error(E_DEPTH_INDEX_OUT_OF_RANGE,
+			return inContext.Error(ErrorIdWith2int::E_DEPTH_INDEX_OUT_OF_RANGE,
 								   (int)inContext.DS.size(),n+1);
 		}
-		if(n<0) { return inContext.Error(E_TOS_NON_NEGATIVE,n); }
+		if(n<0) { return inContext.Error(ErrorIdWithInt::E_TOS_NON_NEGATIVE,n); }
 		const int size=(int)inContext.DS.size();
 		inContext.DS[size-n-1]=newValue;
 		NEXT;
@@ -138,7 +166,9 @@ void InitDict_Stack() {
 	
 	// x y --- x y x y
 	Install(new Word("2dup",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_AT_LEAST_2); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
 		TypedValue& second=inContext.DS[inContext.DS.size()-2];
 		inContext.DS.emplace_back(second);
@@ -147,20 +177,26 @@ void InitDict_Stack() {
 	}));	
 
 	Install(new Word("drop",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		inContext.DS.pop_back();
 		NEXT;
 	}));
 
 	Install(new Word("2drop",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		inContext.DS.pop_back();
 		inContext.DS.pop_back();
 		NEXT;
 	}));
 
 	Install(new Word("3drop",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		inContext.DS.pop_back();
 		inContext.DS.pop_back();
 		inContext.DS.pop_back();
@@ -168,14 +204,27 @@ void InitDict_Stack() {
 	}));
 
 	Install(new Word("drop-rs",WORD_FUNC {
-		if(inContext.RS.size()==0) { return inContext.Error(E_RS_IS_EMPTY); }
+		if(inContext.RS.size()==0) {
+			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
+		}
+		inContext.RS.pop_back();
+		NEXT;
+	}));
+
+	Install(new Word("2drop-rs",WORD_FUNC {
+		if(inContext.RS.size()==0) {
+			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
+		}
+		inContext.RS.pop_back();
 		inContext.RS.pop_back();
 		NEXT;
 	}));
 
 	// a b c --- b c a
 	Install(new Word("rot",WORD_FUNC {
-		if(inContext.DS.size()<3) { return inContext.Error(E_DS_AT_LEAST_3); }
+		if(inContext.DS.size()<3) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_3);
+		}
 		TypedValue third=inContext.DS[inContext.DS.size()-3];
 		inContext.DS.erase(inContext.DS.end()-3);
 		inContext.DS.emplace_back(third);
@@ -184,21 +233,27 @@ void InitDict_Stack() {
 	
 	// (a b c -- c a b) note:inverse of rot.
 	Install(new Word("inv-rot",WORD_FUNC {
-		if(inContext.DS.size()<3) { return inContext.Error(E_DS_AT_LEAST_3); }
+		if(inContext.DS.size()<3) {
+			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_3);
+		}
 		TypedValue tos=Pop(inContext.DS);
 		inContext.DS.insert(inContext.DS.end()-2,tos);
 		NEXT;
 	}));
 
 	Install(new Word(">r",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		inContext.RS.emplace_back(Pop(inContext.DS));
 		NEXT;
 	}));
 
 	// equivalent to ">r >r"
 	Install(new Word(">r>r",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		inContext.RS.emplace_back(Pop(inContext.DS));
 		inContext.RS.emplace_back(Pop(inContext.DS));
 		NEXT;
@@ -206,27 +261,35 @@ void InitDict_Stack() {
 
 	// equivalent to "dup >r".
 	Install(new Word("@>r",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(E_DS_IS_EMPTY); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+		}
 		TypedValue& tos=ReadTOS(inContext.DS);
 		inContext.RS.emplace_back(tos);
 		NEXT;
 	}));
 
 	Install(new Word("r>",WORD_FUNC {
-		if(inContext.RS.size()<1) { return inContext.Error(E_RS_IS_EMPTY); }
+		if(inContext.RS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
+		}
 		inContext.DS.emplace_back(Pop(inContext.RS));
 		NEXT;
 	}));
 
 	Install(new Word("r>r>",WORD_FUNC {
-		if(inContext.RS.size()<1) { return inContext.Error(E_RS_IS_EMPTY); }
+		if(inContext.RS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
+		}
 		inContext.DS.emplace_back(Pop(inContext.RS));
 		inContext.DS.emplace_back(Pop(inContext.RS));
 		NEXT;
 	}));
 
 	Install(new Word("@r>",WORD_FUNC {
-		if(inContext.RS.size()<1) { return inContext.Error(E_RS_IS_EMPTY); }
+		if(inContext.RS.size()<1) {
+			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
+		}
 		inContext.DS.emplace_back(inContext.RS.back());
 		NEXT;
 	}));
@@ -238,6 +301,22 @@ void InitDict_Stack() {
 
 	Install(new Word("show-rs",WORD_FUNC {
 		ShowStack(inContext.RS,"RS");
+		NEXT;
+	}));
+
+	Install(new Word("show-ss",WORD_FUNC {
+		ShowStack(inContext.SS,"SS");
+		NEXT;
+	}));
+
+	// internal use
+	Install(new Word("show-is",WORD_FUNC {
+		inContext.ShowIS();
+		NEXT;
+	}));
+
+	Install(new Word("show-IS-size",WORD_FUNC {
+		printf("IS size is %d.\n",(int)inContext.IS.size());
 		NEXT;
 	}));
 }

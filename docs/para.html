@@ -3,64 +3,34 @@
 <head>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="top.css">
-	<style type="text/css"> <!-- .VERSION:before{content:"0.93.1";} --> </style>
-	<style type="text/css"> <!-- .DATE:before{content:"2019.12.16";} --> </style>
-	<title>Paraphrase ドキュメント ver. 0.93.1</title>
+	<style type="text/css"> <!-- .VERSION:before{content:"0.94.0";} --> </style>
+	<style type="text/css"> <!-- .DATE:before{content:"2021.2.17";} --> </style>
+	<title>Paraphrase ドキュメント ver. 0.94.0</title>
 </head>
 <body>
 <div id=main>
 <h1>実行ファイル para ver. <span class="VERSION"></span> のオプションについて</h1>
 <div id=author><span class="DATE"></span> 飯倉宏治</div>
 <p>
-Paraphrase の言語処理系プログラム para の引数は以下の通りとなります。
+Paraphrase の言語処理系プログラム para の引数は以下のとうりとなります。
 	<p>
 		&nbsp;&nbsp;&nbsp;&nbsp;
-		<tt>para [-ehknqtv] [--thread]  [program-file] [program-code]</tt>
+		<tt>para [-eEhknqtv] [program-file] [program-code]</tt>
 	</p>
 </p>
 
 <p>
-オプションの詳細は以下の通りです：
+オプションの詳細を以下に示します：
 </p>
 <div align=center>
 <table id=optList>
 	<tr>
-		<td width="180em"><tt>-h</tt> または <tt>--help</tt></td>
+		<td width="190em"><tt>-h</tt> または <tt>--help</tt></td>
 		<td>ヘルプを表示します</td>
 	</tr>
 	<tr>
 		<td><tt>-v</tt> または <tt>--version</tt></td>
 		<td>バージョンを表示します</td>
-	</tr>
-	<tr>
-		<td><tt>-t</tt> または <tt>--time</tt></td>
-		<td>
-			para の初期化処理が完了し、終了するまでの時間を計測し、
-			その値を表示します。
-			Windows におけるプログラムのパフォーマンス測定などにご利用下さい
-			（Linux や MacOS でも利用可能です）。
-		</td>
-	</td>
-	<tr>
-		<td><tt>-k</tt> または <tt>--nook</tt></td>
-		<td>
-			処理が完了した旨を示す「ok.」という表示を抑制します
-			（nook = no ok の意）。
-		</td>
-	</tr>
-	<tr>
-		<td><tt>-n</tt> または <tt>--noprompt</tt></td>
-		<td>
-			ユーザーからの入力を促す「&gt;」を表示しないようにします。
-		</td>
-	</tr>
-	<tr>
-		<td><tt>-q</tt> または <tt>--quiet</tt></td>
-		<td>
-			ユーザーからの入力を促す「&gt;」および
-			処理が完了した旨を示す「ok.」という表示を抑制します。<br>
-			オプション <tt>-nk</tt> と同値です。
-		</td>
 	</tr>
 	<tr>
 		<td><tt>--thread N</tt></td>
@@ -93,9 +63,48 @@ Paraphrase の言語処理系プログラム para の引数は以下の通りと
 		</td>
 	</tr>
 	<tr>
-			<td></td>
-			<td></td>
+		<td><tt>-E S</tt> または <tt>--eval-and-exit S</tt></td>
+		<td>
+			文字列 S をプログラムと解釈し実行を行います。
+			オプション e と異なるのは、プログラムファイルを
+			引数として与えなかった場合の挙動です。
+			本オプションでは処理系 para が終了します
+			（オプション e ではインタプリタモードとなり、実行が継続します）。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-q</tt> または <tt>--quiet</tt></td>
+		<td>
+			ユーザーからの入力を促す「&gt;」および
+			処理が完了した旨を示す「ok.」という表示を抑制します。<br>
+			オプション <tt>-nk</tt> と同値です。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-n</tt> または <tt>--noprompt</tt></td>
+		<td>
+			ユーザーからの入力を促す「&gt;」を表示しないようにします。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-k</tt> または <tt>--nook</tt></td>
+		<td>
+			処理が完了した旨を示す「ok.」という表示を抑制します
+			（nook = no ok の意）。
+		</td>
+	</tr>
+	<tr>
+		<td><tt>-t</tt> または <tt>--time</tt></td>
+		<td>
+			para の初期化処理が完了し、終了するまでの時間を計測し、
+			その値を表示します。
+			Windows におけるプログラムのパフォーマンス測定などにご利用下さい
+			（Linux や MacOS でも利用可能です）。
+		</td>
 	</tr>
 </table>
 </div>
 </div>
+</body>
+</html>
+

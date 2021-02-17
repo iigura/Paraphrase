@@ -27,19 +27,26 @@ enum class WordType {
 };
 
 typedef std::unordered_map<std::string,int /* indexForSlot */> LocalVarDict;
+typedef std::unordered_map<TypedValue,TypedValue,TypedValue::TvHash> Attr;
+
+extern PP_API WordFunc G_DocolAdvice;
 
 struct Word {
 	WordFunc code=NULL;
 	std::string longName;
 	std::string shortName;
+	std::string vocabulary;
 	WordLevel level=WordLevel::Invalid;
 	bool isForgetable=false;
 	WordType type=WordType::Invalid;
-	//bool useLocalVar=false;
+
+	Attr *attr=NULL;
+
 	int numOfLocalVar=0;
 
 	const Word **param=NULL;
 	CodeThread *tmpParam=NULL;
+	std::unordered_map<int,int>  *addressOffsetToIndexMapper=NULL;
 
 	LocalVarDict localVarDict;
 	LVOP LVOpHint=LVOP::NOP;
@@ -63,7 +70,7 @@ struct Word {
 	// for user defined word
 	Word(const std::string *inShortName)
 	  :shortName(*inShortName),longName(GetCurrentVocName()+":"+*inShortName),
-	   level(WordLevel::Normal),type(WordType::Normal),code(Docol) {
+	   level(WordLevel::Normal),type(WordType::Normal),code(G_DocolAdvice) {
 		tmpParam=new std::vector<TypedValue>();
 	}
 
@@ -84,11 +91,14 @@ struct Word {
 
 	~Word() {
 		if( isForgetable ) {
-			// empty
+			if(param!=NULL) { delete param; }
+			if(addressOffsetToIndexMapper!=NULL) { delete addressOffsetToIndexMapper; }
 		} else {
 			fprintf(stderr,
-					"SYSTEM ERROR: can not forget the word '%s'\n",
+					"SYSTEM ERROR: illegal destructor call. "
+					"can not forget the word '%s'\n",
 					longName.c_str());
+			exit(-1);
 		}
 	}
 
@@ -106,26 +116,13 @@ struct Word {
 		return localVarDict[inVarName];
 	}
 
-	void Dump() const {
-		printf("num of local vars: %d\n",numOfLocalVar);
-		std::vector<std::string> lvInfo(numOfLocalVar);
-		for(auto itr=localVarDict.begin(); itr!=localVarDict.end(); itr++) {
-			lvInfo[itr->second]=itr->first;
-   		}
-		for(int i=0; i<numOfLocalVar; i++) {
-			printf("  slot #%02d: local var name: %s\n",i,lvInfo[i].c_str());
-		}
-		printf("the word '%s' is:\n",longName.c_str());
-		const size_t n=tmpParam->size();
-		for(size_t i=0; i<n; i++) {
-			printf("[%zu] ",i);
-			tmpParam->at(i).Dump();
-		}
-	}
+	PP_API void Dump() const;
 };
 
 #define WORD_FUNC [](Context& inContext) NOEXCEPT ->bool
 #define NEXT do { ++inContext.ip; return true; } while(0)
 
 PP_API const Word *GetWordPtr(const std::string& inWordName);
+PP_API const Word *GetWordPtr(Context& inContext,const TypedValue& inTV);
+PP_API void CopyWordProperty(Word *outDestWord,const Word *inSrcWord);
 

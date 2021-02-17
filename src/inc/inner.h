@@ -2,4 +2,4 @@
 
 struct Context;
 
-PP_API bool InnerInterpreter(Context& inContext);
+PP_API bool InnerInterpreter(Context& inContext) NOEXCEPT;

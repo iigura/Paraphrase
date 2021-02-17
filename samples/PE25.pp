@@ -1,19 +1,40 @@
-// Usage: para PE25.pp 1000 PE25 cr
+"help" :
+	<<<
+		-------------------------------------------------------------------------------
+		Project Euler No.25 -> 1000 PE25
+		Find the number of terms in the first Fibonacci sequence greater than 10^(N-1).
+		Where N is a given number of digits.
 
-// Project Euler No.25 -> 1000 PE25
-// n ---    10^n を超える最初のフィボナッチ数列 ( 1 1 2 3 ... ) の項数を求める
-"PE25" :
-	1- 10 >INT swap pow
-	2 1 1 >INT true while
-		swap over + rot 1+ inv-rot dup 4 pick <
-	repeat
-	drop drop . drop
+		usage: ../para PE25.pp 1000 run
+	   \             or
+	   \       ../para PE25.pp test
+		-------------------------------------------------------------------------------
+	>>> write
 ;
 
-// count F_{n-1} Fn -{ swap over +  rot 1+ inv-rot }- count+1 Fn F_{n+1}
-/*
-	note:
-		count F_{n-1} Fn に対し、swap over +  rot 1+ inv-rot とすると、
-		count+1 Fn F_{n+1} を得る。
-*/
+interactive? not if
+	args size 0? if
+      help -1 exit
+    then 
+then
+
+// n --- n
+"PE25" :
+	1 - 10LL swap pow `upper local // upper=10^(n-1)
+	2 `count local
+	1 1LL while dup `upper , <= do
+		swap +@ 	// calculate the Fibonacci sequence.
+		`count ++
+	repeat
+	2drop
+	`count ,
+;
+
+"run" : PE25 .cr ;
+
+"test" :
+	1000 PE25
+	4782 != if "NG" .cr -1 exit then
+	"GOOD" .cr
+;
 

@@ -1,19 +1,44 @@
-"help" : 
-	cr
-	"This is a sample program of for+ ~ next loop." .cr
-	"This program outputs a Japanese multiplication table." .cr
-	cr
-	"usage: ../para 99.pp run" .cr
-	cr
+// for test
+//	../para 99.pp test
+
+"help" : <<<
+
+	This is a sample program of for+ ~ next loop.
+	This program outputs a Japanese multiplication table.
+
+	\tusage: ../para 99.pp run
+
+	>>> write
 ;
 
 "run" :
-	1 9 for+
+	1 10 for+
 		i
-		1 9 for+ dup i * "%2d " putf next
+		1 10 for+ dup i * "%2d " putf next
 		drop cr
 	next
 ;
 
-args size 0? if help then 
+interactive? not if
+	args size 0? if help then 
+then
+
+"ng" : "NG" .cr -1 exit ;
+"check" : != if ng then ;
+
+"test" :
+	use-mock-stdout
+		run
+	use-stdout
+	get-line-from-mock-stdout " 1  2  3  4  5  6  7  8  9 " check
+	get-line-from-mock-stdout " 2  4  6  8 10 12 14 16 18 " check
+	get-line-from-mock-stdout " 3  6  9 12 15 18 21 24 27 " check
+	get-line-from-mock-stdout " 4  8 12 16 20 24 28 32 36 " check
+	get-line-from-mock-stdout " 5 10 15 20 25 30 35 40 45 " check
+	get-line-from-mock-stdout " 6 12 18 24 30 36 42 48 54 " check
+	get-line-from-mock-stdout " 7 14 21 28 35 42 49 56 63 " check
+	get-line-from-mock-stdout " 8 16 24 32 40 48 56 64 72 " check
+	get-line-from-mock-stdout " 9 18 27 36 45 54 63 72 81 " check
+	"GOOD" .cr
+;
 

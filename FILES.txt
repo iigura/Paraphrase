@@ -1,29 +1,41 @@
 ===============================================================================
-Paraphrase ver.0.93.1　同梱ファイル情報　by Koji Iigura
+Paraphrase ver.0.94.0　同梱ファイル情報　by Koji Iigura
 ===============================================================================
 
 -------------------------------------------------------------------------------
 ビルド済みパッケージに同梱されているもの
 -------------------------------------------------------------------------------
 
-paraphrase
+Paraphrase
   +- FILES.txt <-------------------- 本文書（このファイル）
+  +- LICENSE <---------------------- ライセンスについてのテキストファイル
   +- README.md <-------------------- Paraphrase の概要等
   +- docs <------------------------- ドキュメントディレクトリ
   |    +- README.html <------------- README.md の HTML 版
   |    +- ext <--------------------- 拡張辞書関連文書
   |    |    +- ext.css <------------ 拡張辞書の説明で用いる css ファイル
+  |    |    +- extAOP.html <-------- AOP のサンプルで用いる外部関数の説明文書
   |    |    +- extFactor.html <----- extFactor.{so | dll} の説明文書
   |    |    +- extLP.html <--------- extLP.{so | dll} の説明文書
+  |    |    +- extStdCode.html <---- 標準コードの説明文書
   |    +- index.html <-------------- 文書ファイルの取りまとめ用 HTML ファイル
+  |    +- para.html <--------------- 処理系 para に関する説明文書
   |    +- readme.css <-------------- README.html 用 css ファイル
+  |    +- release-notes.md <-------- リリースノート
+  |    +- release-notes_Japanese.md  リリースノート（日本語版）
   |    +- top.css <----------------- docs/index.html 用 css ファイル
+  |    +- typedValue <-------------- 値に関するドキュメントディレクトリ
+  |    |    +- index.html <--------- 値として使用できる情報の一覧（概要）
+  |    |    +- string.html <-------- 文字列に関する説明文書
+  |    |    +- typedValue.css <----- 値の説明で用いる css ファイル
   |    +- words <------------------- ワードに関するものを集めたディレクトリ
   |         +- index.html <--------- 全ワード辞典（リファレンスマニュアル）
   |         +- words.css <---------- 上記リファレンスマニュアル用 CSS ファイル
   +- ext <-------------------------- 拡張辞書を格納するディレクトリ
+  |    +- extAOP.{so | dll} <------- docol ラップ用関数の動的ライブラリ（参考）
   |    +- extFactor.{so | dll} <---- factor 型の if 文等を格納した拡張辞書(参考)
   |    +- extLP.{so | dll} <-------- 簡易文芸的プログラミング用拡張辞書(参考)
+  |    +- extStdCode.{so | dll} <--- 標準コード用動的ライブラリ（参考）
   +- libPP.{so | dll} <------------- Paraphrase インタプリタ用動的ライブラリ
   +- para{.exe} <------------------- Paraphrase インタプリタ（言語処理系）
   +- samples <---------------------- サンプルプログラム格納用ディレクトリ
@@ -31,15 +43,17 @@ paraphrase
        +- 99.pp <------------------- 九九を表示するプログラム
        +- FizzBuzz.pp <------------- いわゆる FizzBuzz 問題用ワード
        +- Mersenne.pp <------------- メルセンヌ数の素数性判定プログラム
-       +- PE21mt-shot.pp <---------- 友愛数を並列にて計算するプログラム
+       +- PE21mt.pp <--------------- 友愛数を並列にて計算するプログラム
        +- PE25.pp <----------------- フィボナッチ数列に関するプログラム
+       +- PE56.pp <----------------- Project Euler No.56 を解くプログラム
+       +- aop.pp <------------------ アスペクト指向プログラミングの例
        +- check-scriptFile-args.pp   コマンドライン引数の確認用
        +- countPrimeMT-short.pp <--- 1 から 1000 万までの素数を数えます
        +- dumpMPmt.pp <------------- 1 から 1000 までのメルセンヌ素数を表示します
        +- fact-tr.pp <-------------- 末尾再帰最適化の例
        +- pseudo_shebang.bat <------ Windows にて shebang を実現する例
        +- shebang_example <--------- Linux, MacOS における実行可能なスクリプト例
-       +- zdk.pp <------------------ いわゆるズンドコキヨシ問題用ワード
+       +- zdk.pp <------------------ いわゆるズンドコキヨシ問題のプログラム
 
 -------------------------------------------------------------------------------
 ソースコード一式に同梱されているもの
@@ -49,16 +63,19 @@ paraphrase
 
 paraphrase
   +- BUILD.txt <-------------------- ビルド方法を示したメモ  
-  +- docs <------------------------- ドキュメント格納ディレクトリ
   +- src <-------------------------- ソースコード格納ディレクトリ
        +- Makefile <---------------- Linux, MacOS 用 Makefile
        +- dict <-------------------- 各種ワード関連用ソース格納ディレクトリ
        |    +- Makefile <----------- ワード関連 Makefile
+       |    +- dictAOP.cpp <-------- アスペクト指向関連ワード
        |    +- dictArray.cpp <------ 配列関連ワード
+       |    +- dictAssoc.cpp <------ 連想配列関連ワード
        |    +- dictControl.cpp <---- 制御構造関連ワード
+       |    +- dictDebug.cpp <------ デバッガ関連ワード
        |    +- dictIO.cpp <--------- 入出力関連ワード
        |    +- dictLangSys.cpp <---- 局所変数等、言語システム関連ワード
        |    +- dictList.cpp <------- リスト関連ワード
+       |    +- dictLocalVar.cpp <--- 局所変数関連ワード
        |    +- dictMath.cpp <------- 数学関数ワード
        |    +- dictObject.cpp <----- 型情報等に関するワード
        |    +- dictOptimize.cpp <--- 最適化のために用意されているワード
@@ -68,8 +85,10 @@ paraphrase
        |    +- dictWord.cpp <------- ワード定義用関連ワード
        |    +- ext <---------------- 拡張辞書関連ディレクトリ
        |         +- Makefile <------ 拡張辞書関連 Makefile
+       |         +- extAOP.cpp <---- docol ラップ用関数
        |         +- extFactor.cpp <- Factor 風 if 文用拡張辞書
        |         +- extLP.cpp <----- 簡易文芸的プログラミング用拡張辞書
+       |         +- extStdCode <---- stdCode の例
        +- inc <--------------------- ヘッダファイル格納ディレクトリ
        |    +- array.h <------------ 配列オブジェクト定義用テンプレート
        |    +- chan.h <------------- チャネルマネージャの定義
@@ -86,6 +105,7 @@ paraphrase
        |    +- stack.h <------------ スタックおよびスタック操作関数
        |    +- thread.h <----------- マルチプラットフォーム用スレッドラッパ
        |    +- typedValue.h <------- スタックにプッシュ可能な値の定義（型付値）
+       |    +- util.h <------------- ユーティリティ関数用宣言
        |    +- word.h <------------- ワード型の定義
        +- lang <-------------------- 言語コア部格納ディレクトリ
        |    +- Makefile <----------- 言語コア部 Makefile
@@ -99,15 +119,22 @@ paraphrase
        |    +- para.cpp <----------- Paraphrase インタプリタ（REPL 部）実装部
        |    +- stack.cpp <---------- スタック表示
        |    +- typedValue.cpp <----- スタックにプッシュ可能な値関連の実装部
+       |    +- util.cpp <----------- ユーティリティ関数実装部
        |    +- word.cpp <----------- ワード型関連実装部
        +- windows <----------------- Visual Studio 関連ファイル格納部
             +- ext <---------------- ext プロジェクト格納ディレクトリ
+            |    +- extAOP <-------- extAOP プロジェクトディレクトリ
+            |    |    +- dllmain.cpp extAOP.dll 用 dllmain
+            |    |    +- extAOP.vcxproj  extAOP.dll 用プロジェクトファイル
             |    +- extFactor <----- extFactor プロジェクトディレクトリ
             |    |    +- dllmain.cpp extFactor.dll 用 dllmain
             |    |    +- extFactor.vcxproj  extFactor.dll 用プロジェクトファイル
             |    +- extLP <--------- extLP プロジェクトディレクトリ
-            |         +- dllmain.cpp extLP.dll 用 dllmain
-            |         +- extLP.vcxproj  extLP.dll 用プロジェクトファイル
+            |    |    +- dllmain.cpp extLP.dll 用 dllmain
+            |    |    +- extLP.vcxproj  extLP.dll 用プロジェクトファイル
+            |    +- extStdCode ----- extStdCode プロジェクトディレクトリ
+            |         +- dllmain.cpp extStdCode.dll 用 dllmain
+            |         +- extStdCode.vcxproj  extStdCode.dll 用プロジェクトファイル
             +- libPP <-------------- Paraphrase インタプリタの実体格納ディレクトリ
             |    +- dllmain.cpp <--- libPP.dll 用 dllmain
             |    +- libPP.vcxproj <- libPP.dll 用プロジェクトファイル
@@ -115,6 +142,6 @@ paraphrase
             +- paraphrase.vcxproj <- para.exe 用プロジェクトファイル
 
 *1 コンテキスト＝内部インタプリタと連携することにより Virtual Machine を構成します。
-　　内部インタプリタは実行部分であり、コンテキストはデータ部分を指します。
-　　コンテキストには、定義中のワードやスタック等が保持されます。
+　 内部インタプリタは実行部分であり、コンテキストはデータ部分を指します。
+　 コンテキストには、スタックおよび定義中のワード等が保持されます。
 

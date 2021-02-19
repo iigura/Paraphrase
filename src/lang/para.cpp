@@ -236,7 +236,7 @@ static bool parseOption(int argc,char *argv[]) {
 	namespace bstPrgOpt=boost::program_options;
 	bstPrgOpt::options_description desc("options");
 	desc.add_options()
-		("help,h",		"pint help.")
+		("help,h",		"print help.")
 		("version,v",	"print version info.")
 		("quiet,q",		"quiet mode (equivalent to -nk).")
 		("thread",bstPrgOpt::value<int>(),"set maximum thread (ex: --thread 8).")

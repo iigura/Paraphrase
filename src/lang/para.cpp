@@ -261,8 +261,7 @@ static bool parseOption(int argc,char *argv[]) {
 			argVec.push_back(str);	
 		}
 	} catch(const bstPrgOpt::error& e) {
-		std::cerr << e.what() << '\n';
-		std::cerr << desc << '\n';
+		std::cerr << e.what() << std::endl << desc << std::endl;
         return false;
 	}
 	
@@ -275,8 +274,7 @@ static bool parseOption(int argc,char *argv[]) {
 	if( vm.count("thread")	 ) {
 		int n=vm["thread"].as<int>();
 		if(n<0) {
-			fprintf(stderr,"--thread argument should be a positive integer ");
-			fprintf(stderr,"(current argument is %d).\n",n);
+			std::cerr << "--thread argument should be a positive integer (current argument is " << n << ")." << std::endl;
 			return false;
 		}
 		G_NumOfCores=n;
@@ -299,8 +297,7 @@ static bool parseOption(int argc,char *argv[]) {
 				for(++i; i<n; i++) {
 					std::string t=argVec[i];
 					if(t[0]=='"') {
-						fprintf(stderr,
-								"ERROR: illegal quotation at script arg[%zu]\n",i);
+						std::cerr << "ERROR: illegal quotation at script arg[" << i << "]" << std::endl;
 						return false;
 					}	
 					s+=" "+t;
@@ -360,28 +357,23 @@ static std::string readFromFile() {
 }
 
 static void printUsage() {
-	fprintf(stderr,
-			"Usage: para [-ehknqtv] [--thread]  [program-file] [program-code]\n");
-	fprintf(stderr,"  -h (--help)      print help.\n");
-	fprintf(stderr,"  -v (--version)   print version.\n");
-	fprintf(stderr,"  --thread N       set maximum thread. "
-				   "N should be a positive integer.\n");
-	fprintf(stderr,"  -e (--eval) S    "
-				   "evaluate the string S before executing the given script file.\n");
-	fprintf(stderr,"  -E (--eval-and-exit) S  "
-				   "evaluate the string S and exit.\n");
-	fprintf(stderr,"  -q (--quiet)     "
-				   "suppress prompt and 'ok'. (equivalent to -nk)\n");
-	fprintf(stderr,"  -n (--noprompt)  suppress prompt.\n");
-	fprintf(stderr,"  -k (--nook))     suppress 'ok' message (no ok)\n");
-	fprintf(stderr,"  -t (--time))     display spent time.\n");
-	//fprintf(stderr,"  --refimp         run with reduced dict "
-	//								   "for reference implementation.\n");
-	fprintf(stderr,"Ex) para FizzBuzz.pp 1 20 for+ i FizzBuzz . next cr\n");
+	std::cerr
+		<< "Usage: para [-ehknqtv] [--thread]  [program-file] [program-code]" << std::endl
+		<< "  -h (--help)      print help." << std::endl
+		<< "  -v (--version)   print version." << std::endl
+		<< "  --thread N       set maximum thread. N should be a positive integer." << std::endl
+		<< "  -e (--eval) S    evaluate the string S before executing the given script file." << std::endl
+		<< "  -E (--eval-and-exit) S  evaluate the string S and exit." << std::endl
+		<< "  -q (--quiet)     suppress prompt and 'ok'. (equivalent to -nk)" << std::endl
+		<< "  -n (--noprompt)  suppress prompt." << std::endl
+		<< "  -k (--nook)      suppress 'ok' message (no ok)" << std::endl
+		<< "  -t (--time)      display spent time." << std::endl
+		// << "  --refimp         run with reduced dict for reference implementation." << std::endl
+		<< "Ex) para FizzBuzz.pp 1 20 for+ i FizzBuzz . next cr" << std::endl;
 }
 
 static void printVersion() {
 	// printf("para: Paraphrase interpreter version %s by Koji Iigura.\n",kVersion);
-	printf("Paraphrase %s  Copyright (C) 2018-2021 Koji Iigura\n",kVersion);
+	std::cout << "Paraphrase " << kVersion << "  Copyright (C) 2018-2021 Koji Iigura" << std::endl;
 }
 

@@ -373,8 +373,8 @@ static void printUsage() {
 	fprintf(stderr,"  -q (--quiet)     "
 				   "suppress prompt and 'ok'. (equivalent to -nk)\n");
 	fprintf(stderr,"  -n (--noprompt)  suppress prompt.\n");
-	fprintf(stderr,"  -k (--nook))     suppress 'ok' message (no ok)\n");
-	fprintf(stderr,"  -t (--time))     display spent time.\n");
+	fprintf(stderr,"  -k (--nook)      suppress 'ok' message (no ok)\n");
+	fprintf(stderr,"  -t (--time)      display spent time.\n");
 	//fprintf(stderr,"  --refimp         run with reduced dict "
 	//								   "for reference implementation.\n");
 	fprintf(stderr,"Ex) para FizzBuzz.pp 1 20 for+ i FizzBuzz . next cr\n");

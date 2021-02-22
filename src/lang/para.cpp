@@ -115,10 +115,10 @@ int main(int argc,char *argv[]) {
 #endif
 
 // check data size for TypedValue optimize hack.
-static_assert(sizeof(double)>=sizeof(Word*) 
+static_assert(sizeof(double)>=sizeof(Word*)
 		   && sizeof(double)>=sizeof(Word**)
 		   && sizeof(double)>=sizeof(bool)
-		   && sizeof(double)>=sizeof(int) 
+		   && sizeof(double)>=sizeof(int)
 		   && sizeof(double)>=sizeof(long)
 		   && sizeof(double)>=sizeof(float)
 		   && sizeof(double)>=sizeof(WordFunc),
@@ -135,7 +135,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
 	exit(-1);
 #endif
 
-	boost::timer::cpu_timer timer; 
+	boost::timer::cpu_timer timer;
 
 	if(parseOption(argc,argv)==false) { return -1; }
 	if(initReadLineFunc()==false) { return -1; }
@@ -145,7 +145,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
 	InitOptPattern();
 	InitOuterInterpreter();
 	SetCurrentVocName("user");
-	
+
 	if(gToEvalStr!="") {
 		OIResult result=OuterInterpreter(*GlobalContext,gToEvalStr);
 		if(result!=OIResult::OI_NO_ERROR) { return -1; }
@@ -187,11 +187,11 @@ static_assert(sizeof(double)>=sizeof(Word*)
 	}
 
 	if(gArgsToExec.size()>0) {
-		const size_t n=gArgsToExec.size();	
+		const size_t n=gArgsToExec.size();
 		for(size_t i=0; i<n; i++) {
-			std::string s=gArgsToExec[i];	
-			OIResult result=OuterInterpreter(*GlobalContext,s);	
-			if(result!=OIResult::OI_NO_ERROR) { return -1; }	
+			std::string s=gArgsToExec[i];
+			OIResult result=OuterInterpreter(*GlobalContext,s);
+			if(result!=OIResult::OI_NO_ERROR) { return -1; }
 		}
 	}
 
@@ -265,14 +265,14 @@ static bool parseOption(int argc,char *argv[]) {
 		std::cerr << desc << '\n';
         return false;
 	}
-	
-	if( vm.count("help")     ) { printUsage();	return false; }
+
+	if( vm.count("help")     ) { printUsage(); return false; }
 	if( vm.count("version")  ) { printVersion(); return false; }
 	if( vm.count("time")     ) { gDisplayTime=true; }
 	if( vm.count("noprompt") ) { gUsePrompt=false; }
 	if( vm.count("nook")     ) { gUseOkDisplay=false; }
 	if( vm.count("quiet")    ) { gUsePrompt=gUseOkDisplay=false; }
-	if( vm.count("thread")	 ) {
+	if( vm.count("thread")   ) {
 		int n=vm["thread"].as<int>();
 		if(n<0) {
 			fprintf(stderr,"--thread argument should be a positive integer ");
@@ -302,17 +302,17 @@ static bool parseOption(int argc,char *argv[]) {
 						fprintf(stderr,
 								"ERROR: illegal quotation at script arg[%zu]\n",i);
 						return false;
-					}	
+					}
 					s+=" "+t;
 					if(t.length()>1 && t[0]!='"' && t[t.length()-1]=='"') {
 						break;
 					}
 				}
-			}	
-			gArgsToExec.push_back(s);	
+			}
+			gArgsToExec.push_back(s);
 		}
 	} else {
-		gInputFilePath=NULL;	
+		gInputFilePath=NULL;
 	}
 	return true;
 }
@@ -336,7 +336,7 @@ static bool initReadLineFunc() {
 				std::string skipLine;
 				gIsEOF=std::getline(gFileStream,skipLine).eof();
 			}
-			gReadLineFunc=readFromFile;	
+			gReadLineFunc=readFromFile;
 		}
 	}
 	return true;

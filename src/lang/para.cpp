@@ -258,7 +258,7 @@ static bool parseOption(int argc,char *argv[]) {
 		for(auto const& str
 		  : bstPrgOpt::collect_unrecognized(parseResult.options,
 											bstPrgOpt::include_positional)) {
-			argVec.push_back(str);	
+			argVec.push_back(str);
 		}
 	} catch(const bstPrgOpt::error& e) {
 		std::cerr << e.what() << '\n';

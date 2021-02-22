@@ -75,7 +75,16 @@ static bool gEvalAndExit=false;
 
 static bool initReadLineFunc();
 static void initDict();
-static bool parseOption(int argc,char *argv[]);
+
+/** 形式の正しいコマンドライン引数で指定される処理内容 */
+enum class Command {
+	PrintUsage,
+	PrintVersion,
+	RunProgram,
+};
+
+static Command parseOption(int argc,char *argv[]);
+
 static std::string readFromFile();
 static std::string readFromStdin();
 static const char *getPrompt();
@@ -137,7 +146,18 @@ static_assert(sizeof(double)>=sizeof(Word*)
 
 	boost::timer::cpu_timer timer;
 
-	if(parseOption(argc,argv)==false) { return -1; }
+	auto cmd = parseOption(argc,argv);
+	switch (cmd) {
+		case Command::PrintUsage:
+			printUsage();
+			return 0;
+		case Command::PrintVersion:
+			printVersion();
+			return 0;
+		case Command::RunProgram:
+			break;
+	}
+
 	if(initReadLineFunc()==false) { return -1; }
 
 	InitErrorMessage();
@@ -232,7 +252,11 @@ static void initDict() {
 	InitDict_Debug();
 }
 
-static bool parseOption(int argc,char *argv[]) {
+/**
+ * コマンドライン引数をパースする。
+ * 正しくパースできた場合は処理内容を返し、失敗した場合は異常終了する。
+ */
+static Command parseOption(int argc,char *argv[]) {
 	namespace bstPrgOpt=boost::program_options;
 	bstPrgOpt::options_description desc("options");
 	desc.add_options()
@@ -263,11 +287,11 @@ static bool parseOption(int argc,char *argv[]) {
 	} catch(const bstPrgOpt::error& e) {
 		std::cerr << e.what() << '\n';
 		std::cerr << desc << '\n';
-        return false;
+        std::exit(-1);
 	}
 
-	if( vm.count("help")     ) { printUsage(); return false; }
-	if( vm.count("version")  ) { printVersion(); return false; }
+	if( vm.count("help")     ) return Command::PrintUsage;
+	if( vm.count("version")  ) return Command::PrintVersion;
 	if( vm.count("time")     ) { gDisplayTime=true; }
 	if( vm.count("noprompt") ) { gUsePrompt=false; }
 	if( vm.count("nook")     ) { gUseOkDisplay=false; }
@@ -277,7 +301,7 @@ static bool parseOption(int argc,char *argv[]) {
 		if(n<0) {
 			fprintf(stderr,"--thread argument should be a positive integer ");
 			fprintf(stderr,"(current argument is %d).\n",n);
-			return false;
+			std::exit(-1);
 		}
 		G_NumOfCores=n;
 	}
@@ -301,7 +325,7 @@ static bool parseOption(int argc,char *argv[]) {
 					if(t[0]=='"') {
 						fprintf(stderr,
 								"ERROR: illegal quotation at script arg[%zu]\n",i);
-						return false;
+						std::exit(-1);
 					}
 					s+=" "+t;
 					if(t.length()>1 && t[0]!='"' && t[t.length()-1]=='"') {
@@ -314,7 +338,8 @@ static bool parseOption(int argc,char *argv[]) {
 	} else {
 		gInputFilePath=NULL;
 	}
-	return true;
+
+	return Command::RunProgram;
 }
 
 static bool initReadLineFunc() {

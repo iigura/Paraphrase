@@ -1,0 +1,13 @@
+`prime? :
+	switch
+		case 1 ==	-> false 
+		case 2 ==	-> true 
+		case 2 % 0?	-> false
+		default ->> dup sqrt ceil >int 1 + 3 swap 
+				   for+
+				   		dup i % 0? if drop false return then 2 step
+				   next
+    			   drop true
+	dispatch
+;
+

@@ -1,0 +1,253 @@
+// LisP8E: Scheme Interpreter in Paraphrase
+// (c) Koji Iigura, 2021-10; See http://github.com/iigura/Paraphrase/sample/lisp
+//
+// Original -> http://norvig.com/lispy.html by Peter Norvig.
+
+// "debug-util.p8e" load
+
+// ------------------------------------------------------------------
+// Parsing: parse, tokenize, and read_from_tokens
+// ------------------------------------------------------------------
+
+// Convert a string into a list of tokens ( S --- T )
+`tokenize : "\\(" "( " replace-str "\\)" " )" replace-str >array >list ;
+`integer? : '^[+-]?\d+$' search invalid? not ;
+
+// regex format from https://qiita.com/BlueSilverCat/items/f35f9b03169d0f70818b
+`float-str? :
+	'^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$' search @invalid? if
+		drop false
+	else
+		0 get >float? 
+	then
+;
+
+// Numbers become numbers; every other token is a symbol.
+// S --- {J|F|S}
+`atom :
+	switch
+		case integer?   ->> >big-int
+		case float-str? ->> >float
+		default 	    ->> >string
+	dispatch
+;
+
+// T ---
+`read_from_tokens :
+	`tokens local
+	`tokens , size 0 == if "unexpected EOF while reading" .cr panic then
+	`tokens , pop-front `tokenElement local
+	`tokenElement , switch
+		case "(" == -> () `l local
+			while `tokens , car ")" != do
+				`append :( `l , `read_from_tokens :( `tokens , ); );
+			repeat
+			`tokens , pop-front	drop // pop off ")"
+			`l , 
+		case ")" == -> "unexpected ')'." .cr panic 
+		default -> `tokenElement , atom 
+	dispatch
+;
+
+/* S --- */  `parse : tokenize read_from_tokens ;
+
+// ------------------------------------------------------------------
+// Environments
+// ------------------------------------------------------------------
+// Env is array
+//	[0] : outer env
+//	[1] : assoc
+
+/* X --- B */	`number?    : type-name ( "int" "float" "bigInt" ) has?  ;
+/* X --- B */	`procedure? : type-name "word" == ;
+
+// list --- X
+`en-multi-args-def : "{ @pop-front swap { %s } foreach }" sputf eval def ;
+
+// do ==> `lisp-add "+" en-multi-args-def
+( ( `lisp-add "+"  ) ( `lisp-minus "-" ) ( `lisp-mul "*" ) ( `lisp-div "/" )
+  ( `lisp-max `max ) ( `lisp-min  `min )
+) { expand en-multi-args-def } foreach
+
+/* sym --- */  	`call : >word >r expand r> exec ;
+/* X --- t/f */ `lisp-null? : expand @list? if () == return otherwise-drop false ;
+
+// An environment with some Scheme standard procedures.
+// --- env
+`standard_env :
+	2 new-array
+	"@set" :( 1
+		( ( '#t' 	 {{ true }},   ) ( '#f' {{ false }},   )
+		  ( '+'   	 { lisp-add  } ) ( '-'  { lisp-minus } )
+		  ( '*'   	 { lisp-mul  } ) ( '/'  { lisp-div   } )
+		  ( '>'   	 { '>'  call } ) ( '<'  { '<'  call  } )
+		  ( '>='  	 { '>=' call } ) ( '<=' { '<=' call  } )
+		  ( 'abs' 	 { `abs call } ) ( 'round' { `round call } )
+		  ( 'append' { `concat call } )
+		  ( 'cons' 	 { @pop-front en-list swap expand concat } )
+		  ( 'apply'  { expand swap exec } )
+		  ( 'car' 	 { `car call } ) ( 'cdr' { `cdr call } )
+		  ( 'eq?' 	 { `is? call } )
+		  ( 'equal?' { '==' call } )
+		  ( 'length' { `size call } )
+		  ( 'list?'  { expand type-name "list" == } )
+		  ( 'max' 	 { lisp-max } ) ( 'min' { lisp-min } )
+		  ( 'not' 	 { `not call } )
+		  ( 'null?'  { lisp-null? } ) ( 'number?' { `number? call } )
+		  ( 'procedure?' { expand type-name '(LAMBDA)' ==  } )	
+		  ( 'symbol?' { expand type-name 'string' == } )
+		) >assoc
+	);
+;
+
+// parms args outer --- env
+`new-env :
+	( parms args outer ) local
+	2 new-array
+	0 `outer , @set
+	`@set :( 1 `min-zip :( `parms , `args , ); >assoc );
+;
+
+// env S --- env
+`env-find :
+	( env var ) local
+	`env , 1 get `var , has-key? if
+		drop `env , return
+	else
+		drop `env , 0 get @invalid? if return then
+		`var , env-find
+	then
+;
+
+// env S --- value
+`get-value :
+	( env var ) local
+	`env , 1 get `var , get
+;
+
+// env S X ---
+`env-set :
+	( env var value ) local
+	`env , 1 get `var , `value , set
+;
+
+`global_env var
+standard_env >$global_env
+
+// ------------------------------------------------------------------
+// Procedure
+// ------------------------------------------------------------------
+// Procedure is assoc.
+//	assoc['parms']:=parms
+//	assoc['body'] :=body
+//	assoc['env']  :=env
+
+`lisp8e-eval : /* decl only */ ;
+
+// parms body env --- procedure-assoc
+`new-procedure-assoc :
+	( parms body env ) local
+	new-assoc
+	'parms' `parms , @set
+	'body'  `body  , @set
+	'env'   `env   , @set
+;
+
+// args assoc ---
+`procedure-call :
+	( args assoc ) local
+	`assoc , 'body' get
+	`new-env :( `assoc , 'parms' get
+				`args  ,
+				`assoc , 'env' get );
+	lisp8e-eval
+;
+// `procedure-call set-debug
+
+
+// ------------------------------------------------------------------
+// eval
+// ------------------------------------------------------------------
+`@drop-front : @pop-front drop ;
+
+// Evaluate an expression in an environment.
+// expr env --- expr
+`lisp8e-eval {
+	`env local
+	full-clone `x local drop
+	`x , invalid? if return then
+
+	( var expr )  local-decl
+	cond
+		case `x , string?  			// variable reference
+			-> `env-find :( `env , `x , ); 
+			   @invalid? if
+					`x , "ERROR: no such symbol (%s).\n" putf return
+			   then
+			   `x , get-value
+		case `x , list? not -> `x , // constant literal
+
+		// --- now x is a list ---
+		default
+			-> `x , @car switch
+				case 'quote' == -> cdr expand 	// (quote expr)
+				case 'if'    == 				// (if test conseq alt)
+					->  @drop-front ( test conseq alt ) map-local
+						`test , `env , lisp8e-eval if `conseq , else `alt , then 
+						`env , lisp8e-eval				
+				case 'define' ==		// (define var expr)
+					->  @drop-front ( var expr ) map-let
+						`env-set :( `env , `var , `lisp8e-eval :( `expr , `env , ); );
+						`var ,
+				case 'set!' == 			// (set! var expr)
+					->  @drop-front ( var expr ) map-let
+						`expr , `env , lisp8e-eval `value local
+						`env-set :( `env-find :( `env , `var , );
+									`var , `value , );
+						`value ,
+				case 'lambda' ==		// (lambda (var ...) body)
+					->  @drop-front ( parms body ) map-local
+						{ self 'lambda' get-attr procedure-call }
+						`@set-attr :( 'lambda'
+									  `new-procedure-assoc :( `parms ,
+									 					      `body ,
+														      `env , ); );
+				case 'begin' ==			// (begin expr1 expr2 ... exprN)
+					-> 	@drop-front @size 1 - `maxI local
+						{ `env , lisp8e-eval i `maxI , != if drop then }
+						foreach
+				default
+					-> @pop-front `env , lisp8e-eval `proc local
+					   () `args local
+					   { `env , lisp8e-eval `args , push-back } foreach
+					   `proc , invalid? if "!!!INVALID PROC" .cr  return then
+					   `args , `proc , exec
+			dispatch
+	dispatch
+} update
+
+
+// ------------------------------------------------------------------
+// Interaction: A REPL
+// ------------------------------------------------------------------
+
+// Convert a expr back into a Lisp-readable string.
+// expr --- S
+`lispstr :
+	switch
+		case list?  ->> `expr local
+						'(' `expr , { lispstr + ' ' + } foreach trim ')' +
+		case bool? ->> if '#t' else '#f' then
+		default	   ->> >string
+	dispatch
+;
+
+// A prompt-read-eval-print loop.
+`repl :
+	while true do
+		'lis.p8e> ' . get-line @eof? if .cr "bye." .cr leave then
+		parse $global_env> lisp8e-eval
+		empty? not if @valid? if lispstr .cr otherwise-drop then
+	repeat
+;
+

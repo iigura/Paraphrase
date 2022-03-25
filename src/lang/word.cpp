@@ -42,18 +42,25 @@ PP_API const Word *GetWordPtr(const std::string& inWordName) {
 }
 
 PP_API const Word *GetWordPtr(Context& inContext,const TypedValue& inTV) {
-	if( inTV.HasWordPtr() ) {
-		return inTV.wordPtr;
-	} else if(inTV.dataType==DataType::kTypeString) {
+	const Word *ret;
+	if( inTV.HasWordPtr(&ret) ) {
+		return ret;
+	} else if(inTV.dataType==DataType::String || inTV.dataType==DataType::Symbol) {
 		const Word *ret=GetWordPtr(*inTV.stringPtr);
 		if(ret==NULL) {
-			inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_WORD,*inTV.stringPtr);
+			inContext.Error(ErrorIdWithString::CanNotFindTheWord,*inTV.stringPtr);
 			return NULL;
 		}
 		return ret;
 	} else {
-		inContext.Error(InvalidTypeErrorID::E_TOS_STRING_OR_WORD,inTV);
+		inContext.Error(InvalidTypeErrorID::TosSymbolOrStringOrWord,inTV);
 		return NULL;
 	}
 }
+
+static bool gDeleteByForget=false;
+
+PP_API void SetDeleteByForget()   { gDeleteByForget=true;  }
+PP_API void ClearDeleteByForget() { gDeleteByForget=false; }
+PP_API bool CheckDeleteByForget() { return gDeleteByForget; }
 

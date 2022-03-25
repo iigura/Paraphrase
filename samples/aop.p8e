@@ -1,0 +1,28 @@
+// W --- 
+// execute on AOP context.
+`myDocol :
+	"IN :myDocol" `in-message  local
+	"OUT:myDocol" `out-message local
+
+	`in-message , .cr
+	docol
+	`out-message , .cr
+;
+
+// set myDocol to worded-docol-callee.
+"myDocol" >word set-worded-docol-callee
+
+`hello :
+	"---hello begin---" `s1 local
+	"---hello end---" `s2 local
+
+	`s1 , .cr
+	"HELLO" .cr
+	`s2 , .cr
+;
+
+// weave myDocol to hello.
+"hello" >word worded-docol-caller set-code
+
+// hello
+

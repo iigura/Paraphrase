@@ -22,7 +22,7 @@ inline TypedValue& ReadSecond(Stack& inStack) {
 
 inline int GetAddress(Stack& inStack,int inPos) {
 	TypedValue& tv=inStack.at(inPos);
-	if(tv.dataType!=DataType::kTypeAddress) { return -1; }
+	if(tv.dataType!=DataType::Address) { return -1; }
 	return tv.intValue;
 }
 

@@ -17,5 +17,9 @@ PP_API extern bool Docol(Context& inContext) NOEXCEPT;
 
 PP_API extern void SetTraceOn();
 PP_API extern void SetTraceOff();
+PP_API extern bool IsTraceOn();
 PP_API extern void ShowTrace(const Context& inContext);
+
+PP_API extern void SetScriptFileDir(const std::string& inScriptFileDir);
+PP_API extern const char *GetScriptFileDir();
 

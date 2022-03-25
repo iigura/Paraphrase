@@ -86,7 +86,7 @@ struct ChanMan {
 	}
 
 	inline TypedValue Recv() NOEXCEPT {
-		TypedValue ret(DataType::kTypeEOC);
+		TypedValue ret(DataType::EoC);
 		LockForWait(mutex);	
 			while(fifoBuffer.empty() && NumOfWriter>0) {
 				CondWait(cond,mutex);	

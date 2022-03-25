@@ -1,0 +1,39 @@
+`help : <<<
+		-----------------------------------------------------------------------
+		This is a sample program of fast inverse square root.
+		i.e. For a given x, it calculates 1/sqrt(x).
+
+		\tusage: ../para fastInvSqrt N run
+		\tex) ../para fastInvSqrt 100 run
+		\t        or
+		\t    ../para fastInvSqrt test
+
+		This program uses information from the following sites for reference:
+		\  https://github.com/itchyny/fastinvsqrt
+		\  https://itchyny.hatenablog.com/entry/2016/07/25/100000
+		-----------------------------------------------------------------------
+
+	>>> write
+;
+
+( { interactive? not } { args size 0? } ) and if help then
+
+// N --- f
+`fastInvSqrt :
+	>float
+	dup `x local
+	int-type >type
+	1 >>
+	0x5f3759df swap -
+	float-type >type `y local
+	1.5f  0.5f `x , * `y , * `y , *  -  `y , *
+;
+
+`run : fastInvSqrt .cr ;
+
+`test :
+	100 fastInvSqrt
+	int-type >type 1036811129 != // To examine the bit pattern strictly, cast it to int.
+	if "NG" .cr -1 exit else "GOOD" .cr then
+;
+

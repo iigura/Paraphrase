@@ -44,10 +44,10 @@ static TypedValue gTvLit;	// == getWord("std:_lit");
 static MathOpOptDB *gMathOp=NULL;
 static TypedValue gWordLit[4];
 enum class LitType {
-   	kLitInt   =0,
-	kLitLong  =1,
-	kLitFloat =2,
-	kLitDouble=3,
+   	Int   =0,
+	Long  =1,
+	Float =2,
+	Double=3,
 };
 
 static TypedValue getWord(const char *inWordName);
@@ -72,6 +72,11 @@ static void updateCode(CodeThread *ioThread,
 
 PP_API void InitOptPattern() {
 	static OptPattern optDB[]={
+		OptPattern({getWord("std:_nop")},{}),
+		OptPattern({getWord("std:dup"),getWord("std:drop")},{}),
+		OptPattern({getWord("std:_inc-loop-counter"),getWord("std:_repeat?+")},
+				   {getWord("std:_inc-loop-counter_repeat?+")}),
+
 		OptPattern({getWord("std:_0"),getWord("std:_setValue")},{getWord("std:>$0")}),
 		OptPattern({getWord("std:_1"),getWord("std:_setValue")},{getWord("std:>$1")}),
 		OptPattern({getWord("std:_2"),getWord("std:_setValue")},{getWord("std:>$2")}),
@@ -94,6 +99,17 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:_8"),getWord("std:_getValue")},{getWord("std:$8>")}),
 		OptPattern({getWord("std:_9"),getWord("std:_getValue")},{getWord("std:$9>")}),
 
+		OptPattern({getWord("std:>$0"),getWord("std:$0>")},{getWord("std:@>$0")}),
+		OptPattern({getWord("std:>$1"),getWord("std:$1>")},{getWord("std:@>$1")}),
+		OptPattern({getWord("std:>$2"),getWord("std:$2>")},{getWord("std:@>$2")}),
+
+		OptPattern({getWord("std:_2"),getWord("std:_step+")},{getWord("std:_2_step+")}),
+
+		OptPattern({getWord("std:dup"),getWord("std:sqrt")},{getWord("std:@sqrt")}),
+
+		OptPattern({getWord("std:>"),getWord("std:_branch-if-false")},
+				   {getWord("std:_>_branch-if-false")}),
+
 		// "dup 2 % 0 ==" -> "@even?"
 		OptPattern({getWord("std:dup"),
 					getWord("std:_litInt"),TypedValue(2),getWord("std:%"),
@@ -105,9 +121,13 @@ PP_API void InitOptPattern() {
 		// "0 ==" convert to "0?"
 		OptPattern({getWord("std:_lit"),TypedValue(0),getWord("std:==")},
 				   {getWord("std:0?")}),
+		OptPattern({getWord("std:_lit"),TypedValue(1),getWord("std:+")},
+				   {getWord("std:_1+")}),
+		OptPattern({getWord("std:_lit"),TypedValue(1),getWord("std:-")},
+				   {getWord("std:_1-")}),
 		OptPattern({getWord("std:_lit"),TypedValue(2),getWord("std:/")},
-				   {getWord("std:2/")}),
-		OptPattern({getWord("std:_2"),getWord("std:/")},{getWord("std:2/")}),
+				   {getWord("std:_2/")}),
+		OptPattern({getWord("std:_2"),getWord("std:/")},{getWord("std:_2/")}),
 		OptPattern({getWord("std:dup"),getWord("std:@r>"),getWord("std:%")},
 				   {getWord("std:_dup_@r>%")}),
 		OptPattern({getWord("std:dup"),getWord("std:i"),getWord("std:%")},
@@ -218,6 +238,11 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:dup"),getWord("std:_1"),getWord("std:!=")},
 				   {getWord("std:_@1!=")}),
 
+		OptPattern({getWord("std:drop"),getWord("std:false")},
+				   {getWord("std:_drop_false")}),
+		OptPattern({getWord("std:drop"),getWord("std:true")},
+				   {getWord("std:_drop_true")}),
+
 		OptPattern(),	// the sentinel
 	};
 
@@ -233,10 +258,10 @@ PP_API void InitOptPattern() {
 	};
 	gMathOp=mathOpDB;
 
-	gWordLit[(int)LitType::kLitInt]   =getWord("std:_litInt");
-	gWordLit[(int)LitType::kLitLong]  =getWord("std:_litLong");
-	gWordLit[(int)LitType::kLitFloat] =getWord("std:_litFloat");
-	gWordLit[(int)LitType::kLitDouble]=getWord("std:_litDouble");
+	gWordLit[(int)LitType::Int]   =getWord("std:_litInt");
+	gWordLit[(int)LitType::Long]  =getWord("std:_litLong");
+	gWordLit[(int)LitType::Float] =getWord("std:_litFloat");
+	gWordLit[(int)LitType::Double]=getWord("std:_litDouble");
 }
 
 int gOptimizeLevel=5;
@@ -272,21 +297,21 @@ void ReplaceTailRecursionToJump(Word *inWord,CodeThread *ioThread) {
 	size_t n=ioThread->size();
 	if(n<2) { return; }
 	TypedValue& semis=ioThread->at(n-1);
-	if(semis.dataType!=DataType::kTypeDirectWord || semis.wordPtr!=Dict["std:_semis"]) {
+	if(semis.dataType!=DataType::DirectWord || semis.wordPtr!=Dict["std:_semis"]) {
 		return;
 	}
 	TypedValue& lastCall=ioThread->at(n-2);
-	if(lastCall.dataType!=DataType::kTypeDirectWord || lastCall.wordPtr!=inWord) {
+	if(lastCall.dataType!=DataType::DirectWord || lastCall.wordPtr!=inWord) {
 		return;
 	}
 
 	lastCall.wordPtr=Dict["std:_absolute-jump"];
 	auto insertPos=ioThread->begin()+n-1;
-	ioThread->insert(insertPos,TypedValue(DataType::kTypeAddress,0));
+	ioThread->insert(insertPos,TypedValue(DataType::Address,0));
 
 	for(size_t i=0; i<n-2; i++) {
 		TypedValue& tv=ioThread->at(i);
-		if(tv.dataType!=DataType::kTypeAddress || tv.intValue<=n-2) { continue; }
+		if(tv.dataType!=DataType::Address || tv.intValue<=n-2) { continue; }
 		tv.intValue++;	// jump to semis.
 	}
 }
@@ -322,7 +347,7 @@ static bool optimize(CodeThread *ioThread,const OptPattern& inPattern) {
 						   inPattern.replaceTo.end());
 
 		for(int k=0; k<ioThread->size(); k++) {
-			if(ioThread->at(k).dataType==DataType::kTypeAddress
+			if(ioThread->at(k).dataType==DataType::Address
 			   && ioThread->at(k).intValue>i) {
 				ioThread->at(k).intValue-=inPattern.gap;
 			}
@@ -340,18 +365,18 @@ static bool mathOpOptimize(CodeThread *ioThread) {
 		if(tvN.IsNumber()==false) { continue; }
 		TypedValue& op=ioThread->at(i+2);
 		int mathOpDB_index=-1;
-		for(int j=0; gMathOp[j].originalOp.dataType==DataType::kTypeDirectWord; j++) {
+		for(int j=0; gMathOp[j].originalOp.dataType==DataType::DirectWord; j++) {
 			if(op==gMathOp[j].originalOp) { mathOpDB_index=j; break; }
 		}	
 		if(mathOpDB_index<0) { continue; }
 		int replaceIndex=-1;
 		switch(tvN.dataType) {
-			case DataType::kTypeInt:		replaceIndex=0;	break;
-			case DataType::kTypeLong:		replaceIndex=1;	break;
-			case DataType::kTypeFloat:		replaceIndex=2;	break;
-			case DataType::kTypeDouble:		replaceIndex=3; break;
-			case DataType::kTypeBigInt:		replaceIndex=4;	break;
-			case DataType::kTypeBigFloat:	replaceIndex=5; break;
+			case DataType::Int:			replaceIndex=0;	break;
+			case DataType::Long:		replaceIndex=1;	break;
+			case DataType::Float:		replaceIndex=2;	break;
+			case DataType::Double:		replaceIndex=3; break;
+			case DataType::BigInt:		replaceIndex=4;	break;
+			case DataType::BigFloat:	replaceIndex=5; break;
 			default:
 				fprintf(stderr,"SYSTEM ERROR in mathOpOptimise.\n");
 				exit(-1);
@@ -370,10 +395,10 @@ static bool litOptimize(CodeThread *ioThread) {
 		if(tvN.IsNumber()==false) { continue; }
 		int index=-1;
 		switch(tvN.dataType) {
-			case DataType::kTypeInt:	index=(int)LitType::kLitInt;	break;
-			case DataType::kTypeLong:	index=(int)LitType::kLitLong;	break;
-			case DataType::kTypeFloat:	index=(int)LitType::kLitFloat;	break;
-			case DataType::kTypeDouble:	index=(int)LitType::kLitDouble;	break;
+			case DataType::Int:		index=(int)LitType::Int;	break;
+			case DataType::Long:	index=(int)LitType::Long;	break;
+			case DataType::Float:	index=(int)LitType::Float;	break;
+			case DataType::Double:	index=(int)LitType::Double;	break;
 			default:
 				;	// empty
 		}
@@ -463,7 +488,7 @@ static bool lvopOptimize(CodeThread *ioThread) {
 static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::kTypeDirectWord) { return false; }
+	if(tv.dataType!=DataType::DirectWord) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	if((lvop&LVOP::opMask)!=inLVOP) { return false; }
 	return (lvop & LVOP::destMask)==LVOP::dDS;
@@ -472,7 +497,7 @@ static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 static bool fromDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::kTypeDirectWord) { return false; }
+	if(tv.dataType!=DataType::DirectWord) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	if((lvop&LVOP::opMask)!=inLVOP) { return false; }
 	return (lvop & LVOP::src1Mask)==LVOP::sDS;
@@ -481,7 +506,7 @@ static bool fromDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 static bool isLVOpSupport(CodeThread *inThread,int inTarget,LVOP inArgMask) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::kTypeDirectWord) { return false; }
+	if(tv.dataType!=DataType::DirectWord) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	return (lvop & inArgMask) !=0;
 }
@@ -489,7 +514,7 @@ static bool isLVOpSupport(CodeThread *inThread,int inTarget,LVOP inArgMask) {
 static bool isPushLVOP(CodeThread *inThread,int inTarget) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::kTypeLVOP) { return false; }
+	if(tv.dataType!=DataType::LVOP) { return false; }
 	LVOP lvop=static_cast<LVOP>(tv.intValue);
 	return (lvop & LVOP::XPushBase) !=0;
 }
@@ -500,13 +525,13 @@ static bool lvopPack(CodeThread *ioThread) {
 	TypedValue tv_N_LvopWord=getWord("std:_nLVOP");
 	for(int i=0; i<(int)ioThread->size()-4; i++) {
 		if(ioThread->at(i)==tvLvopWord
-		   && ioThread->at(i+1).dataType==DataType::kTypeLVOP
+		   && ioThread->at(i+1).dataType==DataType::LVOP
 		   && ioThread->at(i+2)==tvLvopWord
-		   && ioThread->at(i+3).dataType==DataType::kTypeLVOP) {
+		   && ioThread->at(i+3).dataType==DataType::LVOP) {
 			int lvopCount=0;
 			for(int t=0;
 				t<ioThread->size() && ioThread->at(i+t)==tvLvopWord
-				&& ioThread->at(i+t+1).dataType==DataType::kTypeLVOP
+				&& ioThread->at(i+t+1).dataType==DataType::LVOP
 				&& canGrouping(ioThread,i,t+2);
 				t+=2, lvopCount++) {
 				// empty
@@ -535,7 +560,7 @@ static bool canGrouping(const CodeThread *inThread,
 	const int n=(int)inThread->size();
 	for(int i=0; i<n; i++) {
 		const TypedValue& tv=inThread->at(i);
-		if(tv.dataType==DataType::kTypeAddress) {
+		if(tv.dataType==DataType::Address) {
 			const int addr=tv.intValue;
 			if(inStartAddress<addr && addr<endAddress) {
 				// jump into target block
@@ -556,7 +581,7 @@ static void updateCode(CodeThread *ioThread,
 
 	int offset=inOldSize-(int)inNewCode.size();
 	for(int k=0; k<ioThread->size(); k++) {
-		if(ioThread->at(k).dataType==DataType::kTypeAddress
+		if(ioThread->at(k).dataType==DataType::Address
 		   && ioThread->at(k).intValue>inStartPos) {
 				ioThread->at(k).intValue-=offset;
 		}

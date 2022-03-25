@@ -3,11 +3,18 @@
 <head>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="top.css">
-	<style type="text/css"> <!-- .VERSION:before{content:"0.94.0";} --> </style>
-	<style type="text/css"> <!-- .DATE:before{content:"2021.2.17";} --> </style>
-	<title>Paraphrase ドキュメント ver. 0.94.0</title>
+	<style type="text/css"> <!-- .VERSION:before{content:"0.95rc1";} --> </style>
+	<style type="text/css"> <!-- .DATE:before{content:"2022.3.25";} --> </style>
+	<title>Paraphrase ドキュメント ver. 0.95rc1</title>
 </head>
 <body>
+
+<script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
+<script>
+  const opt={ label: '🌙' }
+  new Darkmode(opt).showWidget();
+</script>
+
 <div id=main>
 <h1>Paraphrase ドキュメント ver. <span class="VERSION"></span></h1>
 <div id=author><span class="DATE"></span> 飯倉宏治</div>
@@ -125,16 +132,15 @@
 		<a href="../FILES.txt">Paraphrase/FILES.txt</a>
 	</li>
 	<br>
-<!--
 	<li>テクニカルマニュアル
 		<ol>
-			<li><a href="tech/while.html">Paraphrase/docs/tech/while.html</a><br>
+			<li><a href="tech/loop-impl.html">Paraphrase/docs/tech/loop-impl.html</a><br>
 				&nbsp;&nbsp;&nbsp;&nbsp;
-				while - repeat など繰り返し処理はどのように実現されているのかを解説
+				while ... do  - repeat など繰り返し処理は Paraphrase で
+				どのように実現されているのかを解説します。
 			</li>
 		</ol>
 	</li>
--->
 </ol>
 </div>
 </body>

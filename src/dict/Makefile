@@ -4,7 +4,7 @@ OBJ=../obj
 INCLUDE_PATHS=-I $(INC)
 
 objs=$(OBJ)/dictWord.o $(OBJ)/dictLangSys.o $(OBJ)/dictObject.o $(OBJ)/dictStack.o \
-	 $(OBJ)/dictControl.o $(OBJ)/dictIO.o $(OBJ)/dictMath.o \
+	 $(OBJ)/dictControl.o $(OBJ)/dictIO.o $(OBJ)/dictMath.o $(OBJ)/dictType.o \
 	 $(OBJ)/dictString.o $(OBJ)/dictArray.o $(OBJ)/dictList.o $(OBJ)/dictAssoc.o \
 	 $(OBJ)/dictParallel.o $(OBJ)/dictLocalVar.o \
 	 $(OBJ)/dictOptimize.o $(OBJ)/dictAOP.o $(OBJ)/dictDebug.o

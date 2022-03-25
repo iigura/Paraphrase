@@ -11,9 +11,19 @@
 #include "inner.h"
 
 enum class Level {
-	kInterpret	=0,
-	kCompile 	=1,
-	kSymbol		=2,
+	Interpret	=0,
+	Compile 	=1,
+	Symbol		=2,
+};
+
+enum class DebugCommand {
+	None,
+	SystemError,
+	Invalid,
+	Continue,
+	StepOver,
+	StepIn,
+	Quit,
 };
 
 typedef std::vector<TypedValue> LocalVarSlot;
@@ -33,7 +43,7 @@ struct Context {
 	Level ExecutionThreshold;
 
 	Word *newWord=NULL;
-	Word *lastDefinedWord=NULL;;
+	Word *lastDefinedWord=NULL;
 
 	TypedValue initParamForPBlock;
 	bool isInitParamBroadcast;
@@ -59,6 +69,9 @@ struct Context {
 	std::string hereDocStr="";
 	bool appendNewlineForHereDocStr=true;
 
+	bool nowDebugging=false;
+	DebugCommand debugCommand=DebugCommand::None;
+
 	PP_API Context(Context *inParent,Level inExecutionThreshold,
 			std::shared_ptr<ChanMan> inFromParent,
 			std::shared_ptr<ChanMan> inToParent,
@@ -79,20 +92,17 @@ struct Context {
 
 	void SetInterpretMode() {
 		newWord=NULL;
-		ExecutionThreshold=Level::kInterpret;
+		ExecutionThreshold=Level::Interpret;
 	}
-	void SetCompileMode() { ExecutionThreshold=Level::kCompile; }
-	void SetSymbolMode() { ExecutionThreshold=Level::kSymbol; }
+	void SetCompileMode() { ExecutionThreshold=Level::Compile; }
+	void SetSymbolMode() { ExecutionThreshold=Level::Symbol; }
 
-	bool IsInterpretMode()	const { return ExecutionThreshold==Level::kInterpret; }
-	bool IsSymbolMode() 	const { return ExecutionThreshold==Level::kSymbol;    }
-	bool CheckCompileMode() const { return ExecutionThreshold!=Level::kInterpret; }
+	bool IsInterpretMode()	const { return ExecutionThreshold==Level::Interpret; }
+	bool IsSymbolMode() 	const { return ExecutionThreshold==Level::Symbol;    }
+	bool CheckCompileMode() const { return ExecutionThreshold!=Level::Interpret; }
 
 	void PushThreshold() { DS.emplace_back(ExecutionThreshold); }
-
-	void PushNewWord() {
-		DS.emplace_back(DataType::kTypeNewWord,newWord);
-	}
+	void PushNewWord() { DS.emplace_back(DataType::NewWord,newWord); }
 
 	PP_API void FinishNewWord();
 
@@ -140,14 +150,18 @@ struct Context {
 	PP_API bool EnterHereDocument(const ControlBlockType inCB_ID);
 	PP_API bool LeaveHereDocument();
 
-	const char *GetExecutingWordName() const;
+	PP_API const char *GetExecutingWordName() const;
+
+	PP_API TypedValue GetLiteralFromThreadedCode(bool inIsRemoveFromThread=true,
+												 bool inPrintErrorMessage=true);
 
 	inline bool SetCurrentLocalVar(int inSlotIndex,TypedValue& inValue) {
 		assert(Env.size()>0);
 		LocalVarSlot& localVarSlot=Env.back();
 		if(localVarSlot.size()<=inSlotIndex) { return false; /* inalid index */ }
 		// needs full clone for list or array.
-		localVarSlot[inSlotIndex]=FullClone(inValue);
+		//localVarSlot[inSlotIndex]=FullClone(inValue);
+		localVarSlot[inSlotIndex]=inValue;
 		return true;
 	}
 
@@ -173,11 +187,11 @@ struct Context {
 		}
 		Word *word=(Word*)*IS.back();
 		if(word==NULL) {
-			Error(NoParamErrorID::E_SYSTEM_ERROR);
+			Error(NoParamErrorID::SystemError);
 			exit(-1);
 		}
 		if(word->localVarDict.find(inVarName)==word->localVarDict.end()) {
-			Error(ErrorIdWithString::E_NO_SUCH_LOCAL_VAR,inVarName);
+			Error(ErrorIdWithString::NoSuchLocalVar,inVarName);
 			return TypedValue();	// invalid value.
 		}
 		LocalVarSlot& localVarSlot=Env.back();

@@ -1,0 +1,58 @@
+`help :
+	<<<
+		-------------------------------------------------------------------------------
+        PE10mt.pp - Solve Project Euler No. 10, which asks you to find the sum of all
+       \            prime numbers under 2 million.
+
+		usage: ../para PE10mt.pp run
+		note : the above command will show 142913828922
+	   \            or
+	   \       ../para PE10mt.pp N PE10mt .cr
+       \       N is an integer that indicates how far to probe.
+       \       If only "run" is given as an argument, it means that N=2000000 is given.
+		test : ../para PE10mt.pp test
+		-------------------------------------------------------------------------------
+	>>> write
+;
+
+interactive? not if
+	args size 0? if help cr -1 exit then
+then
+
+`prime?-for-odd :	/* TOS should be grater than 3. */
+	true swap
+	dup sqrt ceil >int 1 + 3 swap
+	for+
+		dup
+		i % 0 == if
+			swap drop false swap leave 
+		then 
+		2 step
+	next
+	drop
+;
+
+// 2 ... N
+// N ---
+`PE10mt :
+	reset-pipes
+
+	/* scatter */
+	[-> 5 swap for+ i >pipe 2 step next ]
+
+	/* worker */
+	[[ while-pipe dup prime?-for-odd if >pipe otherwise-drop repeat ]]
+
+	/* gather: total */
+	2 3 + >big-int
+	while-pipe + repeat
+;
+
+`runMain : 2000000 PE10mt ;
+`run : runMain .cr ;
+
+`test :
+	runMain 142913828922 != if "NG" .cr -1 exit then
+	"GOOD" .cr
+;
+

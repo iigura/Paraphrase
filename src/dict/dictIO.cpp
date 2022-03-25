@@ -2,6 +2,7 @@
 #include <iostream>
 #include <limits>
 #include <cstdio>
+#include <filesystem>
 
 #include <boost/format.hpp>
 #include <unicode/unistr.h>
@@ -11,6 +12,7 @@
 #include "stack.h"
 #include "word.h"
 #include "context.h"
+#include "util.h"
 
 #ifdef _WIN32
 	#include <Windows.h>
@@ -34,8 +36,8 @@ static std::deque<char> gMockStdout;
 
 static void *getCFuncPointer(Context& inContext,
 							 std::string *inLibPath,const char *inFuncName);
-static void printValue(TypedValue& inTV);
-static void printStr(std::string& inStr);
+static void printValue(const TypedValue& inTV,bool inTypePostfix=false);
+static void printStr(const std::string& inStr);
 
 static void addMockStdin(const char *inStr);
 static bool getlineFromMockStdin(std::string *outLine);
@@ -71,13 +73,11 @@ void InitDict_IO() {
 
 	// S ---
 	Install(new Word(">mock-stdin",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tv);
+		if(tv.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tv);
 		}
 
 		addMockStdin(tv.stringPtr->c_str());
@@ -131,71 +131,90 @@ void InitDict_IO() {
 	}));
 
 	Install(new Word(".",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tv=Pop(inContext.DS);
 		toStdout(' ');
-		printValue(tv);
+		printValue(tv,true);
 		NEXT;
 	}));
 
 	Install(new Word(".cr",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tv=Pop(inContext.DS);
 		toStdout(' ');
-		printValue(tv);
+		printValue(tv,true);
 		toStdout('\n');
 		NEXT;
 	}));
 
 	Install(new Word("@.",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tv=ReadTOS(inContext.DS);
 		toStdout(' ');
-		printValue(tv);
+		printValue(tv,true);
 		NEXT;
 	}));
 
 	Install(new Word("write",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tv=Pop(inContext.DS);
-		printValue(tv);
+		printValue(tv,false);
 		NEXT;
 	}));
 
 	Install(new Word("putf",WORD_FUNC {
 		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
-		try {
-			boost::format fmt(tos.stringPtr->c_str());
-			TypedValue second=Pop(inContext.DS);
-			switch(second.dataType) {
-				case DataType::kTypeInt:		fmt=fmt%second.intValue;	break;
-				case DataType::kTypeLong:		fmt=fmt%second.longValue;	break;
-				case DataType::kTypeFloat:		fmt=fmt%second.floatValue;	break;
-				case DataType::kTypeDouble:		fmt=fmt%second.doubleValue;	break;
-				case DataType::kTypeBigFloat:
-				case DataType::kTypeBigInt:
-				default:
-					const int kNoIndent=0;
-					fmt=fmt%second.GetValueString(kNoIndent).c_str();
+		TypedValue second=Pop(inContext.DS);
+		TypedValue tvFormatted=GetFormattedString(tos.stringPtr->c_str(),second);
+		if(tvFormatted.dataType!=DataType::String) {
+			return inContext.Error(NoParamErrorID::FormatDataMismatch);
+		}
+		printStr(*tvFormatted.stringPtr);
+		NEXT;
+	}));
+
+	// { wordPtr | S | KV } --- 
+	Install(new Word("dump",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType==DataType::Word
+		   || tos.dataType==DataType::String || tos.dataType==DataType::Symbol) {
+			const Word *word=NULL;
+			if(tos.dataType==DataType::Word) {
+				word=tos.wordPtr;
+			} else {
+				auto iter=Dict.find(*tos.stringPtr);
+				if(iter==Dict.end()) {
+					return inContext.Error(ErrorIdWithString
+										   ::CanNotFindTheWord,*tos.stringPtr);
+				}
+				word=iter->second;
 			}
-			std::string s=fmt.str();
-			printStr(s);
-		} catch(...) {
-			return inContext.Error(NoParamErrorID::E_FORMAT_DATA_MISMATCH);
+			if(word->param==NULL) {
+				printf("the word '%s' is internal.\n",word->longName.c_str());
+			} else {
+				word->Dump();
+			}
+		} else if(tos.dataType==DataType::KV) {
+			printStr("assoc(\n");
+			for(auto const &pair : *tos.kvPtr) {
+				printStr("\tkey=");
+				printValue(pair.first,true);
+				printStr(", value=");
+				printValue(pair.second,true);
+				toStdout('\n');
+			}
+			printStr(")\n");
+		} else {
+			return inContext.Error(InvalidTypeErrorID::TosWpOrStringOrSymbolOrKV,tos);
 		}
 		NEXT;
 	}));
@@ -211,73 +230,65 @@ void InitDict_IO() {
 	}));
 	
 	Install(new Word("open",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tv);
+		if(tv.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tv);
 		}
 		File *file=new File();
 		if(file->Open(tv.stringPtr->c_str(),"a+")==false) {
-			return inContext.Error(ErrorIdWithString::E_CAN_NOT_OPEN_FILE,*tv.stringPtr);
+			return inContext.Error(ErrorIdWithString::CanNotOpenFile,*tv.stringPtr);
 		}
 		inContext.DS.emplace_back(file);
 		NEXT;
 	}));
 
 	Install(new Word("new-file",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tv);
+		if(tv.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tv);
 		}
 
 		File *file=new File();
 		if(file->Open(tv.stringPtr->c_str(),"w")==false) {
-			return inContext.Error(ErrorIdWithString::E_CAN_NOT_CREATE_FILE,*tv.stringPtr);
+			return inContext.Error(ErrorIdWithString::CanNotCreateFile,*tv.stringPtr);
 		}
 		inContext.DS.emplace_back(file);
 		NEXT;
 	}));
 
 	Install(new Word("close",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tv=Pop(inContext.DS);
-		if(tv.dataType!=DataType::kTypeFile) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_FILE,tv);
+		if(tv.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::TosFile,tv);
 		}
 
 		File *file=tv.filePtr.get();
 		if(file->fp==NULL) {
-			return inContext.Error(NoParamErrorID::E_FILE_IS_ALREADY_CLOSED);
+			return inContext.Error(NoParamErrorID::FileIsAlreadyClosed);
 		}
 		if(file->Close()==false) {
-			return inContext.Error(NoParamErrorID::E_CAN_NOT_CLOSE_FILE);
+			return inContext.Error(NoParamErrorID::CanNotCloseFile);
 		}
 		NEXT;
 	}));
 
 	Install(new Word("to-read",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeFile) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_FILE,tos);
+		if(tos.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::TosFile,tos);
 		}
 
 		File *file=tos.filePtr.get();
 		if(file->fp==NULL) {
-			return inContext.Error(NoParamErrorID::E_FILE_IS_ALREADY_CLOSED);
+			return inContext.Error(NoParamErrorID::FileIsAlreadyClosed);
 		}
 
 		fseek(file->fp,0L,SEEK_SET);
@@ -286,14 +297,12 @@ void InitDict_IO() {
 
 	// file X --- file
 	Install(new Word(">file",WORD_FUNC {
-		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<2) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue& tvFile=ReadTOS(inContext.DS);
-		if(tvFile.dataType!=DataType::kTypeFile) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_FILE,tvFile);
+		if(tvFile.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::SecondFile,tvFile);
 		}	
 		File *file=tvFile.filePtr.get();
 		fprintf(file->fp,"%s",tos.GetValueString(0).c_str());
@@ -301,18 +310,16 @@ void InitDict_IO() {
 	}));
 
 	Install(new Word("fgets",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeFile) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_FILE,tos);
+		if(tos.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::TosFile,tos);
 		}
 
 		File *file=tos.filePtr.get();
 		if(file->fp==NULL) {
-			return inContext.Error(NoParamErrorID::E_FILE_IS_ALREADY_CLOSED);
+			return inContext.Error(NoParamErrorID::FileIsAlreadyClosed);
 		}
 
 		FILE *fp=file->fp;
@@ -350,22 +357,20 @@ next:
 	}));
 
 	Install(new Word("flush-file",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeFile) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_FILE,tos);
+		if(tos.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::TosFile,tos);
 		}
 
 		File *file=tos.filePtr.get();
 		if(file->fp==NULL) {
-			return inContext.Error(NoParamErrorID::E_FILE_IS_ALREADY_CLOSED);
+			return inContext.Error(NoParamErrorID::FileIsAlreadyClosed);
 		}
 
 		if(fflush(file->fp)!=0) {
-			return inContext.Error(NoParamErrorID::E_CAN_NOT_FLUSH_FILE);
+			return inContext.Error(NoParamErrorID::CanNotFlushFile);
 		}
 		NEXT;
 	}));
@@ -378,14 +383,14 @@ next:
 			if( isValid ) {
 				inContext.DS.emplace_back(line);
 			} else {
-				inContext.DS.emplace_back(DataType::kTypeEOF);
+				inContext.DS.emplace_back(DataType::EoF);
 			}
 		} else {
 			// from stdin
 			if( std::getline(std::cin,line) ) {
 				inContext.DS.emplace_back(line);
 			} else {
-				inContext.DS.emplace_back(DataType::kTypeEOF);
+				inContext.DS.emplace_back(DataType::EoF);
 				std::cin.clear();
 				clearerr(stdin);
 			}
@@ -394,19 +399,31 @@ next:
 	}));
 
 	Install(new Word("load",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tvFileName=Pop(inContext.DS);
-		if(tvFileName.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tvFileName);
+		if(tvFileName.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvFileName);
 		}
 
 		std::ifstream inputStream;
 		inputStream.open(tvFileName.stringPtr->c_str());
 		if( inputStream.fail() ) {
-			return inContext.Error(ErrorIdWithString::E_CAN_NOT_READ_FILE,*tvFileName.stringPtr);
+			const char *scriptFileDir=NULL;
+			std::filesystem::path targetFilePath=tvFileName.stringPtr->c_str();
+			if( targetFilePath.is_absolute() ) { goto openFileError; }
+
+			scriptFileDir=GetScriptFileDir();
+			if(scriptFileDir!=NULL) {
+				std::filesystem::path path=scriptFileDir;
+				path.append(tvFileName.stringPtr->c_str());
+				std::string pathString=path.string();
+				inputStream.open(pathString.c_str());
+				if( inputStream.fail() ) { goto openFileError; }
+			} else {
+openFileError:
+				return inContext.Error(ErrorIdWithString::CanNotReadFile,*tvFileName.stringPtr);
+			}
 		}
 		std::string line;
 		std::getline(inputStream,line);
@@ -414,14 +431,14 @@ next:
 		if(line.length()>1 && line[0]=='#') {
 			// emtpy <- skip shebang.
 		} else {
-			if(OuterInterpreter(inContext,line)!=OIResult::OI_NO_ERROR) {
+			if(OuterInterpreter(inContext,line)!=OIResult::NoError) {
 				inContext.IS.clear();
 				return false;
 			}
 		}
 		int count=2;	// line count is 1-origin.
 		while(std::getline(inputStream,line).eof()==false) {
-			if(OuterInterpreter(inContext,line)!=OIResult::OI_NO_ERROR) {
+			if(OuterInterpreter(inContext,line)!=OIResult::NoError) {
 				fprintf(stderr,"Error at %d, line=%s\n",count,line.c_str());
 				inContext.IS.clear();
 				return false;
@@ -432,19 +449,17 @@ next:
 	}));
 
 	Install(new Word("import",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 
 		typedef void(*FuncPtr)(void);
 		FuncPtr func=(FuncPtr)getCFuncPointer(inContext,tos.stringPtr.get(),"InitDict");
 		if(func==NULL) {
-			return inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_ENTRY_POINT,*tos.stringPtr);
+			return inContext.Error(ErrorIdWithString::CanNotFindTheEntryPoint,*tos.stringPtr);
 		}
 		func();
 		NEXT;
@@ -453,48 +468,42 @@ next:
 	// S(=libFilePath) S(=func-name) --- C(=stdCode)
 	Install(new Word("get-std-code",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,second);
+		if(second.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,second);
 		}
 		WordFunc func=(WordFunc)getCFuncPointer(inContext,
 												second.stringPtr.get(),
 												tos.stringPtr->c_str());
 		if(func==NULL) {
-			return inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_ENTRY_POINT,*tos.stringPtr);
+			return inContext.Error(ErrorIdWithString::CanNotFindTheEntryPoint,*tos.stringPtr);
 		}
 		inContext.DS.emplace_back(func);
 		NEXT;
 	}));
 
 	Install(new Word("eof?",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		inContext.DS.emplace_back(tos.dataType==DataType::kTypeEOF);
+		inContext.DS.emplace_back(tos.dataType==DataType::EoF);
 		NEXT;
 	}));
 
 	Install(new Word("@eof?",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		inContext.DS.emplace_back(tos.dataType==DataType::kTypeEOF);
+		inContext.DS.emplace_back(tos.dataType==DataType::EoF);
 		NEXT;
 	}));
 
 	Install(new Word("inspect",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tv=ReadTOS(inContext.DS);
 		tv.Dump();
 		NEXT;
@@ -502,9 +511,7 @@ next:
 
 	Install(new Word("__size/tv__",WORD_FUNC {
 		const char *name="__size/tv__";
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tv=Pop(inContext.DS);
 		printf("sizeof(TypedValue)=%d\n",(int)sizeof(tv));
@@ -543,14 +550,14 @@ static void *getCFuncPointer(Context& inContext,
 	std::wstring dllFileName(inLibPath->begin(),inLibPath->end());
 	HINSTANCE hDLL=LoadLibrary(dllFileName.c_str());
 	if(hDLL==NULL) {
-		inContext.Error(ErrorIdWithString::E_CAN_NOT_OPEN_FILE,*inLibPath);
+		inContext.Error(ErrorIdWithString::CanNotOpenFile,*inLibPath);
 		return NULL;
 	}
 	ret=GetProcAddress(hDLL,inFuncName);
 	if(ret==NULL) {
-		inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_ENTRY_POINT,*inLibPath);
+		inContext.Error(ErrorIdWithString::CanNotFindTheEntryPoint,*inLibPath);
 		if(FreeLibrary(hDLL)==0) {
-			inContext.Error(ErrorIdWithString::E_CAN_NOT_CLOSE_THE_FILE,*inLibPath);
+			inContext.Error(ErrorIdWithString::CanNotCloseTheFile,*inLibPath);
 		}
 		return NULL;
 	}
@@ -558,19 +565,19 @@ static void *getCFuncPointer(Context& inContext,
 #else
 	void *fh=dlopen(inLibPath->c_str(),RTLD_NOW | RTLD_NODELETE);
 	if(fh==NULL) {
-		inContext.Error(ErrorIdWithString::E_CAN_NOT_OPEN_FILE,*inLibPath);
+		inContext.Error(ErrorIdWithString::CanNotOpenFile,*inLibPath);
 		return NULL;
 	}
 	ret=dlsym(fh,inFuncName);
 	if(ret==NULL) {
-		inContext.Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_ENTRY_POINT,*inLibPath);
+		inContext.Error(ErrorIdWithString::CanNotFindTheEntryPoint,*inLibPath);
 		if(dlclose(fh)!=0) {
-			inContext.Error(ErrorIdWithString::E_CAN_NOT_CLOSE_THE_FILE,*inLibPath);
+			inContext.Error(ErrorIdWithString::CanNotCloseTheFile,*inLibPath);
 		}
 		return NULL;
 	}
 	if(dlclose(fh)!=0) {
-		inContext.Error(ErrorIdWithString::E_CAN_NOT_CLOSE_THE_FILE,*inLibPath);
+		inContext.Error(ErrorIdWithString::CanNotCloseTheFile,*inLibPath);
 		return NULL;
 	}
 #endif
@@ -580,25 +587,26 @@ static void *getCFuncPointer(Context& inContext,
 const char *kSJIS="shift_jis";
 const char *kUTF8="utf8";
 
-static void printValue(TypedValue& inTV) {
+static void printValue(const TypedValue& inTV,bool inTypePostfix) {
 	const char *encodeFrom=NULL;
 	const char *encodeTo=NULL;
 	switch(gCCC) {
 		case kCCC_THRU:
 			if( gUseMockStdout ) {
-				std::string valueString=inTV.GetValueString();
+				std::string valueString=inTV.GetValueString(-1,true,inTypePostfix);
 				const char *s=valueString.c_str();
 				for(int i=0; s[i]!='\0'; i++) {
 					gMockStdout.emplace_back(s[i]);
 				}
 			} else {
-				inTV.PrintValue();
+				inTV.PrintValue(0,inTypePostfix);
 			}
 			return;
 		case kUTF8_to_SJIS: encodeFrom=kUTF8; encodeTo=kSJIS; break;
 		case kSJIS_to_UTF8: encodeFrom=kSJIS; encodeTo=kUTF8; break;
 	}
-	icu::UnicodeString src(inTV.GetValueString().c_str(),encodeFrom);
+	icu::UnicodeString src(inTV.GetValueString(-1,true,inTypePostfix).c_str(),
+						   encodeFrom);
    	int len=src.extract(0,(int)src.length(),NULL,encodeTo);
 	char *tmp=new char[len+1];
 		src.extract(0,src.length(),tmp,encodeTo);
@@ -612,7 +620,7 @@ static void printValue(TypedValue& inTV) {
 	delete[] tmp;
 }
 
-static void printStr(std::string& inStr) {
+static void printStr(const std::string& inStr) {
 	const char *encodeFrom=NULL;
 	const char *encodeTo=NULL;
 	switch(gCCC) {

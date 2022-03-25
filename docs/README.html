@@ -12,6 +12,7 @@
     div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="readme.css" />
   <!--[if lt IE 9]>
@@ -19,10 +20,11 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="paraphrase-ver.-0.94.0">Paraphrase ver. 0.94.0</h1>
-<p>Copyright (c) 2018-2021 Koji Iigura<br />
+<h1 id="paraphrase-ver.-0.95rc1">Paraphrase ver. 0.95rc1</h1>
+<p>Copyright (c) 2018-2022 Koji Iigura<br />
 Released under the MIT license<br />
-<a href="https://opensource.org/licenses/mit-license.php">https://opensource.org/licenses/mit-license.php</a></p>
+<a
+href="https://opensource.org/licenses/mit-license.php">https://opensource.org/licenses/mit-license.php</a></p>
 <h2 id="マルチコア対応-forth-系言語">マルチコア対応 Forth 系言語</h2>
 <p>Paraphrase はマルチコアに対応した Forth 系言語です。<br />
 スレッド間通信もサポートしており、 並列処理も簡単に記述できます。</p>
@@ -58,23 +60,41 @@ while-pipe append repeat { &lt; } sort
 <pre><code>numOfPrimes=664579 (2 ... 9999991)</code></pre>
 <h2 id="マルチプラットフォーム対応">マルチプラットフォーム対応</h2>
 <p>Windows, Linux, MacOS に対応しています。</p>
-<h2 id="すぐ使えるビルド済みパッケージを使う場合">すぐ使える：ビルド済みパッケージを使う場合</h2>
+<h2
+id="すぐ使えるビルド済みパッケージを使う場合">すぐ使える：ビルド済みパッケージを使う場合</h2>
 <p>ダウンロードして解凍（展開）するだけです。<br />
 インストール不要で、すぐに実行できます。</p>
-<p>以下のリンク（Google Drive）をクリックし、それぞれのプラットフォーム用のパッケージを入手して下さい。</p>
-<p><a href="https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ">https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ</a></p>
-<p>Windows 版 para-0-94-0-win.zip<br />
-Linux 版 para-0-94-0-linux.tar.gz<br />
-MacOS 版 para-0-94-0-mac.tar.gz</p>
-<p>展開して para （Windows 版は para.exe）を実行して下さい （同梱されるファイルについては、 <a href="http://github.com/iigura/paraphrase/blob/master/FILES.txt">FILES.txt</a> を 見て下さい）。</p>
+<p>以下のリンク（Google
+Drive）をクリックし、それぞれのプラットフォーム用のパッケージを入手して下さい。</p>
+<p><a
+href="https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ">https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ</a></p>
+<p>Windows 版 para-0-95rc1-win.zip<br />
+Linux 版 para-0-95rc1-linux.tar.gz<br />
+MacOS 版 para-0-95rc1-mac.tar.gz</p>
+<p>展開して para （Windows 版は para.exe）を実行して下さい
+（同梱されるファイルについては、 <a
+href="http://github.com/iigura/paraphrase/blob/master/FILES.txt">FILES.txt</a>
+を 見て下さい）。</p>
 <p>終了方法は、Linux や Mac の場合 Ctrl-D または Ctrl-C です。<br />
-Windows では Ctrl-Z を入力後リターンキーを押すか、Ctrl-C で終了します。</p>
-<h2 id="ソースコードからビルドする場合">ソースコードからビルドする場合</h2>
+Windows では Ctrl-Z を入力後リターンキーを押すか、Ctrl-C
+で終了します。</p>
+<h2
+id="ソースコードからビルドする場合">ソースコードからビルドする場合</h2>
 <p>git clone https://github.com/iigura/Paraphrase.git でクローン。<br />
-ビルド方法の詳細は、 <a href="http://github.com/iigura/paraphrase/blob/master/BUILD.txt">BUILD.txt</a> を 見て下さい。</p>
+ビルド方法の詳細は、 <a
+href="http://github.com/iigura/paraphrase/blob/master/BUILD.txt">BUILD.txt</a>
+を 見て下さい。</p>
 <h2 id="その他">その他</h2>
-<p>サンプルプログラムの概要は samples ディレクトリの中の <a href="http://github.com/iigura/paraphrase/blob/master/samples/SAMPLES.txt">SAMPLES.txt</a> を 見て下さい。</p>
-<p>開発者が日本人なので、質問などは日本語で OK。 Paraphrase に関する情報は Twitter ( @<a href="https://twitter.com/paraphrase_lang">paraphrase_lang</a> ) や Facebook ( <a href="https://www.facebook.com/groups/219684655627070/">Paraphrase ユーザー会</a> ) にて発信中です。</p>
-<p>バグレポートや要望・質問などは Facebook の方に書いて頂ければ助かります。</p>
+<p>サンプルプログラムの概要は samples ディレクトリの中の <a
+href="http://github.com/iigura/paraphrase/blob/master/samples/SAMPLES.txt">SAMPLES.txt</a>
+を 見て下さい。</p>
+<p>開発者が日本人なので、質問などは日本語で OK。 Paraphrase
+に関する情報は Twitter ( @<a
+href="https://twitter.com/paraphrase_lang">paraphrase_lang</a> ) や
+Facebook ( <a
+href="https://www.facebook.com/groups/219684655627070/">Paraphrase
+ユーザー会</a> ) にて発信中です。</p>
+<p>バグレポートや要望・質問などは Facebook
+の方に書いて頂ければ助かります。</p>
 </body>
 </html>

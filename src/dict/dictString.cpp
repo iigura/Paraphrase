@@ -17,7 +17,7 @@ static bool isEndWith(std::string& inTarget,std::string& inPostfix);
 
 void InitDict_String() {
 	Install(new Word("raw<<<",WordLevel::Level2,WORD_FUNC {
-		if(inContext.EnterHereDocument(ControlBlockType::kOPEN_HERE_DOCUMENT_RAW)==false) { NEXT; }
+		if(inContext.EnterHereDocument(ControlBlockType::OpenHereDocumentRaw)==false) { NEXT; }
 
 		int s=(int)inContext.line.find("raw<<<");
 		s=GetIndexForSkipWhiteSpace(inContext.line,s+6);	// 6 is length of "raw<<<".
@@ -36,12 +36,12 @@ void InitDict_String() {
 		if( inContext.IsInCStyleComment() )	  { NEXT; }
 		if( inContext.IsInCppStyleComment() ) { NEXT; }
 		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_HERE_DOCUMENT_MISMATCH);
+			return inContext.Error(NoParamErrorID::HereDocumentMismatch);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.RS);
-		if(tvSyntax.dataType!=DataType::kTypeMiscInt
-		  || tvSyntax.intValue!=(int)ControlBlockType::kOPEN_HERE_DOCUMENT_RAW) {
-			return inContext.Error(NoParamErrorID::E_HERE_DOCUMENT_MISMATCH);
+		if(tvSyntax.dataType!=DataType::MiscInt
+		  || tvSyntax.intValue!=(int)ControlBlockType::OpenHereDocumentRaw) {
+			return inContext.Error(NoParamErrorID::HereDocumentMismatch);
 		}
 		Pop(inContext.RS);
 
@@ -55,7 +55,8 @@ void InitDict_String() {
 	}));
 
 	Install(new Word("<<<",WordLevel::Level2,WORD_FUNC {
-		if(inContext.EnterHereDocument(ControlBlockType::kOPEN_HERE_DOCUMENT_DEDENT)==false) { NEXT; }
+		if(inContext.EnterHereDocument(ControlBlockType::OpenHereDocumentDedent)
+		   ==false) { NEXT; }
 
 		int s=(int)inContext.line.find("<<<");
 		s=GetIndexForSkipWhiteSpace(inContext.line,s+3);	// 3 is length of "<<<".
@@ -74,12 +75,12 @@ void InitDict_String() {
 		if( inContext.IsInCStyleComment() )	  { NEXT; }
 		if( inContext.IsInCppStyleComment() ) { NEXT; }
 		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_HERE_DOCUMENT_MISMATCH);
+			return inContext.Error(NoParamErrorID::HereDocumentMismatch);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.RS);
-		if(tvSyntax.dataType!=DataType::kTypeMiscInt
-		  || tvSyntax.intValue!=(int)ControlBlockType::kOPEN_HERE_DOCUMENT_DEDENT) {
-			return inContext.Error(NoParamErrorID::E_HERE_DOCUMENT_MISMATCH);
+		if(tvSyntax.dataType!=DataType::MiscInt
+		  || tvSyntax.intValue!=(int)ControlBlockType::OpenHereDocumentDedent) {
+			return inContext.Error(NoParamErrorID::HereDocumentMismatch);
 		}
 		Pop(inContext.RS);
 
@@ -97,20 +98,20 @@ void InitDict_String() {
 	// S I --- S
 	Install(new Word("at",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tvIndex=Pop(inContext.DS);
-		if(tvIndex.dataType!=DataType::kTypeInt) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tvIndex);
+		if(tvIndex.dataType!=DataType::Int) {
+			return inContext.Error(InvalidTypeErrorID::TosInt,tvIndex);
 		}
 		int pos=tvIndex.intValue;
 		TypedValue &tvString=ReadTOS(inContext.DS);
-		if(tvString.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,tvString);
+		if(tvString.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvString);
 		}
 		int length=(int)tvString.stringPtr->length();
 		if(pos<0 || length<=pos) {
-			return inContext.Error(ErrorIdWith2int::E_STRING_INDEX_OUT_OF_RANGE,length,pos);
+			return inContext.Error(ErrorIdWith2int::StringIndexOutOfRange,length,pos);
 		}
 		std::string c=tvString.stringPtr->substr(pos,1);
 		inContext.DS.emplace_back(c);
@@ -120,15 +121,15 @@ void InitDict_String() {
 	// S S --- S B
 	Install(new Word("@start-with?",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tvPrefix=Pop(inContext.DS);
-		if(tvPrefix.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tvPrefix);
+		if(tvPrefix.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvPrefix);
 		}
 		TypedValue& tvString=ReadTOS(inContext.DS);
-		if(tvString.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,tvString);
+		if(tvString.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvString);
 		}
 		std::string& target=*tvString.stringPtr;
 		std::string& prefix=*tvPrefix.stringPtr;
@@ -140,15 +141,15 @@ void InitDict_String() {
 	// S S --- B
 	Install(new Word("start-with?",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tvPrefix=Pop(inContext.DS);
-		if(tvPrefix.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tvPrefix);
+		if(tvPrefix.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvPrefix);
 		}
 		TypedValue tvString=Pop(inContext.DS);
-		if(tvString.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,tvString);
+		if(tvString.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvString);
 		}
 		std::string& target=*tvString.stringPtr;
 		std::string& prefix=*tvPrefix.stringPtr;
@@ -160,15 +161,15 @@ void InitDict_String() {
 	// S S --- S B
 	Install(new Word("@end-with?",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tvPrefix=Pop(inContext.DS);
-		if(tvPrefix.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tvPrefix);
+		if(tvPrefix.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvPrefix);
 		}
 		TypedValue& tvString=ReadTOS(inContext.DS);
-		if(tvString.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,tvString);
+		if(tvString.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvString);
 		}
 		std::string& target=*tvString.stringPtr;
 		std::string& postfix=*tvPrefix.stringPtr;
@@ -180,15 +181,15 @@ void InitDict_String() {
 	// S S --- S B
 	Install(new Word("end-with?",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tvPrefix=Pop(inContext.DS);
-		if(tvPrefix.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tvPrefix);
+		if(tvPrefix.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvPrefix);
 		}
 		TypedValue tvString=Pop(inContext.DS);
-		if(tvString.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,tvString);
+		if(tvString.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvString);
 		}
 		std::string& target=*tvString.stringPtr;
 		std::string& postfix=*tvPrefix.stringPtr;
@@ -197,17 +198,111 @@ void InitDict_String() {
 		NEXT;
 	}));
 
-	Install(new Word("eval",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+	// S --- S
+	Install(new Word("trim",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
+		inContext.DS.emplace_back(
+			std::regex_replace(*tos.stringPtr,std::regex("^\\s+|\\s+$"),"")
+		);
+		NEXT;
+	}));
+
+	// S1 S2 S3 --- S
+	// Replace the substring S2 in S1 with the string S3.
+	Install(new Word("replace-str",WORD_FUNC {
+		if(inContext.DS.size()<3) {
+			return inContext.Error(NoParamErrorID::DsAtLeast3);
+		}
+		TypedValue tvStrReplaceTo=Pop(inContext.DS);
+		if(tvStrReplaceTo.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvStrReplaceTo);
+		}
+		TypedValue tvStrReplaceFrom=Pop(inContext.DS);
+		if(tvStrReplaceFrom.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvStrReplaceFrom);
+		}
+		TypedValue tvTargetStr=Pop(inContext.DS);
+		if(tvTargetStr.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::ThirdString,tvTargetStr);
+		}
+		try {
+			std::regex regexPattern=std::regex(*tvStrReplaceFrom.stringPtr);
+			inContext.DS.emplace_back(
+				std::regex_replace(*tvTargetStr.stringPtr,
+					regexPattern,
+					*tvStrReplaceTo.stringPtr
+				)
+			);
+		} catch (std::regex_error& inErr) {
+			return regexError(inContext,inErr);
+		}
+		NEXT;
+	}));
+
+	// S1 S2 --- A
+	Install(new Word("split-str-by",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tvSplitStr=Pop(inContext.DS);
+		if(tvSplitStr.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvSplitStr);
+		}
+		if(tvSplitStr.stringPtr->length()!=1) {
+			return inContext.Error(ErrorIdWithString::StringShouldBeOneChar,
+								   *tvSplitStr.stringPtr);
+		}
+		TypedValue tvTargetStr=Pop(inContext.DS);
+		if(tvTargetStr.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvTargetStr);
+		}
+		std::vector<std::string> tmp;
+		std::stringstream stream(*tvTargetStr.stringPtr);
+		std::string buf;
+		const char separator=tvSplitStr.stringPtr->c_str()[0];
+		while( std::getline(stream,buf,separator) ) {
+			tmp.push_back(buf);
+		}
+		int n=(int)tmp.size();
+		TypedValue *dataBody=new TypedValue[n];
+		Array<TypedValue> *arrayPtr=new Array<TypedValue>(n,dataBody,true);
+		for(int i=0; i<n; i++) {
+			dataBody[i]=tmp[i];
+		}
+		inContext.DS.emplace_back(arrayPtr);
+		NEXT;
+	}));
+
+	Install(new Word("sputf",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
+		}
+		TypedValue second=Pop(inContext.DS);
+		TypedValue tvFormatted=GetFormattedString(tos.stringPtr->c_str(),second);
+		if(tvFormatted.dataType!=DataType::String) {
+			return inContext.Error(NoParamErrorID::FormatDataMismatch);
+		}
+		inContext.DS.emplace_back(tvFormatted);
+		NEXT;
+	}));
+
+	Install(new Word("eval",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tvScriptSource=Pop(inContext.DS);
-		if(tvScriptSource.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tvScriptSource);
+		if(tvScriptSource.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvScriptSource);
 		}
 		size_t depthOfIS=inContext.IS.size();
 		OIResult result=OuterInterpreter(inContext,*tvScriptSource.stringPtr);
-		if(result!=OIResult::OI_NO_ERROR) {
+		if(result!=OIResult::NoError) {
 			auto itr=inContext.IS.begin();
 			std::advance(itr,depthOfIS);
 			inContext.IS.erase(itr,inContext.IS.end());
@@ -215,86 +310,23 @@ void InitDict_String() {
 		NEXT;
 	}));
 
-	Install(new Word(">array",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
-		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
-		}
-		std::vector<std::string> strVec;
-		std::string *str=tos.stringPtr.get();
-		size_t n=str->length();
-		const char *p=str->c_str();
-		
-		int start,end=-1;
-		do {
-			start=end+1;
-			char c;
-			// skip white space
-			for(; c=p[start],c==' ' || c=='\t' || c=='\n' || c=='\r'; start++) {
-				// empty
-			}
-			if(c=='\0') { break; }
-			// search substring
-			for(end=start+1;
-				c=p[end],c!=' ' && c!='\t' && c!='\n' && c!='\r' && c!='\0'; end++) {
-				// empty
-			}
-			strVec.emplace_back(str->substr(start,(size_t)end-(size_t)start));
-			if(c=='\0') { break; }
-		} while(end<n);		
-
-		int numOfElements=(int)strVec.size();
-		TypedValue *dataBody=new TypedValue[numOfElements];
-		for(size_t i=0; i<numOfElements; i++) {
-			dataBody[i]=strVec[i];
-		}
-		Array<TypedValue> *arrayPtr=new Array<TypedValue>(numOfElements,dataBody,true);
-		inContext.DS.emplace_back(arrayPtr);
-
-		NEXT;
-	}));
-
-	Install(new Word("to-hex-str",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
-		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeInt) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tos);
-		}
-
-		std::stringstream ss;
-		ss << std::hex << tos.intValue;
-		std::string hexStr=ss.str();
-		transform(hexStr.begin(),hexStr.end(),hexStr.begin(),toupper);
-		inContext.DS.emplace_back(hexStr);
-		NEXT;
-	}));
-
 	// s --- s t/f
-	Install(new Word("empty-str?",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+	Install(new Word("@empty-str?",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		inContext.DS.emplace_back(tos.stringPtr->length()==0);
 		NEXT;
 	}));
 
 	// s --- s t/f
-	Install(new Word("not-empty-str?",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+	Install(new Word("@not-empty-str?",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		inContext.DS.emplace_back(tos.stringPtr->length()>0);
 		NEXT;
@@ -303,11 +335,11 @@ void InitDict_String() {
 	// s --- s
 	Install(new Word(">upper",WORD_FUNC {
 		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
 		}
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		std::transform(tos.stringPtr->cbegin(),tos.stringPtr->cend(),
 					   tos.stringPtr->begin(),toupper);
@@ -316,41 +348,13 @@ void InitDict_String() {
 	
 	// s --- s
 	Install(new Word(">lower",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		std::transform(tos.stringPtr->cbegin(),tos.stringPtr->cend(),
 					   tos.stringPtr->begin(),tolower);
-		NEXT;
-	}));
-
-	// X --- s
-	Install(new Word(">str",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
-		TypedValue tos=Pop(inContext.DS);
-		inContext.DS.emplace_back(tos.GetValueString());
-		NEXT;
-	}));
-
-	// S --- symbol
-	Install(new Word(">symbol",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
-		TypedValue tos=Pop(inContext.DS);
-		std::string s=tos.GetValueString();
-		char c=s[0];
-		if(('A'<=c && c<='Z') || ('a'<=c && c<='z') || c=='_') {
-			inContext.DS.emplace_back(s,DataType::kTypeSymbol);
-		} else {
-			return inContext.Error(NoParamErrorID::E_CAN_NOT_CONVERT_TO_SYMBOL);
-		}
 		NEXT;
 	}));
 
@@ -359,15 +363,15 @@ void InitDict_String() {
 	// S S --- invalid
 	Install(new Word("search",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		TypedValue second=Pop(inContext.DS);
-		if(second.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,second);
+		if(second.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,second);
 		}
 		try {
 			std::regex regex(*tos.stringPtr);
@@ -400,15 +404,15 @@ void InitDict_String() {
 	// S S --- S invalid
 	Install(new Word("@search",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tos);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
 		TypedValue& second=ReadTOS(inContext.DS);
-		if(second.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_STRING,second);
+		if(second.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,second);
 		}
 		try {
 			std::regex regex(*tos.stringPtr);
@@ -440,13 +444,11 @@ void InitDict_String() {
 
 	// S --- S
 	Install(new Word("add-enter-char",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue& tv=ReadTOS(inContext.DS);
-		if(tv.dataType!=DataType::kTypeString) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_STRING,tv);
+		if(tv.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tv);
 		}
 
 		#if defined(_MSC_VER)
@@ -465,23 +467,23 @@ void InitDict_String() {
 static bool regexError(Context& inContext,std::regex_error& inErr) {
 	std::unordered_map<std::regex_constants::error_type,
 					   NoParamErrorID> errIdMapper={
-		{std::regex_constants::error_collate,	NoParamErrorID::E_REGEX_COLLATE	  },
-		{std::regex_constants::error_ctype,		NoParamErrorID::E_REGEX_CTYPE	  },
-		{std::regex_constants::error_escape,	NoParamErrorID::E_REGEX_ESCAPE	  },
-		{std::regex_constants::error_backref, 	NoParamErrorID::E_REGEX_BACKREF	  },
-		{std::regex_constants::error_brack,		NoParamErrorID::E_REGEX_BRACK	  },
-		{std::regex_constants::error_paren,		NoParamErrorID::E_REGEX_PAREN	  },
-		{std::regex_constants::error_brace,		NoParamErrorID::E_REGEX_BRACE	  },
-		{std::regex_constants::error_badbrace, 	NoParamErrorID::E_REGEX_BADBRACE  },
-		{std::regex_constants::error_range,		NoParamErrorID::E_REGEX_RANGE	  },
-   		{std::regex_constants::error_space,		NoParamErrorID::E_REGEX_SPACE	  },
-		{std::regex_constants::error_badrepeat,	NoParamErrorID::E_REGEX_BADREPEAT },
-		{std::regex_constants::error_complexity,NoParamErrorID::E_REGEX_COMPLEXITY},
-		{std::regex_constants::error_stack,		NoParamErrorID::E_REGEX_STACK	  },
+		{std::regex_constants::error_collate,	NoParamErrorID::RegexCollate   },
+		{std::regex_constants::error_ctype,		NoParamErrorID::RegexCType	   },
+		{std::regex_constants::error_escape,	NoParamErrorID::RegexEscape	   },
+		{std::regex_constants::error_backref, 	NoParamErrorID::RegexBackRef   },
+		{std::regex_constants::error_brack,		NoParamErrorID::RegexBrack	   },
+		{std::regex_constants::error_paren,		NoParamErrorID::RegexParen	   },
+		{std::regex_constants::error_brace,		NoParamErrorID::RegexBrace	   },
+		{std::regex_constants::error_badbrace, 	NoParamErrorID::RegexBadBrace  },
+		{std::regex_constants::error_range,		NoParamErrorID::RegexRange	   },
+   		{std::regex_constants::error_space,		NoParamErrorID::RegexSpace	   },
+		{std::regex_constants::error_badrepeat,	NoParamErrorID::RegexBadRepeat },
+		{std::regex_constants::error_complexity,NoParamErrorID::RegexComplexity},
+		{std::regex_constants::error_stack,		NoParamErrorID::RegexStack     },
 	};
 	return inContext.Error( errIdMapper.count(inErr.code())>0
 							? errIdMapper[inErr.code()]
-							: NoParamErrorID::E_REGEX_UNKNOWN_ERROR );
+							: NoParamErrorID::RegexUnknownError );
 }
 
 static bool isStartWith(std::string& inTarget,std::string& inPrefix) {

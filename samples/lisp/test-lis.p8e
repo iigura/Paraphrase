@@ -1,0 +1,91 @@
+"lis.p8e" load
+
+// t/f test-name ---
+`check : .  if "GOOD" .cr else "NG" .cr -1 exit then ;
+
+// lispstr test
+true  lispstr '#t' == 'lispstr test (true):'	check
+false lispstr '#f' == 'lispstr test (false):'	check
+
+// lisp-prog --- t/f
+`test : >r parse $global_env> lisp8e-eval r> exec ;
+
+'#t'			{ true  == }		test 'parse true:'		check
+'#f'			{ false == }		test 'parse false:'		check
+'123'			{ 123 == } 			test 'parse integer:' 	check
+'2.3'			{ 2.3 == }			test 'parse float:'		check
+'(+ 1 2 3)'		{ 6   == } 	  		test '+ test:'		check
+'(- 1.2 2.3)' 	{ 1.2f 2.3f - == }	test '- test:'		check // due to machine epsilon
+'(* 2 3 4)'		{ 24 == }			test '* test:'		check
+'(/ 120 5 4 3)' {  2 == }			test '/ test:'		check
+'(> 2 1)'		{ true  == }		test '> true  test:'	check
+'(> 1 2)'		{ false == }		test '> false test:'	check
+'(< 1 2)'		{ true  == }		test '< true  test:'	check
+'(< 2 1)'		{ false == }		test '< false test:'	check
+'(>= 2 1)'		{ true  == }		test '>= true  test (gt):'	check
+'(>= 2 2)'		{ true  == }		test '>= true  test (eq):'	check
+'(>= 1 2)'		{ false == }		test '>= false test:'		check
+'(<= 1 2)'		{ true  == }		test '<= true  test (lt):'	check
+'(<= 1 1)'		{ true  == }		test '<= true  test (eq):'	check
+'(<= 2 1)'		{ false == }		test '<= false test:'	check
+'(abs 1)'		{ 1 == }			test 'abs (positive):'	check
+'(abs -2)'		{ 2 == }			test 'abs (negative):'	check
+'(apply + (quote (1 2 3)))' { 6 == } test 'apply:'			check
+'(car (quote (1 2 3)))'	{ 1 == } 	 	 test 'car (atom):'	check
+'(car (quote ((1 2) 3)))' { ( 1 2 ) == } test 'car (list):' check
+'(cdr (quote (1 2 3)))' { ( 2 3 ) == }	 test 'cdr:' 		check
+'(cdr (quote (1)))' { () == }	 		 test 'cdr (empty list):' 	check
+'(cons 1 (quote (2 3)))'	{ ( 1 2 3 ) == }	test 'cons test:'	check
+'(begin (define s (quote someStr)) (eq? s s))' { true  == } test 'eq? (true )' check
+'(begin (define s (quote someStr)) (eq? s 1))' { false == } test 'eq? (false)' check
+'(equal? 1 1)'	{ true  == }		test 'equal? test (equal):'		check
+'(equal? 1 2)'	{ false == }		test 'equal? test (not equal):'	check
+'(length (quote (1 2 3)))' 	{ 3 == } test 'length test (positive):'	check
+'(length (quote ()))'		{ 0 == } test 'length test (zero):'		check
+'(list? (quote (1 2 3)))'	{ true  == } test 'list? (list):'		check
+'(list? (quote ()))'		{ true  == } test 'list? (empty list):'	check
+'(list? 123)'				{ false == } test 'list? (not list):'	check
+'(max 1 2 3 2)'				{  3 == } test 'max:'	check
+'(min 1 -2 3 2)'			{ -2 == } test 'min:'	check
+'(not #f)'					{ true  == } test 'not (false -> true):'	check
+'(not #t)'					{ false == } test 'not (true -> false):'	check
+'(null? (quote ()))'		{ true  == } test 'null? (true):'			check
+'(null? (quote (1 2 3)))'	{ false == } test 'null? (false list):'		check
+'(null? 123)'				{ false == } test 'null? (false number):'	check
+'(null? (lambda (n) (n)))'	{ false == } test 'null? (false lambda):'	check
+'(number? 1)'				{ true  == } test 'number? (integer):'		check
+'(number? 1.2)'				{ true  == } test 'number? (float):'		check
+'(number? (quote s))'		{ false == } test 'number? (false symbol):'	check
+'(number? (quote (1 2 3)))' { false == } test 'number? (false list):'	check
+'(number? (quote ()))'		{ false == } test 'number? (false empty list):'	check
+'(number? (lambda (n) (n)))' { false == } test 'number? (false lambda):'	check
+'(begin (define twice (lambda (x) (* x 2))) (procedure? twice))' { true == } test
+	'procedure? (true):' check
+'(procedure? (lambda (x) (* x 2)))' { true == } test 'procedure? (true lambda):' check
+'(begin (define pi 3.14)  (procedure? pi))' { false == } test
+	'procedure? (false variable):' check
+'(procedure? 123)' { false == } test 'procedure? (false number):' check
+'(procedure? (quote (1 2 3)))' { false == } test 'procedure? (false list):' 	check
+'(procedure? (quote ()))'	{ false == } test 'procedure? (false empty list):'	check
+'(procedure? (quote s))'	{ false == } test 'procedure? (false symbol):'		check
+'(round 1.5)' 	{  2.0 == } test 'round (positive up):'		check
+'(round 1.4)' 	{  1.0 == } test 'round (positive down):'	check
+'(round 0.0)' 	{  0.0 == } test 'round (zero):' 			check
+'(round -1.4)' 	{ -1.0 == } test 'round (minus down):' 		check
+'(round -1.5)' 	{ -2.0 == } test 'round (minus up):' 		check
+'(symbol? (quote s))'	{ true  == } test 'symbol? (true):'					check
+'(symbol? 123)'			{ false == } test 'symbol? (false integer):'		check
+'(symbol? 1.23)'		{ false == } test 'symbol? (false float):'			check
+'(symbol? (quote (1 2 3)))' { false == } test 'symbol? (false list):'		check
+'(symbol? (quote ()))'		{ false == } test 'symbol? (false empty list):'	check
+'(symbol? (lambda (n) (n)))' { false == } test 'symbol? (false lambda):'	check
+
+'(if #t 111 222)'	{ 111 == } test 'if (true ):'	check
+'(if #f 111 222)'	{ 222 == } test 'if (false):'	check
+'(begin (define x 123) x)'	{ 123 == } test 'define:'	check
+'(begin (define x 123) (set! x 333) x)' { 333 == } test 'set!:' check
+'(begin (define fact (lambda (n) (if (> n 1) (* n (fact (- n 1))) 1))) (fact 5))'
+	{ 120 == } test 'lambda:' check
+
+'=== all tests are passed. ===' .cr
+

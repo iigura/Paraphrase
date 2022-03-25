@@ -5,11 +5,11 @@
 "=== This is pseudo shebang file. ===" .cr
 "This FizzBuzz program is written in a batch file." .cr
 
-"FizzBuzz" :
+`FizzBuzz :
 	switch
-		case 15 % 0? -> "FizzBuzz"	break
-		case  5 % 0? -> "Buzz"		break
-		case  3 % 0? -> "Fizz"		break
+		case 15 % 0? -> "FizzBuzz"	
+		case  5 % 0? -> "Buzz"	
+		case  3 % 0? -> "Fizz"
 	dispatch
 ;
 

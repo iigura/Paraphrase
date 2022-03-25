@@ -1,4 +1,4 @@
-"help" : <<<
+`help : <<<
 
 	This sample program shows factorial calculation by tail recursion.
 
@@ -21,21 +21,21 @@ interactive? not if
 	args size 0? if help then
 then
 
-"fact-main" : // accum n -- resutl
+`fact-main : // accum n -- resutl
 	dup 0? if
 		drop
 	else
-		dup rot * swap 1- fact-main // n*accum n-1 fact-main
+		dup rot * swap 1 - fact-main // n*accum n-1 fact-main
 	then
 ;
 
-"fact" : 1 swap fact-main ;
+`fact : 1 swap fact-main ;
 
-"run" : 100LL fact .cr ;
+`run : 100LL fact .cr ;
 
-"check" : != if "NG" .cr -1 exit then ;
+`check : != if "NG" .cr -1 exit then ;
 
-"test" :
+`test :
 	100LL fact
 	93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
 	check

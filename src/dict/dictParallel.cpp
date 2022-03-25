@@ -38,47 +38,41 @@ void InitDict_Parallel() {
 	}));
 	
 	Install(new Word("_exec/single",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeDirectWord
-		   && tos.dataType!=DataType::kTypeNewWord) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_WP_OR_NW,tos);
+		if(tos.dataType!=DataType::DirectWord
+		   && tos.dataType!=DataType::NewWord) {
+			return inContext.Error(InvalidTypeErrorID::TosWpOrNw,tos);
 		}
 		execParallel(inContext,tos,1);
 		NEXT;
 	}));	
 
 	Install(new Word("_exec/parallel",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeDirectWord
-		   && tos.dataType!=DataType::kTypeNewWord) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_WP_OR_NW,tos);
+		if(tos.dataType!=DataType::DirectWord
+		   && tos.dataType!=DataType::NewWord) {
+			return inContext.Error(InvalidTypeErrorID::TosWpOrNw,tos);
 		}
 		execParallel(inContext,tos);
 		NEXT;
 	}));	
 
 	Install(new Word(">child",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tv=Pop(inContext.DS);
 		if(inContext.toChild==NULL) {
 			inContext.toChild.reset(new ChanMan(1,">child"));
 		}
 		if(inContext.toChild->IsOpen==false) {
-			return inContext.Error(NoParamErrorID::E_CHAN_IS_ALREADY_CLOSED);
+			return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
 		}
-		if(tv.dataType==DataType::kTypeEOC) {
+		if(tv.dataType==DataType::EoC) {
 			inContext.toChild->CloseOnWrite();
 		} else {
 			if(inContext.toChild->Send(tv)==false) {
-				return inContext.Error(NoParamErrorID::E_CHAN_IS_ALREADY_CLOSED);
+				return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
 			}
 		}
 		NEXT;
@@ -86,25 +80,23 @@ void InitDict_Parallel() {
 
 	Install(new Word("parent>",WORD_FUNC {
 		if(inContext.fromParent==NULL) {
-			return inContext.Error(NoParamErrorID::E_NO_CHAN_FROM_PARENT);
+			return inContext.Error(NoParamErrorID::NoChanFromParent);
 		}
 		inContext.DS.emplace_back(inContext.fromParent->Recv());
 		NEXT;
 	}));
 
 	Install(new Word(">parent",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tv=Pop(inContext.DS);
 		if(inContext.toParent==NULL) {
-			return inContext.Error(NoParamErrorID::E_NO_CHAN_TO_PARENT);
+			return inContext.Error(NoParamErrorID::NoChanToParent);
 		}
-		if(tv.dataType==DataType::kTypeEOC) {
+		if(tv.dataType==DataType::EoC) {
 			inContext.toParent->CloseOnWrite();
 		} else {
 			if(inContext.toParent->Send(tv)==false) {
-				return inContext.Error(NoParamErrorID::E_CHAN_IS_ALREADY_CLOSED);
+				return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
 			}
 		}
 		NEXT;
@@ -112,19 +104,17 @@ void InitDict_Parallel() {
 
 	Install(new Word("child>",WORD_FUNC {
 		if(inContext.fromChild==NULL) {
-			return inContext.Error(NoParamErrorID::E_NO_CHAN_FROM_CHILD);
+			return inContext.Error(NoParamErrorID::NoChanFromChild);
 		}
 		if(inContext.fromChild->IsOpen==false) {
-			return inContext.Error(NoParamErrorID::E_CHAN_IS_ALREADY_CLOSED);
+			return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
 		}
 		inContext.DS.emplace_back(inContext.fromChild->Recv());
 		NEXT;
 	}));
 
 	Install(new Word(">pipe",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		if(inContext.toPipe==NULL
 		  || (&inContext==GlobalContext
 			  && inContext.fromPipe==inContext.lastOutputPipe)) {
@@ -132,11 +122,11 @@ void InitDict_Parallel() {
 			inContext.lastOutputPipe=inContext.toPipe;
 		}
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType==DataType::kTypeEOC) {
+		if(tos.dataType==DataType::EoC) {
 			inContext.toPipe->CloseOnWrite();
 		} else {
 			if(inContext.toPipe->Send(tos)==false) {
-				return inContext.Error(NoParamErrorID::E_CHAN_IS_ALREADY_CLOSED);
+				return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
 			}
 		}
 		NEXT;
@@ -146,24 +136,22 @@ void InitDict_Parallel() {
 		if(&inContext==GlobalContext && inContext.fromPipe==NULL) {
 			inContext.fromPipe=inContext.lastOutputPipe;
 		} else if(inContext.fromPipe==NULL) {
-			return inContext.Error(NoParamErrorID::E_NO_CHAN_FROM_PIPE);
+			return inContext.Error(NoParamErrorID::NoChanFromPipe);
 		}
 		inContext.DS.emplace_back(inContext.fromPipe->Recv());
 		NEXT;
 	}));
 	
 	Install(new Word("eoc",WORD_FUNC {
-		inContext.DS.emplace_back(DataType::kTypeEOC);
+		inContext.DS.emplace_back(DataType::EoC);
 		NEXT;
 	}));
 
 	// dup & eoc?
 	Install(new Word("eoc?",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
-		inContext.DS.emplace_back(tos.dataType==DataType::kTypeEOC);
+		inContext.DS.emplace_back(tos.dataType==DataType::EoC);
 		NEXT;
 	}));
 
@@ -202,10 +190,12 @@ void InitDict_Parallel() {
 			if(&inContext==GlobalContext) {
 				inContext.toPipe->CloseOnWrite();
 				inContext.fromPipe=inContext.lastOutputPipe;
-			} else { return inContext.Error(NoParamErrorID::E_NO_CHAN_FROM_PIPE); }	
+			} else {
+				return inContext.Error(NoParamErrorID::NoChanFromPipe);
+			}	
 		}
 		TypedValue tv=inContext.fromPipe->Recv();
-		if(tv.dataType==DataType::kTypeEOC) {
+		if(tv.dataType==DataType::EoC) {
 			inContext.DS.emplace_back(false);	// loop exit by _branch-if-false
 		} else {
 			inContext.DS.emplace_back(tv);
@@ -217,7 +207,7 @@ void InitDict_Parallel() {
 	// while-pipe
 	// SS:
 	//    +------------------+
-	//    | kSyntax_WHILE    |
+	//    | SyntaxWhile      |
 	//    +------------------+
 	//    | 7 (==chunk size) |
 	//    +------------------+
@@ -236,7 +226,7 @@ void InitDict_Parallel() {
 	//    *2  for the word 'redo'.
 	Install(new Word("while-pipe",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		TypedValue tvAlpha1=inContext.MarkHere();
 		inContext.Compile(std::string("_pipe>!eoc?"));
@@ -252,32 +242,28 @@ void InitDict_Parallel() {
 		inContext.SS.emplace_back(tvAlpha2);
 		inContext.SS.emplace_back(tvAlpha1);
 		inContext.SS.emplace_back(chunkSize);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_WHILE);
+		inContext.SS.emplace_back(ControlBlockType::SyntaxWhile);
 		NEXT;
 	}));
 
 	Install(new Word("_broadcastToChild",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		inContext.initParamForPBlock=Pop(inContext.DS);
 		inContext.isInitParamBroadcast=true;
 		NEXT;
 	}));
 
 	Install(new Word("_initChildDSByList",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeList) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_LIST,tos);
+		if(tos.dataType!=DataType::List) {
+			return inContext.Error(InvalidTypeErrorID::TosList,tos);
 		}
 		if(tos.listPtr->size()<1) {
-			return inContext.Error(NoParamErrorID::E_TOS_LIST_NO_ELEMENT);
+			return inContext.Error(NoParamErrorID::TosListNoElement);
 		}
 		if(tos.listPtr->size()<(size_t)G_NumOfCores) {
-			return inContext.Error(NoParamErrorID::E_TOS_LIST_AT_LEAST_CORES);
+			return inContext.Error(NoParamErrorID::TosListAtLeastCores);
 		}
 		inContext.initParamForPBlock=tos;
 		inContext.isInitParamBroadcast=false;
@@ -286,7 +272,7 @@ void InitDict_Parallel() {
 
 	Install(new Word("[->",WordLevel::Immediate,WORD_FUNC {
 		const std::string _broadcastToChild("_broadcastToChild");
-		if(inContext.ExecutionThreshold==Level::kInterpret) {
+		if(inContext.ExecutionThreshold==Level::Interpret) {
 			inContext.Exec(_broadcastToChild);
 		} else {
 			inContext.Compile(_broadcastToChild);
@@ -298,7 +284,7 @@ void InitDict_Parallel() {
 
 	Install(new Word("[[->",WordLevel::Immediate,WORD_FUNC {
 		const std::string _broadcastToChild("_broadcastToChild");
-		if(inContext.ExecutionThreshold==Level::kInterpret) {
+		if(inContext.ExecutionThreshold==Level::Interpret) {
 			inContext.Exec(_broadcastToChild);
 		} else {
 			inContext.Compile(_broadcastToChild);
@@ -310,7 +296,7 @@ void InitDict_Parallel() {
 
 	Install(new Word("[[=>",WordLevel::Immediate,WORD_FUNC {
 		std::string _initChildDSByList("_initChildDSByList");
-		if(inContext.ExecutionThreshold==Level::kInterpret) {
+		if(inContext.ExecutionThreshold==Level::Interpret) {
 			inContext.Exec(_initChildDSByList);
 		} else {
 			inContext.Compile(_initChildDSByList);
@@ -321,12 +307,10 @@ void InitDict_Parallel() {
 	}));
 
 	Install(new Word("set-num-of-threads",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeInt) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tos);
+		if(tos.dataType!=DataType::Int) {
+			return inContext.Error(InvalidTypeErrorID::TosInt,tos);
 		}
 		if(tos.intValue<1) {
 			G_NumOfCores=std::thread::hardware_concurrency();
@@ -347,9 +331,9 @@ static bool closeParallelBlock(Context& inContext,int inNumOfParallels) {
 	inContext.Compile(std::string("_semis"));
 	Word *newWordBackup=inContext.newWord;
 	inContext.FinishNewWord();
-	TypedValue tvExec(DataType::kTypeNewWord,newWordBackup);
+	TypedValue tvExec(DataType::NewWord,newWordBackup);
 	if(inContext.EndNoNameWordBlock()==false) { return false; }
-	if(inContext.ExecutionThreshold!=Level::kInterpret) {
+	if(inContext.ExecutionThreshold!=Level::Interpret) {
 		inContext.Compile(std::string("_lit"));
 		inContext.Compile(tvExec);
 		if(inNumOfParallels==1) {
@@ -365,8 +349,8 @@ static bool closeParallelBlock(Context& inContext,int inNumOfParallels) {
 
 static void execParallel(Context& inContext,TypedValue& inTVExec,
 						 int inNumOfParallels) {
-	assert(inTVExec.dataType==DataType::kTypeWord
-		   || inTVExec.dataType==DataType::kTypeNewWord);
+	assert(inTVExec.dataType==DataType::Word
+		   || inTVExec.dataType==DataType::NewWord);
 	assert(inNumOfParallels!=0);
 
 	const int numOfParallels = inNumOfParallels<0 ? G_NumOfCores
@@ -389,12 +373,12 @@ static void execParallel(Context& inContext,TypedValue& inTVExec,
 
 	std::shared_ptr<ChanMan> toPipe(new ChanMan(numOfParallels,">pipe"));
 		for(int i=0; i<numOfParallels; i++) {
-			Context *childContext=new Context(&inContext,Level::kInterpret,
+			Context *childContext=new Context(&inContext,Level::Interpret,
 											  inContext.toChild,
 											  inContext.fromChild);	
 			childContext->fromPipe=inContext.lastOutputPipe;
 			childContext->toPipe=toPipe;
-			if(inContext.initParamForPBlock.dataType!=DataType::kTypeInvalid) {
+			if(inContext.initParamForPBlock.dataType!=DataType::Invalid) {
 				if(inContext.isInitParamBroadcast) {
 					childContext->DS.emplace_back(
 											inContext.initParamForPBlock);
@@ -420,7 +404,7 @@ static void *kicker(void *inContext) {
 	Context *childContext=(Context *)inContext;
 	
 	if(childContext->DS.size()<1) {
-		childContext->Error(NoParamErrorID::E_DS_IS_EMPTY);
+		childContext->Error(NoParamErrorID::DsIsEmpty);
 		return NULL;
 	}
 	TypedValue tvExec=Pop(childContext->DS);

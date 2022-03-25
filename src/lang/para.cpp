@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.94.0"
+#define VERSION "0.95rc1"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -15,6 +15,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <limits>
+#include <filesystem>
 
 #include <thread>
 
@@ -76,14 +77,7 @@ static bool gEvalAndExit=false;
 static bool initReadLineFunc();
 static void initDict();
 
-/** 形式の正しいコマンドライン引数で指定される処理内容 */
-enum class Command {
-	PrintUsage,
-	PrintVersion,
-	RunProgram,
-};
-
-static Command parseOption(int argc,char *argv[]);
+static bool parseOption(int argc,char *argv[]);
 
 static std::string readFromFile();
 static std::string readFromStdin();
@@ -91,6 +85,9 @@ static const char *getPrompt();
 
 static void printUsage();
 static void printVersion();
+static void showBuildInfo();
+
+void SetDeleteByForget();
 
 PP_API void InitErrorMessage();
 void InitDict_Word();
@@ -98,6 +95,7 @@ void InitDict_LangSys();
 void InitDict_Object();
 void InitDict_IO();
 void InitDict_Math();
+void InitDict_Type();
 void InitDict_Stack();
 void InitDict_Control();
 void InitDict_String();
@@ -132,32 +130,10 @@ static_assert(sizeof(double)>=sizeof(Word*)
 		   && sizeof(double)>=sizeof(float)
 		   && sizeof(double)>=sizeof(WordFunc),
 			  "SYSTEM ERROR: unexpected compile system. sizeof(double) is not max.");
-#if 0
-	fprintf(stderr,"sizeof(Word*)  =%lu\n",sizeof(Word*));
-	fprintf(stderr,"sizeof(Word**) =%lu\n",sizeof(Word**));
-	fprintf(stderr,"sizeof(bool)   =%lu\n",sizeof(bool));
-	fprintf(stderr,"sizeof(int)    =%lu\n",sizeof(int));
-	fprintf(stderr,"sizeof(long)   =%lu\n",sizeof(long));
-	fprintf(stderr,"sizeof(float)  =%lu\n",sizeof(float));
-	fprintf(stderr,"sizeof(double) =%lu\n",sizeof(double));
-	fprintf(stderr,"sizeof(WordFunc)=%lu\n",sizeof(WordFunc));
-	exit(-1);
-#endif
 
 	boost::timer::cpu_timer timer;
 
-	auto cmd = parseOption(argc,argv);
-	switch (cmd) {
-		case Command::PrintUsage:
-			printUsage();
-			return 0;
-		case Command::PrintVersion:
-			printVersion();
-			return 0;
-		case Command::RunProgram:
-			break;
-	}
-
+	if(parseOption(argc,argv)==false) { exit(0); }
 	if(initReadLineFunc()==false) { return -1; }
 
 	InitErrorMessage();
@@ -168,16 +144,16 @@ static_assert(sizeof(double)>=sizeof(Word*)
 
 	if(gToEvalStr!="") {
 		OIResult result=OuterInterpreter(*GlobalContext,gToEvalStr);
-		if(result!=OIResult::OI_NO_ERROR) { return -1; }
+		if(result!=OIResult::NoError) { return -1; }
 	}
 	if(gInputFilePath==NULL && gEvalAndExit ) { return 0; }
 
 	for(int i=0; i<gArgsToExec.size(); i++) {
 		std::string token=gArgsToExec[i];
 		TypedValue tv=GetTypedValue(token);
-		if(tv.dataType==DataType::kTypeInvalid) {
+		if(tv.dataType==DataType::Invalid) {
 			tv=TypedValue(token);
-			tv.dataType=DataType::kTypeMayBeAWord;
+			tv.dataType=DataType::MayBeAWord;
 		}
 		gTvListForArgs->emplace_back(tv);
 	}
@@ -189,7 +165,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
 			std::string line=gReadLineFunc();
 			OIResult result=OuterInterpreter(*GlobalContext,line);
 			if(gInputFilePath==NULL) {
-				if(result!=OIResult::OI_NO_ERROR) {
+				if(result!=OIResult::NoError) {
 					if(GlobalContext->IsInterpretMode()==false) {
 						GlobalContext->RemoveDefiningWord();
 						GlobalContext->SetInterpretMode();
@@ -200,7 +176,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
 						puts(" ok.");
 					}
 				}
-			} else if(result!=OIResult::OI_NO_ERROR) {
+			} else if(result!=OIResult::NoError) {
 				break;
 			}
 		}
@@ -211,7 +187,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
 		for(size_t i=0; i<n; i++) {
 			std::string s=gArgsToExec[i];
 			OIResult result=OuterInterpreter(*GlobalContext,s);
-			if(result!=OIResult::OI_NO_ERROR) { return -1; }
+			if(result!=OIResult::NoError) { return -1; }
 		}
 	}
 
@@ -239,6 +215,7 @@ static void initDict() {
 	InitDict_Object();
 	InitDict_IO();
 	InitDict_Math();
+	InitDict_Type();
 	InitDict_Stack();
 	InitDict_Control();
 	InitDict_String();
@@ -252,16 +229,13 @@ static void initDict() {
 	InitDict_Debug();
 }
 
-/**
- * コマンドライン引数をパースする。
- * 正しくパースできた場合は処理内容を返し、失敗した場合は異常終了する。
- */
-static Command parseOption(int argc,char *argv[]) {
+static bool parseOption(int argc,char *argv[]) {
 	namespace bstPrgOpt=boost::program_options;
 	bstPrgOpt::options_description desc("options");
 	desc.add_options()
 		("help,h",		"print help.")
 		("version,v",	"print version info.")
+		("show-size,s", "show memory size for each values.")
 		("quiet,q",		"quiet mode (equivalent to -nk).")
 		("thread",bstPrgOpt::value<int>(),"set maximum thread (ex: --thread 8).")
 		("eval,e",bstPrgOpt::value<std::string>(),"eval parameter.")
@@ -290,8 +264,8 @@ static Command parseOption(int argc,char *argv[]) {
         std::exit(-1);
 	}
 
-	if( vm.count("help")     ) return Command::PrintUsage;
-	if( vm.count("version")  ) return Command::PrintVersion;
+	if( vm.count("help")     ) { printUsage(); 	 return false; }
+	if( vm.count("version")  ) { printVersion(); return false; }
 	if( vm.count("time")     ) { gDisplayTime=true; }
 	if( vm.count("noprompt") ) { gUsePrompt=false; }
 	if( vm.count("nook")     ) { gUseOkDisplay=false; }
@@ -313,6 +287,7 @@ static Command parseOption(int argc,char *argv[]) {
 		gToEvalStr=vm["eval-and-exit"].as<std::string>();
 		gEvalAndExit=true;
 	}
+	if( vm.count("show-size") ) { showBuildInfo(); return false; }
 
 	const size_t n=argVec.size();
 	if(n>0) {
@@ -339,7 +314,7 @@ static Command parseOption(int argc,char *argv[]) {
 		gInputFilePath=NULL;
 	}
 
-	return Command::RunProgram;
+	return true;
 }
 
 static bool initReadLineFunc() {
@@ -354,9 +329,12 @@ static bool initReadLineFunc() {
 		} else {
 			gFileStream.open(gInputFilePath);
 			if(gFileStream.fail()) {
-				return GlobalContext->Error(ErrorIdWithString::E_CAN_NOT_OPEN_FILE,
+				return GlobalContext->Error(ErrorIdWithString::CanNotOpenFile,
 											std::string(gInputFilePath));
 			}
+			std::filesystem::path argPath=std::filesystem::path(gInputFilePath);
+			std::filesystem::path argAbsDir=std::filesystem::absolute(argPath.parent_path());
+			SetScriptFileDir(argAbsDir.string());
 			if(gFileStream.peek()=='#') {
 				std::string skipLine;
 				gIsEOF=std::getline(gFileStream,skipLine).eof();
@@ -386,9 +364,11 @@ static std::string readFromFile() {
 
 static void printUsage() {
 	fprintf(stderr,
-			"Usage: para [-ehknqtv] [--thread]  [program-file] [program-code]\n");
+			"Usage: para [-ehknqstv] [--thread] [--show-size]"
+			"[program-file] [program-code]\n");
 	fprintf(stderr,"  -h (--help)      print help.\n");
 	fprintf(stderr,"  -v (--version)   print version.\n");
+	fprintf(stderr,"  -s (--show-size) show memory size for each values.\n");
 	fprintf(stderr,"  --thread N       set maximum thread. "
 				   "N should be a positive integer.\n");
 	fprintf(stderr,"  -e (--eval) S    "
@@ -400,13 +380,25 @@ static void printUsage() {
 	fprintf(stderr,"  -n (--noprompt)  suppress prompt.\n");
 	fprintf(stderr,"  -k (--nook)      suppress 'ok' message (no ok)\n");
 	fprintf(stderr,"  -t (--time)      display spent time.\n");
+
 	//fprintf(stderr,"  --refimp         run with reduced dict "
 	//								   "for reference implementation.\n");
 	fprintf(stderr,"Ex) para FizzBuzz.pp 1 20 for+ i FizzBuzz . next cr\n");
 }
 
 static void printVersion() {
-	// printf("para: Paraphrase interpreter version %s by Koji Iigura.\n",kVersion);
-	printf("Paraphrase %s  Copyright (C) 2018-2021 Koji Iigura\n",kVersion);
+	printf("Paraphrase %s  Copyright (C) 2018-2022 Koji Iigura <@paraphrase_lang>\n",kVersion);
+}
+
+static void showBuildInfo() {
+	fprintf(stderr,"The memory consumption for each value is as follows (in bytes):\n");
+	fprintf(stderr,"\tsizeof(Word*)   =%lu\n",sizeof(Word*));
+	fprintf(stderr,"\tsizeof(Word**)  =%lu\n",sizeof(Word**));
+	fprintf(stderr,"\tsizeof(WordFunc)=%lu\n",sizeof(WordFunc));
+	fprintf(stderr,"\tsizeof(bool)    =%lu\n",sizeof(bool));
+	fprintf(stderr,"\tsizeof(int)     =%lu\n",sizeof(int));
+	fprintf(stderr,"\tsizeof(long)    =%lu\n",sizeof(long));
+	fprintf(stderr,"\tsizeof(float)   =%lu\n",sizeof(float));
+	fprintf(stderr,"\tsizeof(double)  =%lu\n",sizeof(double));
 }
 

@@ -33,7 +33,7 @@ bool Error(Context& inContext,
 bool Error(Context& inContext,const ErrorIdWith2int inErrorID,
 		   const int inIntValue1,const int inIntValue2);
 
-PP_API Context *GlobalContext=new Context(NULL,Level::kInterpret,NULL,NULL,NULL);
+PP_API Context *GlobalContext=new Context(NULL,Level::Interpret,NULL,NULL,NULL);
 
 PP_API Context::Context(Context *inParent,Level inExecutionThreshold,
 				 std::shared_ptr<ChanMan> inFromParent,
@@ -70,16 +70,17 @@ PP_API void Context::RemoveDefiningWord() {
 }
 
 PP_API bool Context::Exec(const TypedValue& inTV) {
-	if(inTV.HasWordPtr()==false) {
-		return Error(InvalidTypeErrorID::E_TOS_WP,inTV);
+	const Word *wordPtr;
+	if(inTV.HasWordPtr(&wordPtr)==false) {
+		return Error(InvalidTypeErrorID::TosWp,inTV);
 	}
-	return Exec(inTV.wordPtr);
+	return Exec(wordPtr);
 }
 
 PP_API bool Context::Exec(const std::string inWordName) {
 	auto iter=Dict.find(inWordName);
 	if(iter==Dict.end()) {
-		return Error(ErrorIdWithString::E_CAN_NOT_FIND_THE_WORD,inWordName);
+		return Error(ErrorIdWithString::CanNotFindTheWord,inWordName);
 	}
 	return Exec(iter->second);
 }
@@ -118,7 +119,7 @@ PP_API bool Context::Compile(int inAddress,
 		return false;
 	}
 	TypedValue& emptySlot=newWord->tmpParam->at(inAddress);
-	if(inIsForceUpdate==false && emptySlot.dataType!=DataType::kTypeEmptySlot) {
+	if(inIsForceUpdate==false && emptySlot.dataType!=DataType::EmptySlot) {
 		fprintf(stderr,"SYSTEM ERROR at Compile(addr,tv).\n");
 		fprintf(stderr,"slot is not an empty slot.\n");
 		fprintf(stderr,"current slot is:");
@@ -131,7 +132,7 @@ PP_API bool Context::Compile(int inAddress,
 
 PP_API bool Context::BeginControlBlock() {
 	RS.emplace_back(ExecutionThreshold);
-	if(ExecutionThreshold==Level::kInterpret) {
+	if(ExecutionThreshold==Level::Interpret) {
 		if(newWord!=NULL) { return false; }
 		newWord=new Word(G_DocolAdvice);
 		SetCompileMode();
@@ -140,12 +141,12 @@ PP_API bool Context::BeginControlBlock() {
 }
 
 PP_API bool Context::EndControlBlock() {
-	if(RS.size()<1) { return Error(NoParamErrorID::E_RS_BROKEN); }
+	if(RS.size()<1) { return Error(NoParamErrorID::RsBroken); }
 	TypedValue tvThreshold=Pop(RS);
-	if(tvThreshold.dataType!=DataType::kTypeThreshold) {
-		return Error(InvalidTypeErrorID::E_RS_TOS_THRESHOLD,tvThreshold);
+	if(tvThreshold.dataType!=DataType::Threshold) {
+		return Error(InvalidTypeErrorID::RsTosThreshold,tvThreshold);
 	}
-	if(tvThreshold.intValue==(int)Level::kInterpret) {
+	if(tvThreshold.intValue==(int)Level::Interpret) {
 		Compile(std::string("_semis"));
 		Word *newWordBackup=newWord;
 		FinishNewWord();
@@ -159,49 +160,49 @@ PP_API bool Context::EndControlBlock() {
 }
 
 PP_API void Context::BeginNoNameWordBlock() {
-	RS.emplace_back(DataType::kTypeNewWord,newWord);
+	RS.emplace_back(DataType::NewWord,newWord);
 	newWord=new Word(G_DocolAdvice);
 	RS.emplace_back(ExecutionThreshold);
 	SetCompileMode();
 }
 
 PP_API bool Context::EndNoNameWordBlock() {
-	if(RS.size()<2) { return Error(NoParamErrorID::E_RS_AT_LEAST_2); }
+	if(RS.size()<2) { return Error(NoParamErrorID::RsAtLeast2); }
 	TypedValue tvThreshold=Pop(RS);
-	if(tvThreshold.dataType!=DataType::kTypeThreshold) {
-		return Error(InvalidTypeErrorID::E_RS_TOS_THRESHOLD,tvThreshold);
+	if(tvThreshold.dataType!=DataType::Threshold) {
+		return Error(InvalidTypeErrorID::RsTosThreshold,tvThreshold);
 	}
 	TypedValue newWordElement=Pop(RS);
-	if(newWordElement.dataType!=DataType::kTypeNewWord) {
-		return Error(InvalidTypeErrorID::E_RS_SECOND_WP,newWordElement);
+	if(newWordElement.dataType!=DataType::NewWord) {
+		return Error(InvalidTypeErrorID::RsSecondWp,newWordElement);
 	}
 	
 	newWord=(Word *)newWordElement.wordPtr;
 	ExecutionThreshold=(Level)tvThreshold.intValue;
-	if(ExecutionThreshold==Level::kInterpret && newWord!=NULL) {
-		Error(NoParamErrorID::E_SYSTEM_ERROR);
+	if(ExecutionThreshold==Level::Interpret && newWord!=NULL) {
+		Error(NoParamErrorID::SystemError);
 		exit(-1);
 	}
 	return true;
 }
 
 PP_API void Context::BeginListBlock() {
-	RS.emplace_back(DataType::kTypeNewWord,newWord);
+	RS.emplace_back(DataType::NewWord,newWord);
 	newWord=new Word(WordType::List);
 	RS.emplace_back(ExecutionThreshold);
 	SetSymbolMode();
 }
 
 PP_API bool Context::EndListBlock() {
-	if(RS.size()<2) { return Error(NoParamErrorID::E_RS_AT_LEAST_2); }
+	if(RS.size()<2) { return Error(NoParamErrorID::RsAtLeast2); }
 	TypedValue tvThreshold=Pop(RS);
-	if(tvThreshold.dataType!=DataType::kTypeThreshold) {
-		return Error(InvalidTypeErrorID::E_RS_TOS_THRESHOLD,tvThreshold);
+	if(tvThreshold.dataType!=DataType::Threshold) {
+		return Error(InvalidTypeErrorID::RsTosThreshold,tvThreshold);
 	}
 
 	TypedValue newWordElement=Pop(RS);
-	if(newWordElement.dataType!=DataType::kTypeNewWord) {
-		return Error(InvalidTypeErrorID::E_RS_SECOND_WP,newWordElement);
+	if(newWordElement.dataType!=DataType::NewWord) {
+		return Error(InvalidTypeErrorID::RsSecondWp,newWordElement);
 	}
 
 	newWord=(Word *)newWordElement.wordPtr;
@@ -211,24 +212,24 @@ PP_API bool Context::EndListBlock() {
 
 int Context::ReadThresholdBackup() {
 	if(RS.size()<1) {
-		Error(NoParamErrorID::E_RS_IS_EMPTY);
+		Error(NoParamErrorID::RsIsEmpty);
 		return -1;
 	}
 	TypedValue& tvThreshold=ReadTOS(RS);
-	if(tvThreshold.dataType!=DataType::kTypeThreshold) {
-		Error(InvalidTypeErrorID::E_RS_TOS_THRESHOLD,tvThreshold);
+	if(tvThreshold.dataType!=DataType::Threshold) {
+		Error(InvalidTypeErrorID::RsTosThreshold,tvThreshold);
 		return -1;
 	}
 	return tvThreshold.intValue;
 }
 
 PP_API TypedValue Context::MarkHere(int inOffset) {
-	return TypedValue(DataType::kTypeAddress,GetNextThreadAddressOnCompile()+inOffset);
+	return TypedValue(DataType::Address,GetNextThreadAddressOnCompile()+inOffset);
 }
 
 PP_API int Context::GetChunkIndex(const int inCbtMask) {
 	if(SS.size()<2) {
-		Error(NoParamErrorID::E_SS_BROKEN);
+		Error(NoParamErrorID::SsBroken);
 		return -1;
 	}
 	// chunk size contains CB info.
@@ -243,24 +244,24 @@ PP_API int Context::GetChunkIndex(const int inCbtMask) {
 	int chunkSize=0;
 	for(int i=(int)SS.size()-1; i>0; i-=chunkSize) {
 		const TypedValue& tvCB=SS.at(i);
-		if(tvCB.dataType!=DataType::kTypeCB) {
-			Error(NoParamErrorID::E_SS_BROKEN);
+		if(tvCB.dataType!=DataType::CB) {
+			Error(NoParamErrorID::SsBroken);
 			return -1;
 		}
 		if((tvCB.intValue & inCbtMask)!=0) {
 			return i;
 		}
 		if(i-1<0) {
-			Error(NoParamErrorID::E_SS_BROKEN);
+			Error(NoParamErrorID::SsBroken);
 			return -1;
 		}
 		const TypedValue& tvChunkSize=SS.at(i-1);
-		if(tvChunkSize.dataType!=DataType::kTypeInt) {
-			Error(NoParamErrorID::E_SS_BROKEN);
+		if(tvChunkSize.dataType!=DataType::Int) {
+			Error(NoParamErrorID::SsBroken);
 			return -1;
 		}
 		if(tvChunkSize.intValue<=1) {
-			Error(NoParamErrorID::E_SS_BROKEN);
+			Error(NoParamErrorID::SsBroken);
 			return -1;
 		}
 		chunkSize=tvChunkSize.intValue;
@@ -270,14 +271,14 @@ PP_API int Context::GetChunkIndex(const int inCbtMask) {
 
 PP_API bool Context::RemoveTopChunk() {
 	TypedValue& tvCB=ReadTOS(SS);
-	if(tvCB.dataType!=DataType::kTypeCB) { return Error(NoParamErrorID::E_SS_BROKEN); }
+	if(tvCB.dataType!=DataType::CB) { return Error(NoParamErrorID::SsBroken); }
+
 	TypedValue& tvChunkSize=ReadSecond(SS);
-	if(tvChunkSize.dataType!=DataType::kTypeInt) {
-		return Error(NoParamErrorID::E_SS_BROKEN);
-	}
+	if(tvChunkSize.dataType!=DataType::Int) { return Error(NoParamErrorID::SsBroken); }
+
 	int chunkSize=tvChunkSize.intValue;
-	if(chunkSize<0) { return Error(NoParamErrorID::E_SS_BROKEN); }
-	if(SS.size()<chunkSize) { return Error(NoParamErrorID::E_SS_BROKEN); }
+	if(chunkSize<0) { return Error(NoParamErrorID::SsBroken); }
+	if(SS.size()<chunkSize) { return Error(NoParamErrorID::SsBroken); }
 	for(int i=0; i<chunkSize; i++) {
 		SS.pop_back();
 	}
@@ -285,7 +286,7 @@ PP_API bool Context::RemoveTopChunk() {
 }
 
 PP_API void Context::CompileEmptySlot(const Level inThresholdBackup) {
-	TypedValue tv=TypedValue(DataType::kTypeEmptySlot,inThresholdBackup);
+	TypedValue tv=TypedValue(DataType::EmptySlot,inThresholdBackup);
 	Compile(tv);
 }
 
@@ -310,10 +311,40 @@ PP_API TypedValue Context::GetList() const {
 	return tvList;
 }
 
-const char *Context::GetExecutingWordName() const {
+PP_API const char *Context::GetExecutingWordName() const {
 	if(ip==NULL) { return ""; }
 	const char *wordName=(*ip)->longName.c_str();
 	return wordName;
+}
+
+PP_API TypedValue Context::GetLiteralFromThreadedCode(bool inIsRemoveFromThread,
+													  bool inPrintErrorMessage) {
+	if(newWord==NULL) {
+		Error(NoParamErrorID::ShouldBeExecutedInDefinition);
+		return TypedValue();
+	}
+	if(newWord->tmpParam==NULL) {
+		Error(NoParamErrorID::SystemError);
+		exit(-1);
+	}
+	CodeThread *thread=newWord->tmpParam;
+	int n=(int)thread->size();
+	if(n<1) {
+		Error(NoParamErrorID::SystemError);
+		exit(-1);
+	}
+	if((thread->at(n-2).dataType!=DataType::Word
+		&& thread->at(n-2).dataType!=DataType::DirectWord)
+	  || thread->at(n-2).wordPtr->longName!="std:_lit") {
+		if( inPrintErrorMessage ) { Error(NoParamErrorID::InvalidUse); }
+		return TypedValue();
+	}
+	TypedValue tv=thread->at(n-1);
+	if( inIsRemoveFromThread ) {
+		thread->pop_back();
+		thread->pop_back();
+	}
+	return tv;
 }
 
 PP_API bool Context::Error(const NoParamErrorID inErrorID) {
@@ -360,6 +391,7 @@ PP_API bool Context::Error_InvalidType(const InvalidTypeStrTvTvErrorID inErrorID
 static int getParamSize(const std::vector<TypedValue> *inTmpParam);
 
 PP_API void Context::FinishNewWord() {
+	newWord->numOfLocalVar=(int)newWord->localVarDict.size();
 	Optimize(newWord->tmpParam);
 	ReplaceTailRecursionToJump(newWord,newWord->tmpParam);
 
@@ -372,8 +404,8 @@ PP_API void Context::FinishNewWord() {
 		addressTransferMap[i]=(int)newIndex;
 		TypedValue tv=newWord->tmpParam->at(i);
 		switch(tv.dataType) {
-			case DataType::kTypeAddress:
-			case DataType::kTypeDirectWord: newIndex++; break;
+			case DataType::Address:
+			case DataType::DirectWord: newIndex++; break;
 
 			default:
 				newIndex += sizeof(TypedValue)%sizeof(WordFunc*)==0
@@ -389,10 +421,10 @@ PP_API void Context::FinishNewWord() {
 	for(int i=0; i<n; i++) {
 		addressOffsetToIndexMapper->insert({dest,i});
 		TypedValue& tv=newWord->tmpParam->at(i);
-		if(tv.dataType==DataType::kTypeDirectWord) {
+		if(tv.dataType==DataType::DirectWord) {
 			wordPtrArray[dest]=tv.wordPtr;
 			dest++;
-		} else if(tv.dataType==DataType::kTypeAddress) {
+		} else if(tv.dataType==DataType::Address) {
 			wordPtrArray[dest]
 				=(const Word*)(wordPtrArray+addressTransferMap[tv.intValue]);
 			dest++;
@@ -406,6 +438,7 @@ PP_API void Context::FinishNewWord() {
 	newWord->param=wordPtrArray;
 	newWord->addressOffsetToIndexMapper=addressOffsetToIndexMapper;
 	newWord->isForgetable=true;
+
 	lastDefinedWord=newWord;
 	newWord=NULL;
 }
@@ -442,8 +475,10 @@ static int getParamSize(const std::vector<TypedValue> *inTmpParam) {
 	for(size_t i=0; i<n; i++) {
 		TypedValue tv=inTmpParam->at(i);
 		switch(tv.dataType) {
-			case DataType::kTypeAddress:
-			case DataType::kTypeDirectWord:	ret++;	break;
+			case DataType::Address:
+			case DataType::DirectWord:
+				ret++;
+				break;
 			default: ret += TvSize;
 		}
 	}
@@ -453,9 +488,9 @@ static int getParamSize(const std::vector<TypedValue> *inTmpParam) {
 PP_API bool Context::IsInComment() {
 	if(RS.size()>0) {
 		TypedValue& rsTos=ReadTOS(RS);
-		return rsTos.dataType==DataType::kTypeMiscInt
-		  && (rsTos.intValue==(int)ControlBlockType::kOPEN_C_STYLE_COMMENT
-			  || rsTos.intValue==(int)ControlBlockType::kOPEN_CPP_STYLE_ONE_LINE_COMMENT);
+		return rsTos.dataType==DataType::MiscInt
+		  && (rsTos.intValue==(int)ControlBlockType::OpenCStyleComment
+			  || rsTos.intValue==(int)ControlBlockType::OpenCppStyleOneLineComment);
 	}
 	return false;
 }
@@ -463,8 +498,8 @@ PP_API bool Context::IsInComment() {
 PP_API bool Context::IsInCStyleComment() {
 	if(RS.size()>0) {
 		TypedValue& rsTos=ReadTOS(RS);
-		if(rsTos.dataType==DataType::kTypeMiscInt
-		   && rsTos.intValue==(int)ControlBlockType::kOPEN_C_STYLE_COMMENT) {
+		if(rsTos.dataType==DataType::MiscInt
+		   && rsTos.intValue==(int)ControlBlockType::OpenCStyleComment) {
 			return true;
 		}
 	}
@@ -474,8 +509,8 @@ PP_API bool Context::IsInCStyleComment() {
 PP_API bool Context::IsInCppStyleComment() {
 	if(RS.size()>0) {
 		TypedValue& rsTos=ReadTOS(RS);
-		if(rsTos.dataType==DataType::kTypeMiscInt
-		  && rsTos.intValue==(int)ControlBlockType::kOPEN_CPP_STYLE_ONE_LINE_COMMENT) {
+		if(rsTos.dataType==DataType::MiscInt
+		  && rsTos.intValue==(int)ControlBlockType::OpenCppStyleOneLineComment) {
 			return true;
 		}
 	}
@@ -485,25 +520,25 @@ PP_API bool Context::IsInCppStyleComment() {
 PP_API void Context::EnterLevel2(const ControlBlockType inCB_ID) {
 	PushThreshold();
 	PushNewWord();
-	RS.emplace_back(DataType::kTypeMiscInt,inCB_ID);
+	RS.emplace_back(DataType::MiscInt,inCB_ID);
 	newWord=new Word(WordType::Normal);
-	ExecutionThreshold=Level::kSymbol;
+	ExecutionThreshold=Level::Symbol;
 }
 
 PP_API bool Context::LeaveLevel2() {
 	delete newWord->tmpParam;
 	delete newWord;
 
-	if(DS.size()<2) { return Error(NoParamErrorID::E_DS_AT_LEAST_2); }
+	if(DS.size()<2) { return Error(NoParamErrorID::DsAtLeast2); }
 	TypedValue tvNW=Pop(DS);
-	if(tvNW.dataType!=DataType::kTypeNewWord) {
-		return Error(InvalidTypeErrorID::E_TOS_NEW_WORD,tvNW);
+	if(tvNW.dataType!=DataType::NewWord) {
+		return Error(InvalidTypeErrorID::TosNewWord,tvNW);
 	}
  	newWord=(Word *)tvNW.wordPtr;
 
 	TypedValue tvThreshold=Pop(DS);
-	if(tvThreshold.dataType!=DataType::kTypeThreshold) {
-		return Error(InvalidTypeErrorID::E_SECOND_THRESHOLD,tvThreshold);
+	if(tvThreshold.dataType!=DataType::Threshold) {
+		return Error(InvalidTypeErrorID::SecondThreshold,tvThreshold);
 	}
 	ExecutionThreshold=(Level)tvThreshold.intValue;
 	return true;
@@ -512,7 +547,7 @@ PP_API bool Context::LeaveLevel2() {
 PP_API bool Context::EnterHereDocument(ControlBlockType inCB_ID) {
 	if( IsInCStyleComment() )   { return false; }
 	if( IsInCppStyleComment() ) { return false; }
-	if(ExecutionThreshold==Level::kSymbol) { return false; }
+	if(ExecutionThreshold==Level::Symbol) { return false; }
 	EnterLevel2(inCB_ID);
 	return true;
 }
@@ -520,10 +555,10 @@ PP_API bool Context::EnterHereDocument(ControlBlockType inCB_ID) {
 PP_API bool Context::LeaveHereDocument() {
 	if(LeaveLevel2()==false) { return false; }
 	switch(ExecutionThreshold) {
-		case Level::kInterpret:
+		case Level::Interpret:
 			DS.emplace_back(hereDocStr);
 			break;
-		case Level::kCompile:
+		case Level::Compile:
 			Compile(std::string("_lit"));
 			Compile(TypedValue(hereDocStr));
 			break;

@@ -1,7 +1,7 @@
-"usage" :
+`usage :
 	<<<
 		----------------------------------
-		usage: ../para PE21mt.pp 10000 run
+		usage: ../para PE21mt.pp run
        \           or
        \       ../para PE21mt.pp test
 		----------------------------------
@@ -14,16 +14,16 @@ then
 
 // n --- d-func-value
 // For more information about d-func-value, see https://projecteuler.net/problem=21 .
-"d-func" :
+`d-func :
 	0 ( `n `result ) local
-	1 `n , 2 / 1+ for+
+	1 `n , 2 / 1 + for+
 		`n , i % 0 == if `result , i + `result let then
 	next
 	`result ,
 ;
 
 // N --- array
-"make-d-array/mt" :
+`make-d-array/mt :
 	`n local
 
 	reset-pipes
@@ -34,41 +34,39 @@ then
 	[[ while-pipe dup d-func tuple >pipe repeat ]]
 
 	while-pipe /* array (t d-value-of-t) */
-		de-list	@set
+		expand @set
 	repeat
 	0 0 @set	// d(0):=0
 	1 1 @set	// d(1):=1 
 ;
 
 // array from to --- array
-"getAmicableNumbersFromArray/mt" :
+`getAmicableNumbersFromArray/mt :
 	reset-pipes
 	tuple	// array ( from to ) 
 
 	/* init DS by the TOS (list:( from to )). */
-	[-> de-list /* from to */ 1+ for+ i >pipe next ]
+	[-> expand /* from to */ 1 + for+ i >pipe next ]
 
 	/* --- worker --- */
 	/* init DS by the TOS (array). */
 	[[->	// TOS is 'd-value' array.
  		while-pipe
 			`t local
-			`t , get `t , == if continue then	// skip if t is perfect number.
-			`t , get valid-index? if 
-				get `t , == if `t , >pipe then
-			else
-				drop
-			then
+			`t , @get `t , == if continue then	// skip if t is perfect number.
+			`t , @get @valid-index? if 
+				@get `t , == if `t , >pipe then
+			otherwise-drop
 		repeat
 	]]
 
 	/* --- gather (or reduce) --- */
-	[ () while-pipe append repeat >pipe ] 
+	[ () while-pipe @append repeat >pipe ] 
 	pipe>
 ;
 
 // n --- n(=total)
-"printAmicableNumbers/mt" :
+`printAmicableNumbers/mt :
 	`n local
 
 	`n , make-d-array/mt 2 `n ,	// array 2 n 
@@ -76,21 +74,22 @@ then
 	dup . cr
 	0 `total local
 	while @not-empty-list? do
-		pop-front `total , + `total let
+		@pop-front `total , + `total let
 	repeat
 	drop `total , 
 ;
 
-"run" : 
+`run-until : 
 	printAmicableNumbers/mt .cr
 ;
 
-"test" :
+`run : 70000 run-until ;
+
+`test :
 	use-mock-stdout
 		20000 printAmicableNumbers/mt
 	use-stdout
 	115818 != if "NG" .cr -1 exit then
 	"GOOD" .cr
 ;
-
 

@@ -6,4 +6,5 @@
 
 PP_API int GetIndexForSkipWhiteSpace(std::string& inString,int inStartPos);
 PP_API std::string SkipWhiteSpace(std::string& inString);
+PP_API TypedValue GetFormattedString(const char *inFmt,TypedValue& inTV);
 

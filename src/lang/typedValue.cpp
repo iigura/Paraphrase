@@ -16,66 +16,66 @@ static std::string controlBlockNameStr(const ControlBlockType inCBT);
 
 PP_API double TypedValue::ToDouble(Context& inContext) {
 	switch(dataType) {
-		case DataType::kTypeInt:	return (double)intValue;
-		case DataType::kTypeLong:	return (double)longValue;
-		case DataType::kTypeFloat:	return (double)floatValue;
-		case DataType::kTypeDouble:	return doubleValue;
-		case DataType::kTypeBigInt: {
+		case DataType::Int:		return (double)intValue;
+		case DataType::Long:	return (double)longValue;
+		case DataType::Float:	return (double)floatValue;
+		case DataType::Double:	return doubleValue;
+		case DataType::BigInt: {
 			const BigInt& bigInt=*bigIntPtr;
 			if(abs(bigInt)<=gBI_DBL_MAX) {
 				return static_cast<double>(bigInt);
 			} else {
-				inContext.Error(NoParamErrorID::E_CAN_NOT_CONVERT_TO_DOUBLE_DUE_TO_OVERFLOW);
+				inContext.Error(NoParamErrorID::CanNotConvertToDoubleDueToOverflow);
 			}
 		}
-		case DataType::kTypeBigFloat: {
+		case DataType::BigFloat: {
 			const BigFloat& bigFloat=*bigFloatPtr;
 			if(abs(bigFloat)<gBF_DBL_MAX) {
 				return static_cast<double>(bigFloat);
 			} else {
-				inContext.Error(NoParamErrorID::E_CAN_NOT_CONVERT_TO_DOUBLE_DUE_TO_OVERFLOW);
+				inContext.Error(NoParamErrorID::CanNotConvertToDoubleDueToOverflow);
 			}
 		}
 		default:
-			inContext.Error(InvalidTypeErrorID::E_TOS_CAN_NOT_CONVERT_TO_DOUBLE,*this);
+			inContext.Error(InvalidTypeErrorID::TosCanNotConvertToDouble,*this);
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
 PP_API float TypedValue::ToFloat(Context& inContext) {
 	switch(dataType) {
-		case DataType::kTypeInt:	return (float)intValue;
-		case DataType::kTypeLong:	return (float)longValue;
-		case DataType::kTypeFloat:	return floatValue;
-		case DataType::kTypeDouble:	return (float)doubleValue;
-		case DataType::kTypeBigInt: {
+		case DataType::Int:	return (float)intValue;
+		case DataType::Long:	return (float)longValue;
+		case DataType::Float:	return floatValue;
+		case DataType::Double:	return (float)doubleValue;
+		case DataType::BigInt: {
 			const BigInt& bigInt=*bigIntPtr;
 			if(abs(bigInt)<=gBI_FLT_MAX) {
 				return static_cast<float>(*bigIntPtr);
 			} else {
-				inContext.Error(NoParamErrorID::E_CAN_NOT_CONVERT_TO_FLOAT_DUE_TO_OVERFLOW);
+				inContext.Error(NoParamErrorID::CanNotConvertToFloatDueToOverflow);
 			}
 		}
-		case DataType::kTypeBigFloat: {
+		case DataType::BigFloat: {
 			const BigFloat& bigFloat=*bigFloatPtr;
 			if(abs(bigFloat)<=gBF_FLT_MAX) {
 				return static_cast<float>(*bigFloatPtr);
 			} else {
-				inContext.Error(NoParamErrorID::E_CAN_NOT_CONVERT_TO_FLOAT_DUE_TO_OVERFLOW);
+				inContext.Error(NoParamErrorID::CanNotConvertToFloatDueToOverflow);
 			}
 		}
 		default:
-			inContext.Error(InvalidTypeErrorID::E_TOS_CAN_NOT_CONVERT_TO_FLOAT,*this);
+			inContext.Error(InvalidTypeErrorID::TosCanNotConvertToFloat,*this);
 	}
 	return std::numeric_limits<float>::quiet_NaN();
 }
 
 PP_API TypedValue FullClone(TypedValue& inTV) {
 	switch(inTV.dataType) {
-		case DataType::kTypeString:
-		case DataType::kTypeSymbol:
+		case DataType::String:
+		case DataType::Symbol:
 			return TypedValue(*inTV.stringPtr);
-		case DataType::kTypeArray: {
+		case DataType::Array: {
 				Array<TypedValue> *srcPtr=inTV.arrayPtr.get();
 				Lock(srcPtr->mutex);
 					const int n=srcPtr->length;
@@ -87,7 +87,7 @@ PP_API TypedValue FullClone(TypedValue& inTV) {
 				Array<TypedValue> *arrayPtr=new Array<TypedValue>(n,dataBody,true);
 				return TypedValue(arrayPtr);
 			}
-		case DataType::kTypeList: {
+		case DataType::List: {
 				std::deque<TypedValue> *srcPtr=inTV.listPtr.get();
 				std::deque<TypedValue> *destPtr=new std::deque<TypedValue>();
 				const int n=(int)srcPtr->size();
@@ -96,7 +96,7 @@ PP_API TypedValue FullClone(TypedValue& inTV) {
 				}
 				return TypedValue(destPtr);
 			}
-		case DataType::kTypeKV: {
+		case DataType::KV: {
 				KeyValue *srcPtr=inTV.kvPtr.get();
 				KeyValue *dstPtr=new KeyValue();
 				*dstPtr=*srcPtr;
@@ -109,40 +109,41 @@ PP_API TypedValue FullClone(TypedValue& inTV) {
 
 PP_API std::string TypedValue::GetTypeStr() const {
 	switch(dataType) {
-		case DataType::kTypeInvalid:	return std::string("(INVALID)");
-		case DataType::kTypeEOC:		return std::string("EOC");
-		case DataType::kTypeEmptySlot:	return std::string("(EMPRY-SLOT)");
-		case DataType::kTypeDirectWord:	return std::string("(WORD-PTR)");
-		case DataType::kTypeIP:			return std::string("(IPDATA)");
-		case DataType::kTypeParamDest:	return std::string("PARAM-DEST");
-		case DataType::kTypeNewWord:	return std::string("(NEW-WORD-PTR)");
-		case DataType::kTypeAddress:	return std::string("(ADDRESS)");
-		case DataType::kTypeThreshold:	return std::string("(Threshold)");
+		case DataType::Invalid:		return std::string("(INVALID)");
+		case DataType::EoC:			return std::string("EoC");
+		case DataType::EmptySlot:	return std::string("(EMPRY-SLOT)");
+		case DataType::DirectWord:	return std::string("(WORD-PTR)");
+		case DataType::IP:			return std::string("(IPDATA)");
+		case DataType::ParamDest:	return std::string("PARAM-DEST");
+		case DataType::NewWord:		return std::string("(NEW-WORD-PTR)");
+		case DataType::Address:		return std::string("(ADDRESS)");
+		case DataType::Threshold:	return std::string("(Threshold)");
+		case DataType::Lambda:		return std::string("(LAMBDA)");
 
-		case DataType::kTypeBool:	 	return std::string("bool");
-		case DataType::kTypeInt:		return std::string("int");
-		case DataType::kTypeLong:		return std::string("long");
-		case DataType::kTypeBigInt:		return std::string("bigInt");
-		case DataType::kTypeFloat:		return std::string("float");
-		case DataType::kTypeDouble:		return std::string("double");
-		case DataType::kTypeBigFloat:	return std::string("bigFloat");
-		case DataType::kTypeString:		return std::string("string");
-		case DataType::kTypeMayBeAWord:	return std::string("mayBeAWord");
-		case DataType::kTypeWord:		return std::string("word");
+		case DataType::Bool:	 	return std::string("bool");
+		case DataType::Int:			return std::string("int");
+		case DataType::Long:		return std::string("long");
+		case DataType::BigInt:		return std::string("bigInt");
+		case DataType::Float:		return std::string("float");
+		case DataType::Double:		return std::string("double");
+		case DataType::BigFloat:	return std::string("bigFloat");
+		case DataType::String:		return std::string("string");
+		case DataType::MayBeAWord:	return std::string("mayBeAWord");
+		case DataType::Word:		return std::string("word");
 
-		case DataType::kTypeArray:		return std::string("array");
-		case DataType::kTypeList:		return std::string("list");
-		case DataType::kTypeKV:			return std::string("assoc");
+		case DataType::Array:		return std::string("array");
+		case DataType::List:		return std::string("list");
+		case DataType::KV:			return std::string("assoc");
 
-		case DataType::kTypeSymbol:		return std::string("symbol");
-		case DataType::kTypeFile:		return std::string("file");
-		case DataType::kTypeEOF:		return std::string("eof");
+		case DataType::Symbol:		return std::string("symbol");
+		case DataType::File:		return std::string("file");
+		case DataType::EoF:			return std::string("eof");
 
-		case DataType::kTypeMiscInt:	return std::string("(MISC-INT)");
-		case DataType::kTypeLVOP:		return std::string("(LVOP)");
-		case DataType::kTypeCB:			return std::string("(CBT)");
+		case DataType::MiscInt:	return std::string("(MISC-INT)");
+		case DataType::LVOP:		return std::string("(LVOP)");
+		case DataType::CB:			return std::string("(CBT)");
 
-		case DataType::kTypeStdCode:	return std::string("stdCode");
+		case DataType::StdCode:	return std::string("stdCode");
 		default: ;	// empty
 	}
 	fprintf(stderr,"UNKNOWN dataType=%d\n",(int)dataType);
@@ -153,12 +154,12 @@ static void printIndent(int inIndent);
 static std::string indentStr(int inIndent);
 
 int TypedValue::GetLevel() const {
-	return dataType==DataType::kTypeDirectWord ? (int)wordPtr->level : 0;
+	return dataType==DataType::DirectWord ? (int)wordPtr->level : 0;
 }
 
-PP_API void TypedValue::PrintValue(int inIndent) const {
+PP_API void TypedValue::PrintValue(int inIndent,bool inTypePostfix) const {
 	printIndent(inIndent);
-	std::string valueStr=GetValueString(inIndent);
+	std::string valueStr=GetValueString(inIndent,true,inTypePostfix);
 	printf("%s",valueStr.c_str());
 }
 
@@ -182,22 +183,28 @@ static std::string getArrayValueString(const TypedValue& inTV,
 }
 
 static std::string getListValueString(const TypedValue& inTV,
-									  const int inIndent) {
+									  const int inIndent,
+									  bool inTypePostfix) {
 	const size_t n=inTV.listPtr->size();
 	if(n==0) { return "( )"; }
 
 	int childIndent=inIndent;
-	std::string ret="( "+inTV.listPtr->at(0).GetValueString(childIndent);;
+	std::string ret="(";
 	std::string arraySpace = childIndent>=0 ? indentStr(childIndent) : " ";
 	bool isNewLine=false;
-	for(size_t i=1; i<n; i++) {
-		if(inTV.listPtr->at(i).dataType==DataType::kTypeArray) {
+	for(size_t i=0; i<n; i++) {
+		if(inTV.listPtr->at(i).dataType==DataType::Array) {
 			isNewLine=true;
-			ret+=arraySpace;
+			ret+=" "+arraySpace;
 		} else {
 			ret+=" ";
 		}
-		ret+=inTV.listPtr->at(i).GetValueString(childIndent);
+		TypedValue element=inTV.listPtr->at(i);
+		if(element.dataType==DataType::String) {
+			ret+="\""+element.GetValueString(childIndent)+"\"";
+		} else {
+			ret+=element.GetValueString(childIndent,false,inTypePostfix);
+		}
 	}
 	if( isNewLine ) {
 		// ret+="\n";
@@ -209,19 +216,23 @@ static std::string getListValueString(const TypedValue& inTV,
 }
 
 static std::string getKvValueString(const TypedValue& inTV,
-								    const int inIndent) {
+								    const int inIndent,bool inDetail) {
 	std::string ret="( ";
-	for(auto kv : *inTV.kvPtr) {
-		ret+="<"+kv.first.GetValueString(inIndent);
-		ret+=","+kv.second.GetValueString(inIndent);
-		ret+="> ";
+	if( inDetail ) {
+		for(auto kv : *inTV.kvPtr) {
+			ret+="<"+kv.first.GetValueString(inIndent);
+			ret+=","+kv.second.GetValueString(inIndent);
+			ret+="> ";
+		}
+	} else {
+		ret+="num of "+std::to_string(inTV.kvPtr->size())+" pairs";;
 	}
 	ret+=")";
 	return ret;
 }
 
 PP_API std::string TypedValue::GetEscapedValueString(int inIndent) const {
-	if(dataType!=DataType::kTypeString) { return GetValueString(inIndent); }
+	if(dataType!=DataType::String) { return GetValueString(inIndent); }
 	const char *s=stringPtr->c_str();
 	std::string ret;
 	ret.reserve(stringPtr->length()*2);
@@ -240,66 +251,84 @@ PP_API std::string TypedValue::GetEscapedValueString(int inIndent) const {
 	return ret;
 }
 
-PP_API std::string TypedValue::GetValueString(int inIndent) const {
+PP_API std::string TypedValue::GetValueString(int inIndent,
+											  bool inDetail,
+											  bool inTypePostfix) const {
 	std::string ret;
 	switch(dataType) {
-		case DataType::kTypeInvalid:	ret="(invalid-value)";	break;
-		case DataType::kTypeEOC:		ret="(EOC)";			break;
+		case DataType::Invalid:	ret="(invalid-value)";	break;
+		case DataType::EoC:		ret="(EoC)";			break;
 
-		case DataType::kTypeIP:
+		case DataType::IP:
 			ret=(boost::format("(internal-data:IP %p)")%ipValue).str();
 			break;
-		case DataType::kTypeParamDest:
+		case DataType::ParamDest:
 			ret=(boost::format("(PARAM-DEST %p)")%ipValue).str();
 			break;
 
-		case DataType::kTypeDirectWord:
-		case DataType::kTypeNewWord:
-		case DataType::kTypeWord:
+		case DataType::DirectWord:
+		case DataType::NewWord:
+		case DataType::Word:
 			ret=(boost::format("%p[%s]")%wordPtr%wordPtr->longName).str();
 			break;
 
-		case DataType::kTypeBool:
-		case DataType::kTypeEmptySlot:
+		case DataType::Lambda:
+			ret=(boost::format("%p[%s]")%lambdaPtr.get()%lambdaPtr.get()->longName).str();
+			break;
+
+		case DataType::Bool:
+		case DataType::EmptySlot:
 			ret = boolValue ? "true" : "false";
 			break;
 
-		case DataType::kTypeAddress:
-		case DataType::kTypeThreshold:
-		case DataType::kTypeInt:
+		case DataType::Address:
+		case DataType::Threshold:
+		case DataType::Int:
 			ret=std::to_string(intValue);
 			break;
 
-		case DataType::kTypeLong:	ret=std::to_string(longValue);		break;
-		case DataType::kTypeFloat:	ret=std::to_string(floatValue); 	break;
-		case DataType::kTypeDouble:	ret=std::to_string(doubleValue);	break;
+		case DataType::Long:
+			ret=std::to_string(longValue);
+			if( inTypePostfix ) { ret+="L"; }
+			break;
+		case DataType::Float:
+			ret=std::to_string(floatValue);
+			if( inTypePostfix ) { ret+="f"; }
+			break;
+		case DataType::Double:	ret=std::to_string(doubleValue);	break;
 
-		case DataType::kTypeBigInt:		ret=bigIntPtr->str();	break;
-		case DataType::kTypeBigFloat:	ret=bigFloatPtr->str();	break;
+		case DataType::BigInt:
+			ret=bigIntPtr->str();
+			if( inTypePostfix ) { ret+="LL"; }
+			break;
+		case DataType::BigFloat:
+			ret=bigFloatPtr->str();
+			if( inTypePostfix ) { ret+="g"; }
+			break;
 
-		case DataType::kTypeSymbol:
-		case DataType::kTypeMayBeAWord:
-		case DataType::kTypeString:
+		case DataType::Symbol:
+		case DataType::MayBeAWord:
+		case DataType::String:
 			ret=std::string(*stringPtr);
 			break;
 			
-		case DataType::kTypeArray: 	ret=getArrayValueString(*this,inIndent);	break;
-		case DataType::kTypeList:  	ret=getListValueString(*this,inIndent);		break;
-		case DataType::kTypeKV:	 	ret=getKvValueString(*this,inIndent);		break;
+		case DataType::Array: 	ret=getArrayValueString(*this,inIndent);		break;
+		case DataType::List:
+			ret=getListValueString(*this,inIndent,inTypePostfix);
+			break;
+		case DataType::KV:	 	ret=getKvValueString(*this,inIndent,inDetail);	break;
 
-		case DataType::kTypeFile:
+		case DataType::File:
 			ret=(boost::format("(file-pointer: %p)")%filePtr.get()).str();
 			break;
 		
-		case DataType::kTypeEOF:	ret="(EOF)";				break;
+		case DataType::EoF:	ret="(EoF)";	break;
 		
-		case DataType::kTypeLVOP:	ret=disAsmLVOP(intValue);	break;
+		case DataType::LVOP:	ret=disAsmLVOP(intValue);	break;
 
-		case DataType::kTypeCB:
-			ret=controlBlockNameStr((ControlBlockType)intValue);
-			break;
+		case DataType::CB: ret=controlBlockNameStr((ControlBlockType)intValue); break;
 
-		case DataType::kTypeStdCode: {
+		case DataType::StdCode: {
 				std::stringstream strm;
 				strm << (void*)stdCodePtr;
 				ret=strm.str();
@@ -406,42 +435,32 @@ static std::string controlBlockNameStr(const ControlBlockType inCBT) {
 		case ControlBlockType::kOPEN_COMMENT_GROUP:
 			ret="(COMMENT_GROUP)";
 			break;
-		case ControlBlockType::kOPEN_C_STYLE_COMMENT:
-			ret="(OPEN_C_COMMENT)";	
+		case ControlBlockType::OpenCStyleComment:
+			ret="(OpenCComment)";	
 			break;
-		case ControlBlockType::kOPEN_CPP_STYLE_ONE_LINE_COMMENT:
-			ret="(OPEN_CPP_COMMENT)";
+		case ControlBlockType::OpenCppStyleOneLineComment:
+			ret="(OpenCppComment)";
 			break;
 
 		case ControlBlockType::kOPEN_IF_GROUP:
 			ret="(IF_GROUP)";
 			break;
-		case ControlBlockType::kSyntax_IF:
+		case ControlBlockType::SyntaxIf:
 			ret="(if)";
 			break;
 
 		case ControlBlockType::kOPEN_LEAVABLE_LOOP_GROUP:
 			ret="(LEAVABLE_LOOP_GROUP)";
 			break;
-		case ControlBlockType::kSyntax_FOR_PLUS:	
-			ret="(for+)";
-			break;
-		case ControlBlockType::kSyntax_FOR_MINUS:
-			ret="(for-)";
-			break;
-		case ControlBlockType::kSyntax_WHILE:
-			ret="(while)";
-			break;
-		case ControlBlockType::kSyntax_LOOP:
-			ret="(loop)";
-			break;
+		case ControlBlockType::SyntaxForPlus:	ret="(for+)"; 	break;
+		case ControlBlockType::SyntaxForMinus: 	ret="(for-)"; 	break;
+		case ControlBlockType::SyntaxWhile: 	ret="(while)"; 	break;
+		case ControlBlockType::SyntaxLoop: 		ret="(loop)"; 	break;
 
 		case ControlBlockType::kOPEN_SWITCH_GROUP:
 			ret="(SWITCH_GROUP)";
 			break;
-		case ControlBlockType::kSyntax_SWITCH:
-			ret="(switch)";
-			break;
+		case ControlBlockType::SyntaxSwitch: ret="(switch)"; break;
 
 		default:
 			fprintf(stderr,"SYSTEM ERROR at controlBlockNameStr().\n");
@@ -453,5 +472,162 @@ static std::string controlBlockNameStr(const ControlBlockType inCBT) {
 PP_API void TypedValue::Dump() const {
 	printf("dataType:%s ",GetTypeStr().c_str());
 	printf("value:"); PrintValue(); printf("\n");
+}
+
+PP_API bool IsValidDataTypeValue(DataType inDataType) {
+	switch(inDataType) {
+		case DataType::Invalid:
+		case DataType::EoC:
+		case DataType::EmptySlot:
+		case DataType::DirectWord:
+		case DataType::IP:
+		case DataType::ParamDest:
+		case DataType::NewWord:
+		case DataType::Address:
+		case DataType::Threshold:
+
+		case DataType::Bool:
+		case DataType::Int:
+		case DataType::Long:
+		case DataType::BigInt:
+		case DataType::Float:
+		case DataType::Double:
+		case DataType::BigFloat:
+		case DataType::String:
+		case DataType::MayBeAWord:
+		case DataType::Word:
+
+		case DataType::Array:
+		case DataType::List:
+		case DataType::KV:
+
+		case DataType::Symbol:
+		case DataType::File:
+		case DataType::EoF:
+
+		case DataType::MiscInt:
+		case DataType::LVOP:
+		case DataType::CB:
+
+		case DataType::StdCode:
+			return true;
+		default:
+			;	// empty
+	}
+	return false;
+}
+
+PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
+	if(inTV1==inTV2) { return true; }
+	switch(inTV1.dataType) {
+		case DataType::Int:
+			switch(inTV2.dataType) {
+				case DataType::Int: 	return inTV1.intValue==inTV2.intValue;
+				case DataType::Long:	return inTV1.intValue==inTV2.longValue;
+				case DataType::BigInt:	return inTV1.intValue==*inTV2.bigIntPtr;
+				case DataType::Float:	return inTV1.intValue==inTV2.floatValue;
+				case DataType::Double:	return inTV1.intValue==inTV2.doubleValue;
+				case DataType::BigFloat:return inTV1.intValue==*inTV2.bigFloatPtr;
+				default:				return false;
+			}
+			break;
+		case DataType::Long:
+			switch(inTV2.dataType) {
+				case DataType::Int:		return inTV1.longValue==inTV2.intValue;
+				case DataType::Long:	return inTV1.longValue==inTV2.longValue;
+				case DataType::BigInt:	return inTV1.longValue==*inTV2.bigIntPtr;
+				case DataType::Float:	return inTV1.longValue==inTV2.floatValue;
+				case DataType::Double:	return inTV1.longValue==inTV2.doubleValue;
+				case DataType::BigFloat:return inTV1.longValue==*inTV2.bigFloatPtr;
+				default:				return false;
+			}
+			break;
+		case DataType::BigInt:
+			switch(inTV2.dataType) {
+				case DataType::Int:		return *inTV1.bigIntPtr==inTV2.intValue;
+				case DataType::Long:	return *inTV1.bigIntPtr==inTV2.longValue;
+				case DataType::BigInt:	return *inTV1.bigIntPtr==*inTV2.bigIntPtr;
+				case DataType::Float:	return *inTV1.bigIntPtr==inTV2.floatValue;
+				case DataType::Double:	return *inTV1.bigIntPtr==inTV2.doubleValue;
+				case DataType::BigFloat: {
+					return BigFloat(*inTV1.bigIntPtr)==*inTV2.bigFloatPtr;
+				}
+				default:				return false;
+			}
+			break;
+		case DataType::Float:
+			switch(inTV2.dataType) {
+				case DataType::Int:		return inTV1.floatValue==inTV2.intValue;
+				case DataType::Long:	return inTV1.floatValue==inTV2.longValue;
+				case DataType::BigInt:	return inTV1.floatValue==*inTV2.bigIntPtr;
+				case DataType::Float:	return inTV1.floatValue==inTV2.floatValue;
+				case DataType::Double:	return inTV1.floatValue==inTV2.doubleValue;
+				case DataType::BigFloat:return inTV1.floatValue==*inTV2.bigFloatPtr;
+				default:				return false;
+			}
+			break;
+		case DataType::Double:
+			switch(inTV2.dataType) {
+				case DataType::Int:		return inTV1.doubleValue==inTV2.intValue;
+				case DataType::Long:	return inTV1.doubleValue==inTV2.longValue;
+				case DataType::BigInt:	return inTV1.doubleValue==*inTV2.bigIntPtr;
+				case DataType::Float:	return inTV1.doubleValue==inTV2.floatValue;
+				case DataType::Double:	return inTV1.doubleValue==inTV2.doubleValue;
+				case DataType::BigFloat:return inTV2.doubleValue==*inTV2.bigFloatPtr;
+				default:				return false;
+			}
+			break;
+		case DataType::BigFloat:
+			switch(inTV2.dataType) {
+				case DataType::Int:		return *inTV1.bigFloatPtr==inTV2.intValue;
+				case DataType::Long:	return *inTV1.bigFloatPtr==inTV2.longValue;
+				case DataType::BigInt: {
+					return *inTV1.bigFloatPtr==BigFloat(*inTV2.bigIntPtr);
+				}
+				case DataType::Float:	return *inTV1.bigFloatPtr==inTV2.floatValue;
+				case DataType::Double:	return *inTV1.bigFloatPtr==inTV2.doubleValue;
+				case DataType::BigFloat:return *inTV1.bigFloatPtr==*inTV2.bigFloatPtr;
+				default:				return false;
+			}
+			break;
+		case DataType::List: {
+				if(inTV2.dataType!=DataType::List) { return false; }
+				if(inTV1.listPtr->size()!=inTV2.listPtr->size()) { return false; }
+				int n=(int)inTV1.listPtr->size();
+				for(int i=0; i<n; i++) {
+					if(IsSameValue(inTV1.listPtr->at(i),inTV2.listPtr->at(i))==false) {
+						return false;
+					}
+				}
+				return true;
+			}
+			break;
+		case DataType::Array: {
+				if(inTV2.dataType!=DataType::Array) { return false; }
+				if(inTV1.arrayPtr->length!=inTV2.arrayPtr->length) { return false; }
+				int n=inTV1.arrayPtr->length;
+				for(int i=0; i<n; i++) {
+					if(IsSameValue(inTV1.arrayPtr->data[i],
+								   inTV2.arrayPtr->data[i])==false) {
+						return false;
+					}
+				}
+				return true;
+			}
+			break;
+		case DataType::KV: {
+				if(inTV2.dataType!=DataType::KV) { return false; }
+				if(inTV1.kvPtr->size()!=inTV2.kvPtr->size()) { return false; }
+				for(auto const &pair : *inTV1.kvPtr) {
+					auto itr=inTV2.kvPtr->find(pair.first);
+					if(itr==inTV2.kvPtr->end()) { return false; }
+					if(!(pair.first==itr->first)) { return false; }
+				}
+				return true;
+			}
+			break;
+		default:
+			return false;
+	}
 }
 

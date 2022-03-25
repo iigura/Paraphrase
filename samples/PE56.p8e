@@ -1,7 +1,7 @@
 // Project Euler No.56
 // usage: ../para PE56.pp
 
-"usage" :
+`help :
 	<<<
 		---------------------------
 		usage: ../para PE56.pp run
@@ -11,7 +11,13 @@
 	>>> write
 ;
 
-"digit-sum-main" :	// sum target -- sum target
+interactive? not if
+	args size 0? if
+      help -1 exit
+    then 
+then
+
+`digit-sum-main :	// sum target -- sum target
 	dup 0 > if
 		dup 10 %	// sum target digit
 		rot			// target digit sum
@@ -22,43 +28,39 @@
 
 // 123 digit-sum -> 6 (==1+2+3)
 // I --- I
-"digit-sum" : 0 swap digit-sum-main drop ;
+`digit-sum : 0 swap digit-sum-main drop ;
 
-"main" :
+`main :
 	[	1 100 for+
 			1 100 for+
-				i >INT j tuple >pipe
+				i >big-int j tuple >pipe
 			next
 		next
 	]
 
 	[[	while-pipe
-			clone de-list pow digit-sum
-			append >pipe
+			clone expand pow digit-sum
+			@append >pipe
 		repeat
 	]]
 
 	{	( max max-pattern ) local-decl
 	  	0 `max let
 		while-pipe
-			@last dup `max , > if
-				( max-pattern max ) let
-			else
-				2drop
-			then
+			@last dup `max , > if ( max-pattern max ) let otherwise-2drop
 		repeat
 		`max-pattern , `max ,
 	} exec
 ;
 
-"run" :
+`run :
 	main 
 	drop
 	( "answer is digitSum(%d^%d)=%d\n" ) 
 	swap concat printf
 ;
 
-"test" :
+`test :
 	main
 	972LL != if "NG" .cr -1 exit then
 	dup ( 99LL 95 972LL ) != if "NG" .cr -1 exit then

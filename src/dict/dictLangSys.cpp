@@ -10,6 +10,9 @@
 
 static bool gRunningOnInteractive=false;
 
+static bool argBeginBody(Context& inContext);
+static bool argEndBody(Context& inContext);
+
 static bool doLVOP(Context& inContext,LVOP inLVOP);
 
 void RunningOnInteractive() {
@@ -21,13 +24,13 @@ void InitDict_LangSys() {
 
 	Install(new Word("_lvop",WORD_FUNC {
 		TypedValue *tv=(TypedValue *)(inContext.ip+1);
-		if(tv->dataType!=DataType::kTypeLVOP) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+		if(tv->dataType!=DataType::LVOP) {
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		LVOP lvop=static_cast<LVOP>(tv->intValue);
 		if(doLVOP(inContext,lvop)==false) {
 			tv->Dump();
-			return inContext.Error(NoParamErrorID::E_ILLEGAL_LVOP);
+			return inContext.Error(NoParamErrorID::IllegalLVOP);
 		}
 		inContext.ip+=TvSize;
 		NEXT;
@@ -36,19 +39,19 @@ void InitDict_LangSys() {
 	Install(new Word("_nLVOP",WORD_FUNC {
 		TypedValue *tvBuf=(TypedValue *)(inContext.ip+1);
 		TypedValue& tvN=tvBuf[0];
-		if(tvN.dataType!=DataType::kTypeInt) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+		if(tvN.dataType!=DataType::Int) {
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		const int n=tvN.intValue;
 		for(int i=0; i<n; i++) {
 			TypedValue& tvLVOP=tvBuf[1+i];
-			if(tvLVOP.dataType!=DataType::kTypeLVOP) {
-				return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			if(tvLVOP.dataType!=DataType::LVOP) {
+				return inContext.Error(NoParamErrorID::SystemError);
 			}
 			LVOP lvop=static_cast<LVOP>(tvLVOP.intValue);
 			if(doLVOP(inContext,lvop)==false) {
 				tvLVOP.Dump();
-				return inContext.Error(NoParamErrorID::E_ILLEGAL_LVOP);
+				return inContext.Error(NoParamErrorID::IllegalLVOP);
 			}
 		}
 		inContext.ip+=TvSize*(n+1);
@@ -111,6 +114,11 @@ void InitDict_LangSys() {
 		NEXT;
 	}));
 
+	Install(new Word("tron?",WORD_FUNC {
+		inContext.DS.emplace_back(IsTraceOn());
+		NEXT;
+	}));
+
 	Install(new Word("debug",WORD_FUNC {
 		SetOptimizeLevel(0);
 		NEXT;
@@ -118,19 +126,19 @@ void InitDict_LangSys() {
 
 	Install(new Word("/*",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInCppStyleComment() ) { NEXT; }
-		inContext.EnterLevel2(ControlBlockType::kOPEN_C_STYLE_COMMENT);
+		inContext.EnterLevel2(ControlBlockType::OpenCStyleComment);
 		NEXT;
 	}));
 
 	Install(new Word("*/",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInCppStyleComment() ) { NEXT; }
 		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_C_STYLE_COMMENT_MISMATCH);
+			return inContext.Error(NoParamErrorID::CStyleCommentMismatch);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.RS);
-		if(tvSyntax.dataType!=DataType::kTypeMiscInt
-		  || tvSyntax.intValue!=(int)ControlBlockType::kOPEN_C_STYLE_COMMENT) {
-			return inContext.Error(NoParamErrorID::E_C_STYLE_COMMENT_MISMATCH);
+		if(tvSyntax.dataType!=DataType::MiscInt
+		  || tvSyntax.intValue!=(int)ControlBlockType::OpenCStyleComment) {
+			return inContext.Error(NoParamErrorID::CStyleCommentMismatch);
 		}
 		Pop(inContext.RS);
 
@@ -143,40 +151,40 @@ void InitDict_LangSys() {
 		if( inContext.IsInCppStyleComment() ) { NEXT; }
 		inContext.PushThreshold();
 		inContext.PushNewWord();
-		inContext.RS.emplace_back(DataType::kTypeMiscInt,
-								  ControlBlockType::kOPEN_CPP_STYLE_ONE_LINE_COMMENT);
+		inContext.RS.emplace_back(DataType::MiscInt,
+								  ControlBlockType::OpenCppStyleOneLineComment);
 		inContext.newWord=new Word(WordType::Normal);
-		inContext.ExecutionThreshold=Level::kSymbol;
+		inContext.ExecutionThreshold=Level::Symbol;
 		NEXT;
 	}));
 
 	Install(new Word(EOL_WORD,WordLevel::Level2,WORD_FUNC {
 		if(inContext.RS.size()<1) { NEXT; }
 		TypedValue& rsTos=ReadTOS(inContext.RS);
-		if(rsTos.dataType==DataType::kTypeMiscInt) {
+		if(rsTos.dataType==DataType::MiscInt) {
 			switch((ControlBlockType)rsTos.intValue) {
-				case ControlBlockType::kOPEN_CPP_STYLE_ONE_LINE_COMMENT: {
+				case ControlBlockType::OpenCppStyleOneLineComment: {
 						delete inContext.newWord->tmpParam;
 						delete inContext.newWord;
 						if(inContext.DS.size()<2) {
-							return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+							return inContext.Error(NoParamErrorID::DsAtLeast2);
 						}
 						TypedValue tvNW=Pop(inContext.DS);
-						if(tvNW.dataType!=DataType::kTypeNewWord) {
-							return inContext.Error(InvalidTypeErrorID::E_TOS_NEW_WORD,tvNW);
+						if(tvNW.dataType!=DataType::NewWord) {
+							return inContext.Error(InvalidTypeErrorID::TosNewWord,tvNW);
 						}
 			 			inContext.newWord=(Word *)tvNW.wordPtr;
 
 						Pop(inContext.RS);	// already checked by ReadTOS(inContext.RS).
 
 						TypedValue tvThreshold=Pop(inContext.DS);
-						if(tvThreshold.dataType!=DataType::kTypeThreshold) {
-							return inContext.Error(InvalidTypeErrorID::E_SECOND_THRESHOLD,tvThreshold);
+						if(tvThreshold.dataType!=DataType::Threshold) {
+							return inContext.Error(InvalidTypeErrorID::SecondThreshold,tvThreshold);
 						}
 						inContext.ExecutionThreshold=(Level)tvThreshold.intValue;
 					}
 					break;
-				case ControlBlockType::kOPEN_HERE_DOCUMENT_RAW: {
+				case ControlBlockType::OpenHereDocumentRaw: {
 						bool isSuccess;
 						inContext.hereDocStr+=EvalEscapeSeq(inContext.line,&isSuccess);
 						if( inContext.appendNewlineForHereDocStr ) {
@@ -194,7 +202,7 @@ void InitDict_LangSys() {
 						}
 					}
 					break;
-				case ControlBlockType::kOPEN_HERE_DOCUMENT_DEDENT: {
+				case ControlBlockType::OpenHereDocumentDedent: {
 						std::string s=SkipWhiteSpace(inContext.line);
 						bool isSuccess;
 						inContext.hereDocStr+=EvalEscapeSeq(s,&isSuccess);
@@ -219,6 +227,95 @@ void InitDict_LangSys() {
 		}
 		NEXT;
 	}));
+
+	Install(new Word("_arg-begin",WORD_FUNC {
+		if(argBeginBody(inContext)==false) { return false; }
+		NEXT;
+	}));
+	Install(new Word("_arg-end",WORD_FUNC {
+		if(argEndBody(inContext)==false) { return false; }
+		NEXT;
+	}));
+
+
+	// usage: `func :( 1 2 );
+	// 	this program equivalent to  1 2 func.
+	// the word :( equivalent to  >word >r
+	Install(new Word(":(",WordLevel::Immediate,WORD_FUNC {
+		if( inContext.IsInterpretMode() ) {
+			if(argBeginBody(inContext)==false) { return false; }			
+		} else {
+			TypedValue tv=inContext.GetLiteralFromThreadedCode();
+			if(tv.dataType==DataType::Invalid) {
+				inContext.Compile(std::string("_arg-begin"));
+			} else if(tv.dataType==DataType::Symbol || tv.dataType==DataType::String) {	
+				auto iter=Dict.find(*tv.stringPtr);
+				if(iter==Dict.end()) {
+					return inContext.Error(ErrorIdWithString
+										   ::CanNotFindTheWord,*tv.stringPtr);
+				}
+				inContext.RS.emplace_back(iter->second);
+				inContext.SS.emplace_back(ControlBlockType::SyntaxArgBegin);
+			} else {
+				return inContext.Error(InvalidTypeErrorID
+									   ::CompiledLiteralShouldBeSymbolOrString,tv);
+			}
+		}
+		NEXT;
+	}));
+
+	// equivalent to  r> exec
+	Install(new Word(");",WordLevel::Immediate,WORD_FUNC {
+		if( inContext.IsInterpretMode() ) {
+			if(argEndBody(inContext)==false) { return false; }			
+		} else {
+			if(inContext.SS.size()<1) {
+				goto compileArgEnd;
+			} else {
+				TypedValue& ssTos=ReadTOS(inContext.SS);
+				if(ssTos.dataType!=DataType::CB) { goto compileArgEnd; }
+				if(ssTos.intValue!=(int)ControlBlockType::SyntaxArgBegin) {
+					goto compileArgEnd;
+				}
+				inContext.SS.pop_back();
+				TypedValue tvWord=Pop(inContext.RS);
+				if(tvWord.HasWordPtr(NULL)==false) {
+					return inContext.Error(NoParamErrorID::RsBroken);
+				}
+				inContext.Compile(tvWord);	
+				goto finish;
+			}
+compileArgEnd:
+			inContext.Compile(std::string("_arg-end"));
+		}
+finish:
+		NEXT;
+	}));
+}
+
+static bool argBeginBody(Context& inContext) {
+	if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+	TypedValue tos=Pop(inContext.DS);
+	if( tos.HasWordPtr(NULL) ) {
+		inContext.RS.emplace_back(tos);
+	} else if(tos.dataType==DataType::Symbol || tos.dataType==DataType::String) {
+		auto iter=Dict.find(*tos.stringPtr);
+		if(iter==Dict.end()) {
+			return inContext.Error(ErrorIdWithString
+								   ::CanNotFindTheWord,*tos.stringPtr);
+		}
+		inContext.RS.emplace_back(iter->second);
+	} else { return inContext.Error(InvalidTypeErrorID::TosSymbolOrWord,tos); }
+	return true;
+}
+static bool argEndBody(Context& inContext) {
+	if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
+	TypedValue rsTos=Pop(inContext.RS);
+	if(rsTos.HasWordPtr(NULL)==false) {
+		return inContext.Error(NoParamErrorID::RsBroken);
+	}	
+	if(inContext.Exec(rsTos)==false) { return false; }
+	return true;
 }
 
 #define LVMathOp(inContext,OP) do { \
@@ -264,24 +361,12 @@ void InitDict_LangSys() {
 //		SetLocalVarWithSingleOP(localVarSlot[dest],tv,+1);
 #define SetLocalVarWithSingleOP(outDest,srcTV,OP) do { \
 	switch(srcTV.dataType) { \
-		case DataType::kTypeInt: \
-			outDest=TypedValue(srcTV.intValue OP); \
-			break; \
-		case DataType::kTypeLong: \
-			outDest=TypedValue(srcTV.longValue OP); \
-			break; \
-		case DataType::kTypeBigInt:	\
-			outDest=TypedValue(*(srcTV.bigIntPtr) OP); \
-			break; \
-		case DataType::kTypeFloat: \
-			outDest=TypedValue(srcTV.floatValue OP); \
-			break; \
-		case DataType::kTypeDouble: \
-			outDest=TypedValue(srcTV.doubleValue OP); \
-			break; \
-		case DataType::kTypeBigFloat: \
-			outDest=TypedValue(*(srcTV.bigFloatPtr) OP); \
-			break; \
+		case DataType::Int:      outDest=TypedValue(srcTV.intValue OP);       break; \
+		case DataType::Long:     outDest=TypedValue(srcTV.longValue OP);      break; \
+		case DataType::BigInt:   outDest=TypedValue(*(srcTV.bigIntPtr) OP);   break; \
+		case DataType::Float:    outDest=TypedValue(srcTV.floatValue OP);     break; \
+		case DataType::Double: 	 outDest=TypedValue(srcTV.doubleValue OP);    break; \
+		case DataType::BigFloat: outDest=TypedValue(*(srcTV.bigFloatPtr) OP); break; \
 		default: fprintf(stderr,"SYSTEM ERROR\n"); exit(-1); \
 	} \
 } while(0)
@@ -291,31 +376,18 @@ void InitDict_LangSys() {
 // 		OpThenPush(inContext.DS,srvTV,+1)
 #define OpThenPush(inStack,srcTV,OP) do { \
 	switch(srcTV.dataType) { \
-		case DataType::kTypeInt: \
-			inStack.emplace_back(srcTV.intValue OP); \
-			break; \
-		case DataType::kTypeLong: \
-			inStack.emplace_back(srcTV.longValue OP); \
-			break; \
-		case DataType::kTypeBigInt: \
-			inStack.emplace_back(*(srcTV.bigIntPtr) OP); \
-			break; \
-		case DataType::kTypeFloat: \
-			inStack.emplace_back(srcTV.floatValue OP); \
-			break; \
-		case DataType::kTypeDouble: \
-			inStack.emplace_back(srcTV.doubleValue OP); \
-			break; \
-		case DataType::kTypeBigFloat: \
-			inStack.emplace_back(*(srcTV.bigFloatPtr) OP); \
-			break; \
+		case DataType::Int:  	inStack.emplace_back(srcTV.intValue OP);  	   break; \
+		case DataType::Long: 	inStack.emplace_back(srcTV.longValue OP); 	   break; \
+		case DataType::BigInt:  inStack.emplace_back(*(srcTV.bigIntPtr) OP);   break; \
+		case DataType::Float: 	inStack.emplace_back(srcTV.floatValue OP);     break; \
+		case DataType::Double:  inStack.emplace_back(srcTV.doubleValue OP);    break; \
+		case DataType::BigFloat:inStack.emplace_back(*(srcTV.bigFloatPtr) OP); break; \
 		default: fprintf(stderr,"SYSTEM ERROR\n"); exit(-1); \
 	} \
 } while(0)
 
 static bool doLVOP(Context& inContext,LVOP inLVOP) {
 	switch(inLVOP & LVOP::opMask) {
-		case LVOP::NOP:	return true;
 		case LVOP::ADD:	LVMathOp(inContext,+);  break;
 		case LVOP::SUB:	LVMathOp(inContext,-);  break;
 		case LVOP::MUL:	LVMathOp(inContext,*);  break;
@@ -337,14 +409,14 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 				if(src==dest) {
 					TypedValue& lv=localVarSlot[src];
 					switch(lv.dataType) {
-						case DataType::kTypeInt:		lv.intValue++;			break;
-						case DataType::kTypeLong:		lv.longValue++;			break;
-						case DataType::kTypeBigInt:		(*lv.bigIntPtr)++;		break;
-						case DataType::kTypeFloat:		lv.floatValue++;		break;
-						case DataType::kTypeDouble:		lv.doubleValue++;		break;
-						case DataType::kTypeBigFloat:	(*lv.bigFloatPtr)++;	break;
+						case DataType::Int:			lv.intValue++;			break;
+						case DataType::Long:		lv.longValue++;			break;
+						case DataType::BigInt:		(*lv.bigIntPtr)++;		break;
+						case DataType::Float:		lv.floatValue++;		break;
+						case DataType::Double:		lv.doubleValue++;		break;
+						case DataType::BigFloat:	(*lv.bigFloatPtr)++;	break;
 						default:
-							return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+							return inContext.Error(NoParamErrorID::SystemError);
 					}
 				} else {
 					TypedValue& tv=localVarSlot[src];
@@ -382,23 +454,23 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 				TypedValue& tv=localVarSlot[src];
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
 				switch(tv.dataType) {
-					case DataType::kTypeInt:
+					case DataType::Int:
 						localVarSlot[dest]=TypedValue(tv.intValue*tv.intValue);
 						break;
-					case DataType::kTypeLong:
+					case DataType::Long:
 						localVarSlot[dest]=TypedValue(tv.longValue*tv.longValue);
 						break;
-					case DataType::kTypeBigInt:
+					case DataType::BigInt:
 						localVarSlot[dest]=TypedValue(*(tv.bigIntPtr)
 													  * (*(tv.bigIntPtr)));
 						break;
-					case DataType::kTypeFloat:
+					case DataType::Float:
 						localVarSlot[dest]=TypedValue(tv.floatValue*tv.floatValue);
 						break;
-					case DataType::kTypeDouble:
+					case DataType::Double:
 						localVarSlot[dest]=TypedValue(tv.doubleValue*tv.doubleValue);
 						break;
-					case DataType::kTypeBigFloat:
+					case DataType::BigFloat:
 						localVarSlot[dest]=TypedValue(*(tv.bigFloatPtr)
 													  * (*(tv.bigFloatPtr)));
 						break;
@@ -464,23 +536,23 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
 				TypedValue& tv=localVarSlot[src];
 				switch(tv.dataType) {
-					case DataType::kTypeInt:
+					case DataType::Int:
 						inContext.DS.emplace_back(tv.intValue * tv.intValue);
 						break;
-					case DataType::kTypeLong:
+					case DataType::Long:
 						inContext.DS.emplace_back(tv.longValue * tv.longValue);
 						break;
-					case DataType::kTypeBigInt:
+					case DataType::BigInt:
 						inContext.DS.emplace_back(
 							*(tv.bigIntPtr) * (*(tv.bigIntPtr)) );
 						break;
-					case DataType::kTypeFloat:
+					case DataType::Float:
 						inContext.DS.emplace_back(tv.floatValue * tv.floatValue);
 						break;
-					case DataType::kTypeDouble:
+					case DataType::Double:
 						inContext.DS.emplace_back(tv.doubleValue * tv.doubleValue);
 						break;
-					case DataType::kTypeBigFloat:
+					case DataType::BigFloat:
 						inContext.DS.emplace_back(
 							*(tv.bigFloatPtr) * (*(tv.bigFloatPtr)) );
 						break;
@@ -506,6 +578,7 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 				ModOp(localVarSlot[dest],tv1,tv2);
 			}
 			break;
+		case LVOP::NOP:	return true;
 		default:
 			fprintf(stderr,"SYSTEM ERROR\n");
 			exit(-1);

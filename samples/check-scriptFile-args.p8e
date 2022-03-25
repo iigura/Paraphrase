@@ -6,8 +6,8 @@ else
 	args size 0? if show then
 then
 
-"check" : == not if "NG" .cr -1 exit then ;
-"test" :
+`check : == not if "NG" .cr -1 exit then ;
+`test :
 	( a ( b c ) ) check 
 	"str" check
 	2.3 check

@@ -29,51 +29,43 @@ enum class Level;	// see context.h
 
 const int kType_HeavyMask=0x4000;
 enum class DataType {
-	kTypeInvalid	=9999,	// no values
-	kTypeMayBeAWord =kType_HeavyMask | 9998,	// for args, use stringPtr.
-	kTypeDirectWord	=9000,
-	kTypeIP			=9100,
-	kTypeNewWord	=9200,	// wordPtr value as NewWord.
-	kTypeThreshold	=9300,	// intValue as ExecutionThreshold
-	kTypeEmptySlot	=9400,	// use intValue as execution-threshld level backup.
-	kTypeAddress	=9500,	// intValue as an address.
-	kTypeParamDest	=9600,	// ipValue's vallue as a pointer to param[target]
+	Invalid	=999,	// no values
+	MayBeAWord =kType_HeavyMask | 998,	// for args, use stringPtr.
+	DirectWord	=900,
+	IP			=910,
+	NewWord		=920,	// wordPtr value as NewWord.
+	Threshold	=930,	// intValue as ExecutionThreshold
+	EmptySlot	=940,	// use intValue as execution-threshld level backup.
+	Address		=950,	// intValue as an address.
+	ParamDest	=960,	// ipValue's vallue as a pointer to param[target]
+	Lambda		=kType_HeavyMask | 970,
 	//kTypeEnvFrame,
 
-	kTypeBool	 =100,
-	kTypeInt	 =0,
-	kTypeLong	 =1,
-	kTypeBigInt	 =kType_HeavyMask | 2,
-	kTypeFloat	 =3,
-	kTypeDouble	 =4,
-	kTypeBigFloat=kType_HeavyMask | 5,
+	Bool	=10,
+	Int	 	=0,
+	Long	=1,
+	BigInt	=kType_HeavyMask | 2,
+	Float	=3,
+	Double	=4,
+	BigFloat=kType_HeavyMask | 5,
 
-	kTypeString=kType_HeavyMask | 200,
-	kTypeWord=300,
+	String=kType_HeavyMask | 20,
+	Word=30,
 
-	kTypeArray=kType_HeavyMask | 410,
-	kTypeList =kType_HeavyMask | 420,
-	kTypeKV   =kType_HeavyMask | 430,
+	Array=kType_HeavyMask | 41,
+	List =kType_HeavyMask | 42,
+	KV   =kType_HeavyMask | 43,
 
-	kTypeSymbol=kType_HeavyMask | 600,
-	kTypeEOC=700,	// no values
-	kTypeFile	=kType_HeavyMask | 800,
-	kTypeEOF	=801,	// no values
+	Symbol=kType_HeavyMask | 60,
+	EoC =70,	// no values
+	File=kType_HeavyMask | 80,
+	EoF	=81,	// no values
 
-	kTypeStdCode=999,	// use stdCodePtr
+	StdCode=99,	// use stdCodePtr
 
-	kTypeMiscInt=900,	// use intValue as misc. data.
-	kTypeLVOP=1000,		// use intValue as LVOP.
-	kTypeCB =2000,		// use intValue as CB (Control Block) info.
-};
-
-enum class DebugCommandType {
-	kDCTypeSystemError,
-	kDCTypeInvalid,
-	kDCTypeContinue,
-	kDCTypeStepOver,
-	kDCTypeStepIn,
-	kDCTypeQuit,
+	MiscInt=90,	// use intValue as misc. data.
+	LVOP=100,		// use intValue as LVOP.
+	CB =200,		// use intValue as CB (Control Block) info.
 };
 
 inline int GetMathOpType(DataType inType1,DataType inType2) {
@@ -83,74 +75,78 @@ inline int GetMathOpType(DataType inType1,DataType inType2) {
 #define MathOpCombi(s,t) ((((int)s)<<16) | ((int)t))
 
 enum class TypeCombinationForMathOP {
-	kIntInt 	=MathOpCombi(DataType::kTypeInt,DataType::kTypeInt),
-	kIntLong	=MathOpCombi(DataType::kTypeInt,DataType::kTypeLong),
-	kIntBigInt	=MathOpCombi(DataType::kTypeInt,DataType::kTypeBigInt),
-	kIntFloat	=MathOpCombi(DataType::kTypeInt,DataType::kTypeFloat),
-	kIntDouble	=MathOpCombi(DataType::kTypeInt,DataType::kTypeDouble),
-   	kIntBigFloat=MathOpCombi(DataType::kTypeInt,DataType::kTypeBigFloat),
+	IntInt 		=MathOpCombi(DataType::Int,DataType::Int),
+	IntLong		=MathOpCombi(DataType::Int,DataType::Long),
+	IntBigInt	=MathOpCombi(DataType::Int,DataType::BigInt),
+	IntFloat	=MathOpCombi(DataType::Int,DataType::Float),
+	IntDouble	=MathOpCombi(DataType::Int,DataType::Double),
+   	IntBigFloat	=MathOpCombi(DataType::Int,DataType::BigFloat),
 
-	kLongInt	 =MathOpCombi(DataType::kTypeLong,DataType::kTypeInt),
-	kLongLong	 =MathOpCombi(DataType::kTypeLong,DataType::kTypeLong),
-	kLongBigInt	 =MathOpCombi(DataType::kTypeLong,DataType::kTypeBigInt),
-	kLongFloat	 =MathOpCombi(DataType::kTypeLong,DataType::kTypeFloat),
-	kLongDouble	 =MathOpCombi(DataType::kTypeLong,DataType::kTypeDouble),
-	kLongBigFloat=MathOpCombi(DataType::kTypeLong,DataType::kTypeBigFloat),
+	LongInt	 	 =MathOpCombi(DataType::Long,DataType::Int),
+	LongLong	 =MathOpCombi(DataType::Long,DataType::Long),
+	LongBigInt	 =MathOpCombi(DataType::Long,DataType::BigInt),
+	LongFloat	 =MathOpCombi(DataType::Long,DataType::Float),
+	LongDouble	 =MathOpCombi(DataType::Long,DataType::Double),
+	LongBigFloat =MathOpCombi(DataType::Long,DataType::BigFloat),
 
-	kBigIntInt   	=MathOpCombi(DataType::kTypeBigInt,DataType::kTypeInt),
-   	kBigIntLong  	=MathOpCombi(DataType::kTypeBigInt,DataType::kTypeLong),
-	kBigIntBigInt	=MathOpCombi(DataType::kTypeBigInt,DataType::kTypeBigInt),
-	kBigIntFloat 	=MathOpCombi(DataType::kTypeBigInt,DataType::kTypeFloat),
-	kBigIntDouble	=MathOpCombi(DataType::kTypeBigInt,DataType::kTypeDouble),
-	kBigIntBigFloat	=MathOpCombi(DataType::kTypeBigInt,DataType::kTypeBigFloat),
+	BigIntInt   	=MathOpCombi(DataType::BigInt,DataType::Int),
+   	BigIntLong  	=MathOpCombi(DataType::BigInt,DataType::Long),
+	BigIntBigInt	=MathOpCombi(DataType::BigInt,DataType::BigInt),
+	BigIntFloat 	=MathOpCombi(DataType::BigInt,DataType::Float),
+	BigIntDouble	=MathOpCombi(DataType::BigInt,DataType::Double),
+	BigIntBigFloat	=MathOpCombi(DataType::BigInt,DataType::BigFloat),
 
-	kFloatInt   	=MathOpCombi(DataType::kTypeFloat,DataType::kTypeInt),
-	kFloatLong  	=MathOpCombi(DataType::kTypeFloat,DataType::kTypeLong),
-   	kFloatBigInt  	=MathOpCombi(DataType::kTypeFloat,DataType::kTypeBigInt),
-	kFloatFloat		=MathOpCombi(DataType::kTypeFloat,DataType::kTypeFloat),
-	kFloatDouble	=MathOpCombi(DataType::kTypeFloat,DataType::kTypeDouble),
-	kFloatBigFloat	=MathOpCombi(DataType::kTypeFloat,DataType::kTypeBigFloat),
+	FloatInt   		=MathOpCombi(DataType::Float,DataType::Int),
+	FloatLong  		=MathOpCombi(DataType::Float,DataType::Long),
+   	FloatBigInt  	=MathOpCombi(DataType::Float,DataType::BigInt),
+	FloatFloat		=MathOpCombi(DataType::Float,DataType::Float),
+	FloatDouble		=MathOpCombi(DataType::Float,DataType::Double),
+	FloatBigFloat	=MathOpCombi(DataType::Float,DataType::BigFloat),
 
-	kDoubleInt  	=MathOpCombi(DataType::kTypeDouble,DataType::kTypeInt),
-	kDoubleLong  	=MathOpCombi(DataType::kTypeDouble,DataType::kTypeLong),
-	kDoubleBigInt  	=MathOpCombi(DataType::kTypeDouble,DataType::kTypeBigInt),
-	kDoubleFloat	=MathOpCombi(DataType::kTypeDouble,DataType::kTypeFloat),
-	kDoubleDouble	=MathOpCombi(DataType::kTypeDouble,DataType::kTypeDouble),
-	kDoubleBigFloat	=MathOpCombi(DataType::kTypeDouble,DataType::kTypeBigFloat),
+	DoubleInt  		=MathOpCombi(DataType::Double,DataType::Int),
+	DoubleLong  	=MathOpCombi(DataType::Double,DataType::Long),
+	DoubleBigInt  	=MathOpCombi(DataType::Double,DataType::BigInt),
+	DoubleFloat		=MathOpCombi(DataType::Double,DataType::Float),
+	DoubleDouble	=MathOpCombi(DataType::Double,DataType::Double),
+	DoubleBigFloat	=MathOpCombi(DataType::Double,DataType::BigFloat),
 
-	kBigFloatInt  	 =MathOpCombi(DataType::kTypeBigFloat,DataType::kTypeInt),
-	kBigFloatLong  	 =MathOpCombi(DataType::kTypeBigFloat,DataType::kTypeLong),
-	kBigFloatBigInt  =MathOpCombi(DataType::kTypeBigFloat,DataType::kTypeBigInt),
-	kBigFloatFloat	 =MathOpCombi(DataType::kTypeBigFloat,DataType::kTypeFloat),
-	kBigFloatDouble	 =MathOpCombi(DataType::kTypeBigFloat,DataType::kTypeDouble),
-	kBigFloatBigFloat=MathOpCombi(DataType::kTypeBigFloat,DataType::kTypeBigFloat),
+	BigFloatInt  	 =MathOpCombi(DataType::BigFloat,DataType::Int),
+	BigFloatLong  	 =MathOpCombi(DataType::BigFloat,DataType::Long),
+	BigFloatBigInt   =MathOpCombi(DataType::BigFloat,DataType::BigInt),
+	BigFloatFloat	 =MathOpCombi(DataType::BigFloat,DataType::Float),
+	BigFloatDouble	 =MathOpCombi(DataType::BigFloat,DataType::Double),
+	BigFloatBigFloat =MathOpCombi(DataType::BigFloat,DataType::BigFloat),
 
-	kInvalidMathOpTypeThreshold=kBigFloatBigFloat+1,
+	kInvalidMathOpTypeThreshold=BigFloatBigFloat+1,
 };
 
-// int value for kTypeMiscInt
+// int value for DataType::MiscInt
 enum class ControlBlockType {
 	kGROUP_MASK=0xFF00,
 
 	kOPEN_COMMENT_GROUP=0x0100,
-	kOPEN_C_STYLE_COMMENT			=kOPEN_COMMENT_GROUP | 0x01,
-	kOPEN_CPP_STYLE_ONE_LINE_COMMENT=kOPEN_COMMENT_GROUP | 0x02,
+	OpenCStyleComment		  =kOPEN_COMMENT_GROUP | 0x01,
+	OpenCppStyleOneLineComment=kOPEN_COMMENT_GROUP | 0x02,
 
 	kOPEN_IF_GROUP=0x0200,
-	kSyntax_IF=kOPEN_IF_GROUP | 0x01,
+	SyntaxIf=kOPEN_IF_GROUP | 0x01,
 
 	kOPEN_LEAVABLE_LOOP_GROUP=0x0400,
-	kSyntax_FOR_PLUS 	=kOPEN_LEAVABLE_LOOP_GROUP | 0x01,
-	kSyntax_FOR_MINUS	=kOPEN_LEAVABLE_LOOP_GROUP | 0x02,
-	kSyntax_WHILE	 	=kOPEN_LEAVABLE_LOOP_GROUP | 0x11,
-	kSyntax_LOOP	 	=kOPEN_LEAVABLE_LOOP_GROUP | 0x12,
+	SyntaxForPlus 	=kOPEN_LEAVABLE_LOOP_GROUP | 0x01,
+	SyntaxForMinus	=kOPEN_LEAVABLE_LOOP_GROUP | 0x02,
+	SyntaxWhile	 	=kOPEN_LEAVABLE_LOOP_GROUP | 0x11,
+	SyntaxLoop	 	=kOPEN_LEAVABLE_LOOP_GROUP | 0x12,
 
 	kOPEN_SWITCH_GROUP=0x0800,
-	kSyntax_SWITCH=kOPEN_SWITCH_GROUP | 0x01,
+	SyntaxSwitch=kOPEN_SWITCH_GROUP | 0x01,
+	SyntaxCond	=kOPEN_SWITCH_GROUP | 0x02,
 
 	kOPEN_HERE_DOCUMENT_GROUP=0x1000,
-	kOPEN_HERE_DOCUMENT_RAW   =kOPEN_HERE_DOCUMENT_GROUP | 0x01,
-	kOPEN_HERE_DOCUMENT_DEDENT=kOPEN_HERE_DOCUMENT_GROUP | 0x02,
+	OpenHereDocumentRaw   =kOPEN_HERE_DOCUMENT_GROUP | 0x01,
+	OpenHereDocumentDedent=kOPEN_HERE_DOCUMENT_GROUP | 0x02,
+
+	kOPEN_ARG_GROUP=0x2000,
+	SyntaxArgBegin=kOPEN_ARG_GROUP | 0x01,
 };
 
 struct TypedValue {
@@ -169,6 +165,7 @@ struct TypedValue {
 		float  floatValue;
 		double doubleValue;
 
+		std::shared_ptr<const Word> lambdaPtr;
 		std::shared_ptr<std::string> stringPtr;
 		std::shared_ptr< Array<TypedValue> > arrayPtr;
 		std::shared_ptr< std::deque<TypedValue> > listPtr;
@@ -185,54 +182,58 @@ struct TypedValue {
 	#pragma warning(push)
 	#pragma warning(disable:26495)
 #endif
-	TypedValue():dataType(DataType::kTypeInvalid) {
+	TypedValue():dataType(DataType::Invalid) {
 		// empty
 	}
 
 	TypedValue(DataType inDataType):dataType(inDataType) {
-		assert(inDataType==DataType::kTypeEOC || inDataType==DataType::kTypeEOF);
+		assert(inDataType==DataType::EoC || inDataType==DataType::EoF);
 	}
 
 	inline TypedValue(const TypedValue& inSrc)
 	  :dataType(inSrc.dataType) {
-//printf("COPY-CONSTRUCTOR\n");
 		if(((int)inSrc.dataType & kType_HeavyMask)==0) {
-//printf("COPY-CONSTRUCTOR-LightWeight\n");
+			// simple memcpy for primitive data.
+			// note: double is a most large primitive.
 			doubleValue=inSrc.doubleValue;
 		} else {
 			switch(inSrc.dataType) {
-				case DataType::kTypeBigInt:
+				case DataType::Lambda:
+					new(&lambdaPtr) std::shared_ptr<const Word>(inSrc.lambdaPtr);
+					break;
+
+				case DataType::BigInt:
 					bigIntPtr=new BigInt();
 					*bigIntPtr=*inSrc.bigIntPtr;
 					break;
 
-				case DataType::kTypeBigFloat:
+				case DataType::BigFloat:
 					bigFloatPtr=new BigFloat();
 					*bigFloatPtr=*inSrc.bigFloatPtr;
 					break;
 
-				case DataType::kTypeString:
-				case DataType::kTypeSymbol:
-				case DataType::kTypeMayBeAWord:
+				case DataType::String:
+				case DataType::Symbol:
+				case DataType::MayBeAWord:
 					new(&stringPtr) std::shared_ptr<std::string>(inSrc.stringPtr);
 					break;
 
-				case DataType::kTypeArray:
+				case DataType::Array:
 					new(&arrayPtr) std::shared_ptr< Array<TypedValue> >(inSrc.arrayPtr);
 					break;
 
-				case DataType::kTypeList:
+				case DataType::List:
 					new(&listPtr) std::shared_ptr< std::deque<TypedValue> >(inSrc.listPtr);
 					break;
 
-				case DataType::kTypeKV:
+				case DataType::KV:
 					new(&kvPtr)
 						std::shared_ptr<
 							std::unordered_map<TypedValue,TypedValue,TvHash>
 						>(inSrc.kvPtr);
 					break;
 
-				case DataType::kTypeFile:
+				case DataType::File:
 					new(&filePtr) std::shared_ptr<File>(inSrc.filePtr);
 					break;
 
@@ -244,128 +245,134 @@ struct TypedValue {
 	}
 
 	TypedValue(const Word *inWordPtr)
-	  :dataType(DataType::kTypeDirectWord),wordPtr(inWordPtr) {
+	  :dataType(DataType::DirectWord),wordPtr(inWordPtr) {
 		// empty
 	}
-	
+
 	TypedValue(DataType inDataType,const Word *inWordPtr)
 	  :dataType(inDataType),wordPtr(inWordPtr) {
-		assert(inDataType==DataType::kTypeNewWord || inDataType==DataType::kTypeWord);
+		assert(inDataType==DataType::NewWord || inDataType==DataType::Word);
+	}
+
+	TypedValue(std::shared_ptr<const Word> inLambdaPtr):dataType(DataType::Lambda) {
+		new(&lambdaPtr) std::shared_ptr<const Word>(inLambdaPtr);
 	}
 
 	TypedValue(bool inBoolValue)
-	  :dataType(DataType::kTypeBool),boolValue(inBoolValue) {
+	  :dataType(DataType::Bool),boolValue(inBoolValue) {
 		// empty
 	}
 
 	TypedValue(DataType inDataType,int inIntValue)
 	  :dataType(inDataType),intValue(inIntValue) {
-		assert(inDataType==DataType::kTypeEmptySlot
-			|| inDataType==DataType::kTypeAddress);
+		assert(inDataType==DataType::EmptySlot
+			|| inDataType==DataType::Address);
 	}
 
-	TypedValue(enum Level inLevel)
-	  :dataType(DataType::kTypeThreshold),intValue((int)inLevel) {
+	TypedValue(Level inLevel)
+	  :dataType(DataType::Threshold),intValue((int)inLevel) {
 		// empty
 	}
 
-	TypedValue(DataType inDataType,enum ControlBlockType inCBT)
-	  :dataType(DataType::kTypeMiscInt),intValue((int)inCBT) {
-		assert(inDataType==DataType::kTypeMiscInt);
+	TypedValue(DataType inDataType,ControlBlockType inCBT)
+	  :dataType(DataType::MiscInt),intValue((int)inCBT) {
+		assert(inDataType==DataType::MiscInt);
 	}
 
-	TypedValue(DataType inDataType,enum Level inLevel)
-	  :dataType(DataType::kTypeEmptySlot),intValue((int)inLevel) {
-		assert(inDataType==DataType::kTypeEmptySlot);
+	TypedValue(DataType inDataType,Level inLevel)
+	  :dataType(DataType::EmptySlot),intValue((int)inLevel) {
+		assert(inDataType==DataType::EmptySlot);
 	}
 
 	TypedValue(LVOP inLVOP)
-	  :dataType(DataType::kTypeLVOP),intValue(static_cast<int>(inLVOP)) {
+	  :dataType(DataType::LVOP),intValue(static_cast<int>(inLVOP)) {
 		// empty
 	}
 
-	TypedValue(int inIntValue):dataType(DataType::kTypeInt),intValue(inIntValue) {
+	TypedValue(int inIntValue):dataType(DataType::Int),intValue(inIntValue) {
 		// empty
 	}
 
+#if 0
 	TypedValue(DebugCommandType inDCT)
-	  :dataType(DataType::kTypeInt),intValue((int)inDCT) {
+	  :dataType(DataType::Int),intValue((int)inDCT) {
 		// empty
 	}
+#endif
 
-	TypedValue(long inLongValue):dataType(DataType::kTypeLong),longValue(inLongValue) {
+	TypedValue(long inLongValue):dataType(DataType::Long),longValue(inLongValue) {
 		// empty
 	}
 
 	TypedValue(const BigInt& inBigInt)
-   	  :dataType(DataType::kTypeBigInt),bigIntPtr(new BigInt(inBigInt)) {
+   	  :dataType(DataType::BigInt),bigIntPtr(new BigInt(inBigInt)) {
 		// empty
 	}
 
-	TypedValue(float inFloatValue):dataType(DataType::kTypeFloat) {
+	TypedValue(float inFloatValue):dataType(DataType::Float) {
 		floatValue=inFloatValue;
 	}
 
-	TypedValue(double inDoubleValue):dataType(DataType::kTypeDouble) {
+	TypedValue(double inDoubleValue):dataType(DataType::Double) {
 		doubleValue=inDoubleValue;
 	}
 
 	TypedValue(const BigFloat& inBigFloat)
-	  :dataType(DataType::kTypeBigFloat),bigFloatPtr(new BigFloat(inBigFloat)) {
+	  :dataType(DataType::BigFloat),bigFloatPtr(new BigFloat(inBigFloat)) {
 		// empty
 	}
 
 	TypedValue(const std::string& inStringValue)
-	  :dataType(DataType::kTypeString),stringPtr(new std::string(inStringValue)) {
+	  :dataType(DataType::String),stringPtr(new std::string(inStringValue)) {
 		// empty
 	}
 
-	TypedValue(const std::string& inStringValue,DataType /* kTypeSymbol */)
-	  :dataType(DataType::kTypeSymbol),stringPtr(new std::string(inStringValue)) {
+	TypedValue(const std::string& inStringValue,DataType /* DataType::Symbol */)
+	  :dataType(DataType::Symbol),stringPtr(new std::string(inStringValue)) {
 		// empty
 	}
 
-	TypedValue(Array<TypedValue> *inArray):dataType(DataType::kTypeArray) {
+	TypedValue(Array<TypedValue> *inArray):dataType(DataType::Array) {
 		new(&arrayPtr) std::shared_ptr< Array<TypedValue> >(inArray);
 	}
 
-	TypedValue(std::deque<TypedValue> *inList):dataType(DataType::kTypeList) {
+	TypedValue(std::deque<TypedValue> *inList):dataType(DataType::List) {
 		new(&listPtr) std::shared_ptr< std::deque<TypedValue> >(inList);
 	}
 
 	TypedValue(std::shared_ptr< std::deque<TypedValue> > inList)
-	  :dataType(DataType::kTypeList) {
+	  :dataType(DataType::List) {
 		new(&listPtr) std::shared_ptr< std::deque<TypedValue> >();
 		listPtr=inList;
 	}
 
 	TypedValue(std::unordered_map<TypedValue,TypedValue,TvHash> *inKV)
-	  :dataType(DataType::kTypeKV) {
+	  :dataType(DataType::KV) {
 		new(&kvPtr) std::shared_ptr<
 				std::unordered_map<TypedValue,TypedValue,TvHash> >(inKV);
 	}
 
-	TypedValue(File *inFile):dataType(DataType::kTypeFile) {
+	TypedValue(File *inFile):dataType(DataType::File) {
 		new(&filePtr) std::shared_ptr<File>(inFile);
 	}
 
 	TypedValue(const Word **inIPValue)
-	  :dataType(DataType::kTypeIP),ipValue(inIPValue) {
+	  :dataType(DataType::IP),ipValue(inIPValue) {
 		// empty
 	}
 
 	TypedValue(ControlBlockType inCBT)
-	  :dataType(DataType::kTypeCB),intValue(static_cast<int>(inCBT)) {
+	  :dataType(DataType::CB),intValue(static_cast<int>(inCBT)) {
 		// empty
 	}
 
 	TypedValue(DataType inParamDestDataType,const Word **inParamDest)
-	  :dataType(DataType::kTypeParamDest),ipValue(inParamDest) {
-		assert(inParamDestDataType==DataType::kTypeParamDest);
+	  :dataType(DataType::ParamDest),ipValue(inParamDest) {
+		assert(inParamDestDataType==DataType::ParamDest);
 	}
 
 	TypedValue(WordFunc inStdCodePtr)
-	  :dataType(DataType::kTypeStdCode),stdCodePtr(inStdCodePtr) {
+	  :dataType(DataType::StdCode),stdCodePtr(inStdCodePtr) {
 		// empty
 	}
 #ifdef _MSVC_VER
@@ -375,18 +382,20 @@ struct TypedValue {
 	~TypedValue() {
 		if((((int)dataType) & kType_HeavyMask)==0) { return; }
 		switch(dataType) {
-			case DataType::kTypeSymbol:
-			case DataType::kTypeString:
-			case DataType::kTypeMayBeAWord:
-								stringPtr.reset();	break;
+			case DataType::Lambda:	lambdaPtr.reset();	break;
 
-			case DataType::kTypeArray:	arrayPtr.reset();	break;
-			case DataType::kTypeList:	listPtr.reset();	break;
-			case DataType::kTypeKV:		kvPtr.reset();		break;
-			case DataType::kTypeFile:	filePtr.reset();	break;
+			case DataType::Symbol:
+			case DataType::String:
+			case DataType::MayBeAWord:
+				stringPtr.reset();	break;
 
-			case DataType::kTypeBigInt:		delete(bigIntPtr);		break;
-			case DataType::kTypeBigFloat:	delete(bigFloatPtr);	break;
+			case DataType::Array:	arrayPtr.reset();	break;
+			case DataType::List:	listPtr.reset();	break;
+			case DataType::KV:		kvPtr.reset();		break;
+			case DataType::File:	filePtr.reset();	break;
+
+			case DataType::BigInt:		delete(bigIntPtr);		break;
+			case DataType::BigFloat:	delete(bigFloatPtr);	break;
 
 			default:
 				;	// empty
@@ -396,70 +405,77 @@ struct TypedValue {
 	inline TypedValue& operator=(const TypedValue& inSrc) {
 		if(dataType!=inSrc.dataType) {
 			switch(dataType) {
-				case DataType::kTypeSymbol:
-				case DataType::kTypeString:
-				case DataType::kTypeMayBeAWord:
+				case DataType::Lambda:	lambdaPtr.reset();	break;
+
+				case DataType::Symbol:
+				case DataType::String:
+				case DataType::MayBeAWord:
 					stringPtr.reset();
 					break;
 
-				case DataType::kTypeArray:	arrayPtr.reset();	break;
-				case DataType::kTypeList: 	listPtr.reset();	break;
-				case DataType::kTypeKV:		kvPtr.reset();		break;
-				case DataType::kTypeFile:	filePtr.reset();	break;
+				case DataType::Array:	arrayPtr.reset();	break;
+				case DataType::List: 	listPtr.reset();	break;
+				case DataType::KV:		kvPtr.reset();		break;
+				case DataType::File:	filePtr.reset();	break;
 
-				case DataType::kTypeBigInt:		delete(bigIntPtr);		break;
-				case DataType::kTypeBigFloat:	delete(bigFloatPtr);	break;
+				case DataType::BigInt:		delete(bigIntPtr);		break;
+				case DataType::BigFloat:	delete(bigFloatPtr);	break;
 
 				default:
 					;	// dummy
 			}
 
 			switch(inSrc.dataType) {
-				case DataType::kTypeSymbol:
-				case DataType::kTypeString:
-				case DataType::kTypeMayBeAWord:
+				case DataType::Lambda:
+					new(&lambdaPtr) std::shared_ptr<const Word>(inSrc.lambdaPtr);
+					dataType=inSrc.dataType;
+					return *this;
+
+				case DataType::Symbol:
+				case DataType::String:
+				case DataType::MayBeAWord:
 					new(&stringPtr) std::shared_ptr<std::string>(inSrc.stringPtr);
 					dataType=inSrc.dataType;
 					return *this;
 
-				case DataType::kTypeArray:
+				case DataType::Array:
 					new(&arrayPtr) std::shared_ptr< Array<TypedValue> >(inSrc.arrayPtr);
-					dataType=DataType::kTypeArray;
+					dataType=DataType::Array;
 					return *this;
 
-				case DataType::kTypeList:
+				case DataType::List:
 					new(&listPtr)
 						std::shared_ptr< std::deque<TypedValue> >(inSrc.listPtr);
-					dataType=DataType::kTypeList;
+					dataType=DataType::List;
 					return *this;
 
-				case DataType::kTypeKV:
+				case DataType::KV:
 					new(&kvPtr)
 						std::shared_ptr<
 							std::unordered_map<TypedValue,TypedValue,TvHash>
 						>(inSrc.kvPtr);
-					dataType=DataType::kTypeKV;
+					dataType=DataType::KV;
 					return *this;
 
-				case DataType::kTypeFile:
+				case DataType::File:
 					new(&filePtr) std::shared_ptr<File>(inSrc.filePtr);
-					dataType=DataType::kTypeFile;
+					dataType=DataType::File;
 					return *this;
 
-				case DataType::kTypeBigInt:
+				case DataType::BigInt:
 					bigIntPtr=new BigInt();
 					*bigIntPtr=*inSrc.bigIntPtr;
-					dataType=DataType::kTypeBigInt;
+					dataType=DataType::BigInt;
 					return *this;
 
-				case DataType::kTypeBigFloat:
+				case DataType::BigFloat:
 					bigFloatPtr=new BigFloat();
 					*bigFloatPtr=*inSrc.bigFloatPtr;
-					dataType=DataType::kTypeBigFloat;
+					dataType=DataType::BigFloat;
 					return *this;
 
-				case DataType::kTypeStdCode:
-					dataType=DataType::kTypeStdCode;
+				case DataType::StdCode:
+					dataType=DataType::StdCode;
 					stdCodePtr=inSrc.stdCodePtr;
 					return *this;
 
@@ -469,87 +485,92 @@ struct TypedValue {
 		}
 
 		switch(inSrc.dataType) {
-			case DataType::kTypeInvalid:
-			case DataType::kTypeEOC:
-			case DataType::kTypeEOF:
+			case DataType::Invalid:
+			case DataType::EoC:
+			case DataType::EoF:
 				dataType=inSrc.dataType;
 				break;
 
-			case DataType::kTypeDirectWord:
-			case DataType::kTypeNewWord:
-			case DataType::kTypeWord:
+			case DataType::DirectWord:
+			case DataType::NewWord:
+			case DataType::Word:
 				dataType=inSrc.dataType;
 				wordPtr=inSrc.wordPtr;
 				break;
 
-			case DataType::kTypeBool:
+			case DataType::Lambda:
+				dataType=inSrc.dataType;
+				lambdaPtr=inSrc.lambdaPtr;
+				break;
+
+			case DataType::Bool:
 				dataType=inSrc.dataType;
 		 		boolValue=inSrc.boolValue;
 				break;
 
-			case DataType::kTypeAddress:
-			case DataType::kTypeThreshold:
-			case DataType::kTypeEmptySlot:
-			case DataType::kTypeMiscInt:
-			case DataType::kTypeLVOP:
-			case DataType::kTypeCB:
-			case DataType::kTypeInt:
+			case DataType::Address:
+			case DataType::Threshold:
+			case DataType::EmptySlot:
+			case DataType::MiscInt:
+			case DataType::LVOP:
+			case DataType::CB:
+			case DataType::Int:
 				dataType=inSrc.dataType;
 				intValue=inSrc.intValue;
 				break;
 
-			case DataType::kTypeLong:
+			case DataType::Long:
 				dataType=inSrc.dataType;
 				longValue=inSrc.longValue;
 				break;
-			case DataType::kTypeFloat:
+			case DataType::Float:
 				dataType=inSrc.dataType;
 				floatValue=inSrc.floatValue;
 				break;
-			case DataType::kTypeDouble:
+			case DataType::Double:
 				dataType=inSrc.dataType;
 				doubleValue=inSrc.doubleValue;
 				break;
 
-			case DataType::kTypeBigInt:
-				assert(dataType==DataType::kTypeBigInt
-					   && inSrc.dataType==DataType::kTypeBigInt);
+			case DataType::BigInt:
+				assert(dataType==DataType::BigInt
+					   && inSrc.dataType==DataType::BigInt);
 				*bigIntPtr=*inSrc.bigIntPtr;
 				break;
 
-			case DataType::kTypeBigFloat:
-				assert(dataType==DataType::kTypeBigFloat
-					   && inSrc.dataType==DataType::kTypeBigFloat);
+			case DataType::BigFloat:
+				assert(dataType==DataType::BigFloat
+					   && inSrc.dataType==DataType::BigFloat);
 				*bigFloatPtr=*inSrc.bigFloatPtr;
 				break;
 
-			case DataType::kTypeParamDest:
-			case DataType::kTypeIP:
+			case DataType::ParamDest:
+			case DataType::IP:
 				dataType=inSrc.dataType;
 				ipValue=inSrc.ipValue;
 				break;
 
-			case DataType::kTypeSymbol:
-			case DataType::kTypeString:
-			case DataType::kTypeMayBeAWord:
+			case DataType::Symbol:
+			case DataType::String:
+			case DataType::MayBeAWord:
 				dataType=inSrc.dataType;
 				stringPtr=inSrc.stringPtr;
 				break;
 
-			case DataType::kTypeArray:
+			case DataType::Array:
 				dataType=inSrc.dataType;
 				arrayPtr.reset();
 				new(&arrayPtr) std::shared_ptr< Array<TypedValue> >(inSrc.arrayPtr);
 				break;
 
-			case DataType::kTypeList:
+			case DataType::List:
 				dataType=inSrc.dataType;
 				listPtr.reset();
 				new(&listPtr)
 					std::shared_ptr< std::deque<TypedValue> >(inSrc.listPtr);
 				break;
 
-			case DataType::kTypeKV:
+			case DataType::KV:
 				dataType=inSrc.dataType;
 				kvPtr.reset();
 				new(&kvPtr)
@@ -558,12 +579,12 @@ struct TypedValue {
 					>(inSrc.kvPtr);
 				break;
 
-			case DataType::kTypeFile:
+			case DataType::File:
 				dataType=inSrc.dataType;
 				new(&filePtr) std::shared_ptr<File>(inSrc.filePtr);
 				break;
 
-			case DataType::kTypeStdCode:
+			case DataType::StdCode:
 				dataType=inSrc.dataType;
 				stdCodePtr=inSrc.stdCodePtr;
 				break;
@@ -579,172 +600,181 @@ struct TypedValue {
 
 	inline void Set(int inValue) {
 		switch(dataType) {
-			case DataType::kTypeInvalid:
-			case DataType::kTypeInt:
-			case DataType::kTypeLong:
-			case DataType::kTypeFloat:
-			case DataType::kTypeDouble:
-			case DataType::kTypeCB:
-			case DataType::kTypeStdCode:
+			case DataType::Invalid:
+			case DataType::Int:
+			case DataType::Long:
+			case DataType::Float:
+			case DataType::Double:
+			case DataType::CB:
+			case DataType::StdCode:
 				intValue=inValue;
 				break;
-			case DataType::kTypeBigInt:
+			case DataType::BigInt:
 				delete(bigIntPtr);
 				intValue=inValue;
 				break;
-			case DataType::kTypeBigFloat:
+			case DataType::BigFloat:
 				delete(bigFloatPtr);
 				intValue=inValue;
 				break;
 			default:
 				switch(dataType) {
-					case DataType::kTypeSymbol:
-					case DataType::kTypeString:
-					case DataType::kTypeMayBeAWord:
+					case DataType::Lambda:	lambdaPtr.reset();	break;
+
+					case DataType::Symbol:
+					case DataType::String:
+					case DataType::MayBeAWord:
 						stringPtr.reset();
 						break;
 
-					case DataType::kTypeArray:	arrayPtr.reset();	break;
-					case DataType::kTypeList: 	listPtr.reset();	break;
-					case DataType::kTypeKV:		kvPtr.reset();		break;
-					case DataType::kTypeFile:	filePtr.reset();	break;
+					case DataType::Array:	arrayPtr.reset();	break;
+					case DataType::List: 	listPtr.reset();	break;
+					case DataType::KV:		kvPtr.reset();		break;
+					case DataType::File:	filePtr.reset();	break;
 
 					default:
 						;	// dummy
 				}
 				intValue=inValue;
 		}
-		dataType=DataType::kTypeInt;
+		dataType=DataType::Int;
 	}
 
 	inline void Set(float inValue) {
 		switch(dataType) {
-			case DataType::kTypeInvalid:
-			case DataType::kTypeInt:
-			case DataType::kTypeLong:
-			case DataType::kTypeFloat:
-			case DataType::kTypeDouble:
-			case DataType::kTypeCB:
-			case DataType::kTypeStdCode:
+			case DataType::Invalid:
+			case DataType::Int:
+			case DataType::Long:
+			case DataType::Float:
+			case DataType::Double:
+			case DataType::CB:
+			case DataType::StdCode:
 				floatValue=inValue;
 				break;
-			case DataType::kTypeBigInt:
+			case DataType::BigInt:
 				delete(bigIntPtr);
 				floatValue=inValue;
 				break;
-			case DataType::kTypeBigFloat:
+			case DataType::BigFloat:
 				delete(bigFloatPtr);
 				floatValue=inValue;
 				break;
 			default:
 				switch(dataType) {
-					case DataType::kTypeSymbol:
-					case DataType::kTypeString:
-					case DataType::kTypeMayBeAWord:
+					case DataType::Lambda:	lambdaPtr.reset();	break;
+
+					case DataType::Symbol:
+					case DataType::String:
+					case DataType::MayBeAWord:
 						stringPtr.reset();
 						break;
 
-					case DataType::kTypeArray:	arrayPtr.reset();	break;
-					case DataType::kTypeList: 	listPtr.reset();	break;
-					case DataType::kTypeKV:		kvPtr.reset();		break;
-					case DataType::kTypeFile:	filePtr.reset();	break;
+					case DataType::Array:	arrayPtr.reset();	break;
+					case DataType::List: 	listPtr.reset();	break;
+					case DataType::KV:		kvPtr.reset();		break;
+					case DataType::File:	filePtr.reset();	break;
 
 					default:
 						;	// dummy
 				}
 				floatValue=inValue;
 		}
-		dataType=DataType::kTypeFloat;
+		dataType=DataType::Float;
 	}
 
 	inline void Set(double inValue) {
 		switch(dataType) {
-			case DataType::kTypeInvalid:
-			case DataType::kTypeInt:
-			case DataType::kTypeLong:
-			case DataType::kTypeFloat:
-			case DataType::kTypeDouble:
-			case DataType::kTypeCB:
-			case DataType::kTypeStdCode:
+			case DataType::Invalid:
+			case DataType::Int:
+			case DataType::Long:
+			case DataType::Float:
+			case DataType::Double:
+			case DataType::CB:
+			case DataType::StdCode:
 				doubleValue=inValue;
 				break;
-			case DataType::kTypeBigInt:
+			case DataType::BigInt:
 				delete(bigIntPtr);
 				doubleValue=inValue;
 				break;
-			case DataType::kTypeBigFloat:
+			case DataType::BigFloat:
 				delete(bigFloatPtr);
 				doubleValue=inValue;
 				break;
 			default:
 				switch(dataType) {
-					case DataType::kTypeSymbol:
-					case DataType::kTypeString:
-					case DataType::kTypeMayBeAWord:
+					case DataType::Lambda:	lambdaPtr.reset();	break;
+
+					case DataType::Symbol:
+					case DataType::String:
+					case DataType::MayBeAWord:
 						stringPtr.reset();
 						break;
 
-					case DataType::kTypeArray:	arrayPtr.reset();	break;
-					case DataType::kTypeList: 	listPtr.reset();	break;
-					case DataType::kTypeKV:		kvPtr.reset();		break;
-					case DataType::kTypeFile:	filePtr.reset();	break;
+					case DataType::Array:	arrayPtr.reset();	break;
+					case DataType::List: 	listPtr.reset();	break;
+					case DataType::KV:		kvPtr.reset();		break;
+					case DataType::File:	filePtr.reset();	break;
 
 					default:
 						;	// dummy
 				}
 				doubleValue=inValue;
 		}
-		dataType=DataType::kTypeDouble;
+		dataType=DataType::Double;
 	}
 
 	inline size_t Hash() const {
 		switch(dataType) {
-			case DataType::kTypeInvalid:
-			case DataType::kTypeBigInt:
-			case DataType::kTypeBigFloat:
-			case DataType::kTypeEOC:
-			case DataType::kTypeEOF:
+			case DataType::Invalid:
+			case DataType::BigInt:
+			case DataType::BigFloat:
+			case DataType::EoC:
+			case DataType::EoF:
 				return std::hash<int>()((int)dataType);
 
-			case DataType::kTypeWord:
-			case DataType::kTypeDirectWord:
-			case DataType::kTypeNewWord:
+			case DataType::Word:
+			case DataType::DirectWord:
+			case DataType::NewWord:
 				return std::hash<const Word*>()(wordPtr);
 
-			case DataType::kTypeIP:
-			case DataType::kTypeParamDest:
+			case DataType::Lambda:
+				return std::hash<const Word*>()(lambdaPtr.get());
+
+			case DataType::IP:
+			case DataType::ParamDest:
 				return std::hash<const Word**>()(ipValue);
 
-			case DataType::kTypeBool:
+			case DataType::Bool:
 				return std::hash<bool>()(boolValue);
 
-			case DataType::kTypeInt:
-			case DataType::kTypeThreshold:
-			case DataType::kTypeEmptySlot:
-			case DataType::kTypeAddress:
-			case DataType::kTypeMiscInt:
-			case DataType::kTypeLVOP:
-			case DataType::kTypeCB:
+			case DataType::Int:
+			case DataType::Threshold:
+			case DataType::EmptySlot:
+			case DataType::Address:
+			case DataType::MiscInt:
+			case DataType::LVOP:
+			case DataType::CB:
 				return std::hash<int>()(intValue);
 
-			case DataType::kTypeLong:
+			case DataType::Long:
 				return std::hash<long>()(longValue);
 
-			case DataType::kTypeFloat:
+			case DataType::Float:
 				return std::hash<float>()(floatValue);
 
-			case DataType::kTypeDouble:
+			case DataType::Double:
 				return std::hash<double>()(doubleValue);
 
-			case DataType::kTypeString:
-			case DataType::kTypeSymbol:
-			case DataType::kTypeMayBeAWord:
+			case DataType::String:
+			case DataType::Symbol:
+			case DataType::MayBeAWord:
 				return std::hash<std::string>()(*stringPtr);
 
-			case DataType::kTypeStdCode:
+			case DataType::StdCode:
 				return std::hash<WordFunc>()(stdCodePtr);
 
-			case DataType::kTypeArray: {
+			case DataType::Array: {
 					int length=arrayPtr->length;
 					size_t hash=std::hash<int>()(length);
 					for(int i=0; i<length; i++) {
@@ -753,7 +783,7 @@ struct TypedValue {
 					return hash;
 				}
 
-			case DataType::kTypeList: {
+			case DataType::List: {
 					int length=(int)listPtr->size();
 					size_t hash=std::hash<int>()(length);
 					for(int i=0; i<length; i++) {
@@ -762,7 +792,7 @@ struct TypedValue {
 					return hash;
 				}
 
-			case DataType::kTypeKV: {
+			case DataType::KV: {
 					size_t hash=std::hash<int>()((int)kvPtr->size());
 					for(auto kv : *kvPtr) {
 						hash^=kv.first.Hash();
@@ -771,7 +801,7 @@ struct TypedValue {
 					return hash;
 				}
 
-			case DataType::kTypeFile:
+			case DataType::File:
 				return std::hash<File*>()(filePtr.get());
 			default:
 				fprintf(stderr, "SYSTEM ERROR: TypedValue::Hash().");
@@ -779,21 +809,52 @@ struct TypedValue {
 		}
 	}
 
-	inline bool IsInvalid() const { return dataType==DataType::kTypeInvalid; }
+	inline bool IsInvalid() const { return dataType==DataType::Invalid; }
 
-	inline bool HasWordPtr() const {
-		return dataType==DataType::kTypeWord
-			|| dataType==DataType::kTypeDirectWord
-			|| dataType==DataType::kTypeNewWord;
+	inline bool HasWordPtr(const Word **outWordPtr) const {
+		if(dataType==DataType::Word
+		   || dataType==DataType::DirectWord
+		   || dataType==DataType::NewWord
+		   || dataType==DataType::Lambda) {
+			if(outWordPtr!=NULL) {
+				*outWordPtr = dataType==DataType::Lambda ? lambdaPtr.get()
+														 : wordPtr;
+			}
+			return true;
+		} else {
+			if(outWordPtr!=NULL) { *outWordPtr=NULL; }
+			return false;
+		}
 	}
 
 	inline bool IsNumber() const {
-		return dataType==DataType::kTypeInt
-			|| dataType==DataType::kTypeLong
-			|| dataType==DataType::kTypeFloat
-			|| dataType==DataType::kTypeDouble
-			|| dataType==DataType::kTypeBigInt
-			|| dataType==DataType::kTypeBigFloat;
+		return dataType==DataType::Int
+			|| dataType==DataType::Long
+			|| dataType==DataType::Float
+			|| dataType==DataType::Double
+			|| dataType==DataType::BigInt
+			|| dataType==DataType::BigFloat;
+	}
+
+	inline bool IsZero() const {
+		return (dataType==DataType::Int      && intValue==0)
+			|| (dataType==DataType::Long     && longValue==0)
+			|| (dataType==DataType::Float    && floatValue==0) 
+			|| (dataType==DataType::Double   && doubleValue==0)
+			|| (dataType==DataType::BigInt   && *bigIntPtr==0)
+			|| (dataType==DataType::BigFloat && *bigFloatPtr==0);
+	}
+
+	inline bool IsInteger() const {
+		return dataType==DataType::Int
+			|| dataType==DataType::Long
+			|| dataType==DataType::BigInt;
+	}
+
+	inline bool IsCollection() const {
+		return dataType==DataType::Array
+			|| dataType==DataType::List
+			|| dataType==DataType::KV;
 	}
 
 	int GetLevel() const;
@@ -803,9 +864,11 @@ struct TypedValue {
 
 	PP_API std::string GetTypeStr() const;
 
-	PP_API void PrintValue(int inIndent=0) const;
+	PP_API void PrintValue(int inIndent=0,bool inTypePostfix=false) const;
 	PP_API std::string GetEscapedValueString(int inIndent=-1) const;
-	PP_API std::string GetValueString(int inIndent=-1) const;
+	PP_API std::string GetValueString(int inIndent=-1,
+									  bool inDetail=true,
+									  bool inTypePostfix=false) const;
 
 	PP_API void Dump() const;
 };
@@ -814,42 +877,45 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 	if(inTV1.dataType!=inTV2.dataType) { return false; }
 
 	switch(inTV1.dataType) {
-		case DataType::kTypeInvalid:
-		case DataType::kTypeEOC:
-		case DataType::kTypeEOF:
+		case DataType::Invalid:
+		case DataType::EoC:
+		case DataType::EoF:
 			return true;
 
-		case DataType::kTypeParamDest:
-		case DataType::kTypeIP:
+		case DataType::ParamDest:
+		case DataType::IP:
 			return inTV1.ipValue==inTV2.ipValue;
 
-		case DataType::kTypeDirectWord:
-		case DataType::kTypeNewWord:
+		case DataType::DirectWord:
+		case DataType::NewWord:
 			return inTV1.wordPtr==inTV2.wordPtr;
 
-		case DataType::kTypeBool:
-		case DataType::kTypeEmptySlot:
+		case DataType::Lambda: 		return inTV1.lambdaPtr==inTV2.lambdaPtr;
+
+		case DataType::Bool:
+		case DataType::EmptySlot:
 			return inTV1.boolValue==inTV2.boolValue;
 
-		case DataType::kTypeAddress:
-		case DataType::kTypeThreshold:
-		case DataType::kTypeMiscInt:
-		case DataType::kTypeLVOP:
-		case DataType::kTypeCB:
-		case DataType::kTypeInt: return inTV1.intValue==inTV2.intValue;
+		case DataType::Address:
+		case DataType::Threshold:
+		case DataType::MiscInt:
+		case DataType::LVOP:
+		case DataType::CB:
+		case DataType::Int:
+			return inTV1.intValue==inTV2.intValue;
 
-		case DataType::kTypeLong:		return inTV1.longValue   ==inTV2.longValue;
-		case DataType::kTypeBigInt:		return *inTV1.bigIntPtr  ==*inTV2.bigIntPtr;
-		case DataType::kTypeFloat: 		return inTV1.floatValue  ==inTV2.floatValue;
-		case DataType::kTypeDouble:		return inTV1.doubleValue ==inTV2.doubleValue;
-		case DataType::kTypeBigFloat:	return *inTV1.bigFloatPtr==*inTV2.bigFloatPtr;
+		case DataType::Long:		return inTV1.longValue   ==inTV2.longValue;
+		case DataType::BigInt:		return *inTV1.bigIntPtr  ==*inTV2.bigIntPtr;
+		case DataType::Float: 		return inTV1.floatValue  ==inTV2.floatValue;
+		case DataType::Double:		return inTV1.doubleValue ==inTV2.doubleValue;
+		case DataType::BigFloat:	return *inTV1.bigFloatPtr==*inTV2.bigFloatPtr;
 
-		case DataType::kTypeSymbol:
-		case DataType::kTypeString:
-		case DataType::kTypeMayBeAWord:
-							return *inTV1.stringPtr.get()==*inTV2.stringPtr.get();
+		case DataType::Symbol:
+		case DataType::String:
+		case DataType::MayBeAWord:
+			return *inTV1.stringPtr.get()==*inTV2.stringPtr.get();
 
-		case DataType::kTypeArray:
+		case DataType::Array:
 			if(!(inTV1.arrayPtr->length==inTV2.arrayPtr->length)) {
 				return false;
 			}
@@ -860,7 +926,7 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 			}
 			return true;
 
-		case DataType::kTypeList:
+		case DataType::List:
 			if(inTV1.listPtr->size()!=inTV2.listPtr->size()) {
 				return false;
 			}
@@ -874,13 +940,13 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 			}
 			return true;
 
-		case DataType::kTypeKV:
+		case DataType::KV:
 			return (*inTV1.kvPtr.get())==(*inTV2.kvPtr.get());
 
-		case DataType::kTypeFile:
+		case DataType::File:
 			return inTV1.filePtr.get()==inTV2.filePtr.get();
 
-		case DataType::kTypeStdCode:
+		case DataType::StdCode:
 			return inTV1.stdCodePtr==inTV2.stdCodePtr;
 
 		default:
@@ -904,4 +970,6 @@ typedef std::unordered_map<TypedValue,TypedValue,TypedValue::TvHash> KeyValue;
 					? sizeof(Mutex)/sizeof(Word*) : sizeof(Mutex)/sizeof(Word*)+1)
 
 PP_API TypedValue FullClone(TypedValue& inTV);
+PP_API bool IsValidDataTypeValue(DataType inDataType);
 
+PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2);

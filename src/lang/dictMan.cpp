@@ -34,7 +34,7 @@ PP_API bool Install(Word *inWord,const bool inUseShortendForm) {
 	
 	auto dictIter=Dict.find(inWord->longName);
 	if(dictIter!=Dict.end() && dictIter->second->isForgetable==false) {
-		return GlobalContext->Error(ErrorIdWithString::E_CAN_NOT_INSTALL_UNOVERWRITABLE,inWord->longName);
+		return GlobalContext->Error(ErrorIdWithString::CanNotInstallUnoverWritable,inWord->longName);
 	}
 	Dict[inWord->longName]=inWord;
 
@@ -65,7 +65,7 @@ PP_API bool Install(Word *inWord,const bool inUseShortendForm) {
 			} else {
 				const Word *shortendWord=dictIter->second;
 				if(shortendWord->isForgetable==false) {
-					GlobalContext->Error(ErrorIdWithString::E_CAN_NOT_MAKE_SHORTEN_NAME_UNOVERWRITABLE,
+					GlobalContext->Error(ErrorIdWithString::CanNotMakeShortenNameUnoverWritable,
 										shortendWord->shortName);
 				} else {
 					delete shortendWord;
@@ -117,11 +117,11 @@ PP_API void Alias(const char *inNewName,const char *inSrcName) {
 
 static bool ambigous(Context& inContext) NOEXCEPT {
 	const Word *self=(*inContext.ip);
-	inContext.Error(ErrorIdWithString::E_AMBIGOUS_WORD_NAME,self->shortName);
+	inContext.Error(ErrorIdWithString::AmbigousWordName,self->shortName);
 
 	auto iter=gNameToVocName.find(self->shortName);
 	if(iter==gNameToVocName.end()) {
-		inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+		inContext.Error(NoParamErrorID::SystemError);
 		exit(-1);
 	}
 	auto vector=iter->second;
@@ -145,7 +145,9 @@ IP---> Word* ----->+---------+
 PP_API bool Docol(Context& inContext) NOEXCEPT {
 	inContext.IS.emplace_back(inContext.ip);
 	const Word *word=(*inContext.ip);
+// printf("DOCOL: word=%s IN env size=%d\n",word->shortName.c_str(),(int)inContext.Env.size());
 	if(word->numOfLocalVar>0) {
+// printf("DOCOL: Word=%s PUSH ENV (env size=%d)\n",word->shortName.c_str(),(int)inContext.Env.size());
 		inContext.Env.push_back(LocalVarSlot(word->numOfLocalVar,TypedValue()));
 	}
 	inContext.ip=word->param;

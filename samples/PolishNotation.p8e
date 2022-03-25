@@ -1,0 +1,28 @@
+// Polish notation example.
+// to test, ../para PolishNotation.pp test
+
+`sq : dup * ;	// square
+
+// f := sqrt(a*a+b*b);
+
+// in C equivalent to
+// 	f(float a,float b) {
+//		return sqrt( plus( sq(a),
+//						   sq(b) ) );
+//	}
+`f : ( a b ) local
+	`sqrt :( "+" :( `sq :( `a , );
+					  `sq :( `b , ); ); );
+;
+
+// usual style
+`f2 : ( a b ) local
+	`a , sq `b , sq + sqrt
+;
+
+// optimized
+`f3 : sq swap sq + sqrt ;
+
+`test : 3 4 f 5.0 != if "NG" .cr -1 exit else "GOOD" .cr then ;
+
+

@@ -1,4 +1,4 @@
-"help" :
+`help :
 	<<<
 		-------------------------------------------------------------------------------
 		Project Euler No.25 -> 1000 PE25
@@ -19,7 +19,7 @@ interactive? not if
 then
 
 // n --- n
-"PE25" :
+`PE25 :
 	1 - 10LL swap pow `upper local // upper=10^(n-1)
 	2 `count local
 	1 1LL while dup `upper , <= do
@@ -30,9 +30,9 @@ then
 	`count ,
 ;
 
-"run" : PE25 .cr ;
+`run : PE25 .cr ;
 
-"test" :
+`test :
 	1000 PE25
 	4782 != if "NG" .cr -1 exit then
 	"GOOD" .cr

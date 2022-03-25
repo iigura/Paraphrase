@@ -30,10 +30,10 @@ PP_API void ShowStack(Stack& inStack,const char *inStackName) {
 		const size_t n=inStack.size();
 		for(size_t i=0; i<n; i++) {
 			std::string s;
-			if(inStack[i].dataType==DataType::kTypeString) {
+			if(inStack[i].dataType==DataType::String) {
 				s=inStack[i].GetTypeStr()+" '"+inStack[i].GetEscapedValueString(-1)+"'";
 			} else {
-				s=inStack[i].GetTypeStr()+" "+inStack[i].GetValueString(-1);
+				s=inStack[i].GetTypeStr()+" "+inStack[i].GetValueString(-1,false,true);
 			}
 			v.push_back(s);
 			maxLength=std::max(maxLength,(int)s.size());

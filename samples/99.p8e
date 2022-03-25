@@ -1,17 +1,21 @@
 // for test
 //	../para 99.pp test
 
-"help" : <<<
-
+`help : <<<
+	=======================================================
 	This is a sample program of for+ ~ next loop.
 	This program outputs a Japanese multiplication table.
 
 	\tusage: ../para 99.pp run
 
+	\           or
+
+	\tusage: ../para 99.pp test
+	=======================================================
 	>>> write
 ;
 
-"run" :
+`run :
 	1 10 for+
 		i
 		1 10 for+ dup i * "%2d " putf next
@@ -23,10 +27,10 @@ interactive? not if
 	args size 0? if help then 
 then
 
-"ng" : "NG" .cr -1 exit ;
-"check" : != if ng then ;
+`ng : "NG" .cr -1 exit ;
+`check : != if ng then ;
 
-"test" :
+`test :
 	use-mock-stdout
 		run
 	use-stdout

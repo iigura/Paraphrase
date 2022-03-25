@@ -46,6 +46,7 @@ struct Word {
 
 	const Word **param=NULL;
 	CodeThread *tmpParam=NULL;
+	std::shared_ptr<const Word> paramSrcWord;
 	std::unordered_map<int,int>  *addressOffsetToIndexMapper=NULL;
 
 	LocalVarDict localVarDict;
@@ -125,4 +126,8 @@ struct Word {
 PP_API const Word *GetWordPtr(const std::string& inWordName);
 PP_API const Word *GetWordPtr(Context& inContext,const TypedValue& inTV);
 PP_API void CopyWordProperty(Word *outDestWord,const Word *inSrcWord);
+
+PP_API void SetDeleteByForget();
+PP_API void ClearDeleteByForget();
+PP_API bool CheckDeleteByForget();
 

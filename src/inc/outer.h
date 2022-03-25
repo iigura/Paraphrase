@@ -11,11 +11,12 @@
 
 // result code of outer interpreter 
 enum class OIResult {
-	OI_NO_ERROR,		// no error
-	OI_E_WORD,			// error(s) occured in some word.
-	OI_E_INVALID_TOKEN,	// token is invalid.
-	OI_E_NO_SUCH_WORD,	// no such a word
-	OI_E_SYSTEM_ERROR,	// unknown bug is occured.
+	NoError,			// no error
+	WordExecutingError,	// error(s) occured in some word.
+	InvalidToken,		// token is invalid.
+	NoSuchWord,			// no such a word
+	OpenQuoteError,		// single or double quotation mismatch.
+	SystemError,		// unknown bug is occured.
 };
 
 PP_API void InitOuterInterpreter();

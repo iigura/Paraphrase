@@ -12,12 +12,12 @@ void InitDict_Assoc() {
 	// A X --- A B
 	Install(new Word("has-key?",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue tvKey=Pop(inContext.DS);
 		TypedValue& tvKV=ReadTOS(inContext.DS);
-		if(tvKV.dataType!=DataType::kTypeKV) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_KV,tvKV);
+		if(tvKV.dataType!=DataType::KV) {
+			return inContext.Error(InvalidTypeErrorID::SecondKV,tvKV);
 		}
 		inContext.DS.emplace_back(tvKV.kvPtr->count(tvKey)>=1);
 		NEXT;
@@ -25,12 +25,12 @@ void InitDict_Assoc() {
 	// A X --- A X B
 	Install(new Word("@has-key?",WORD_FUNC {
 		if(inContext.DS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_DS_AT_LEAST_2);
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
 		TypedValue& tvKey=ReadTOS(inContext.DS);
 		TypedValue& tvKV=ReadSecond(inContext.DS);
-		if(tvKV.dataType!=DataType::kTypeKV) {
-			return inContext.Error(InvalidTypeErrorID::E_SECOND_KV,tvKV);
+		if(tvKV.dataType!=DataType::KV) {
+			return inContext.Error(InvalidTypeErrorID::SecondKV,tvKV);
 		}
 		inContext.DS.emplace_back(tvKV.kvPtr->count(tvKey)>=1);
 		NEXT;

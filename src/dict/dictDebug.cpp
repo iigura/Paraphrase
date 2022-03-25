@@ -5,13 +5,9 @@
 #include "context.h"
 #include "inner.h"
 
-static void clearDebugCommand(Context& ioContext);
-static void setDebugCommand(Context& ioContext,DebugCommandType inDebugCommand);
-static DebugCommandType getDebugCommand(Context& inContext);
-static bool isOnDebugger(Context& inContext);
 static const Word *step(Context& inContext,bool inIsStepIn);
 static void dump(const Word *inWord,Context& inContext);
-static bool sendDebugCommand(Context& inContext,DebugCommandType inDebugCommand);
+static bool sendDebugCommand(Context& inContext,DebugCommand inDebugCommand);
 
 const char *const kDebugPrompt="debug> ";
 const TypedValue kDebugChannelKey("_DEBUG_COMMAND");
@@ -19,16 +15,15 @@ const TypedValue kDebugChannelKey("_DEBUG_COMMAND");
 static std::string gLastInput="";
 
 static bool docolForDebug(Context& inContext) NOEXCEPT {
-	inContext.IS.emplace_back(inContext.ip);
 	const Word *word=(*inContext.ip);
-	if(word->numOfLocalVar>0) {
-		inContext.Env.push_back(LocalVarSlot(word->numOfLocalVar,TypedValue()));
-	}
+	Docol(inContext);
+
+	bool tronBackup=IsTraceOn();
+	SetTraceOn();
 
 	printf("[--- break at the word '%s'. ---]\n",word->longName.c_str());
-	inContext.ip=word->param;
-	// word->Dump(inContext);
 	for(;;) {
+		if( IsTraceOn() ) { ShowTrace(inContext); }
 		bool isEOF=false;
 		dump(word,inContext);
 		std::string line=ReadFromStdin(&isEOF,kDebugPrompt);
@@ -39,104 +34,60 @@ static bool docolForDebug(Context& inContext) NOEXCEPT {
 		}
 		gLastInput=line;
 
-		clearDebugCommand(inContext);
+		inContext.nowDebugging=true;
+		inContext.debugCommand=DebugCommand::None;
 		OIResult result=OuterInterpreter(inContext,line);
-		DebugCommandType debugCommand=getDebugCommand(inContext);
-		if(debugCommand==DebugCommandType::kDCTypeSystemError) {
+		inContext.nowDebugging=true;
+		const DebugCommand debugCommand=inContext.debugCommand;
+		if(debugCommand==DebugCommand::SystemError) {
 			fprintf(stderr,"SYSTEM ERROR: illegal debug command.\n");
 			return false;
 		}
-		if(result==OIResult::OI_NO_ERROR
-		   && debugCommand!=DebugCommandType::kDCTypeInvalid) {
+		if(result==OIResult::NoError
+		   && debugCommand!=DebugCommand::None) {
 			switch(debugCommand) {
-				case DebugCommandType::kDCTypeContinue: goto execRest;
-				case DebugCommandType::kDCTypeStepOver: 
+				case DebugCommand::Continue:	// exec rest
+					inContext.nowDebugging=false;
+					return true;
+				case DebugCommand::StepOver: 
 					word=step(inContext,false);
-					if(word==NULL) { return true; }	// exit dubugger
+					if(word==NULL || *inContext.ip==NULL) {
+						return true;	// exit dubugger
+					}
 					continue;
-				case DebugCommandType::kDCTypeStepIn:
+				case DebugCommand::StepIn:
 					word=step(inContext,true);
-					if(word==NULL) { return true; }	// exit dubugger
+					if(word==NULL || *inContext.ip==NULL) {
+						return true;	// exit dubugger
+					}
 					continue;
-				case DebugCommandType::kDCTypeQuit:	  goto exitDebugger;
+				case DebugCommand::Quit:
+				  	goto exitDebugger;
 				default:
 					fprintf(stderr,"SYSTEM ERROR\n");
 					exit(-1);
 			}
 		} else {
 			switch(result) {
-				case OIResult::OI_NO_ERROR: puts(" ok."); break;
-				case OIResult::OI_E_WORD:
-				case OIResult::OI_E_INVALID_TOKEN:
-				case OIResult::OI_E_NO_SUCH_WORD:
-						continue;
-				case OIResult::OI_E_SYSTEM_ERROR:	return false;
+				case OIResult::NoError: puts(" ok."); break;
+
+				case OIResult::WordExecutingError:
+				case OIResult::InvalidToken:
+				case OIResult::NoSuchWord:
+				case OIResult::OpenQuoteError:
+					continue;
+
+				case OIResult::SystemError:	return false;
 			}
 		}
 	}
-execRest:
-	return true;
 
 exitDebugger:
-	if(inContext.attr!=NULL) {
-		auto itr=inContext.attr->find(kDebugChannelKey);
-		if(itr!=inContext.attr->end()) { inContext.attr->erase(kDebugChannelKey); }
-		if(inContext.attr->size()==0) {
-			delete inContext.attr;
-			inContext.attr=NULL;
-		}
-	}
 	puts("\n[--- exit debugger ---]");
 	inContext.IS.clear();
+	inContext.nowDebugging=false;
+	if(tronBackup==false) { SetTraceOff(); }
 	return false;
-}
-
-static void clearDebugCommand(Context& ioContext) {
-	if(ioContext.attr==NULL) { ioContext.attr=new Attr(); }
-
-	auto itr=ioContext.attr->find(kDebugChannelKey);
-	if(itr==ioContext.attr->end()) {
-		ioContext.attr->insert({kDebugChannelKey,
-								TypedValue(DebugCommandType::kDCTypeInvalid)});
-	} else {
-		itr->second=TypedValue(DebugCommandType::kDCTypeInvalid);
-	}
-}
-
-static void setDebugCommand(Context& ioContext,DebugCommandType inDebugCommand) {
-	if(ioContext.attr==NULL) { ioContext.attr=new Attr(); }
-
-	auto itr=ioContext.attr->find(kDebugChannelKey);
-	if(itr==ioContext.attr->end()) {
-		ioContext.attr->insert({kDebugChannelKey,TypedValue(inDebugCommand)});
-	} else {
-		itr->second=TypedValue(inDebugCommand);
-	}
-}
-
-static DebugCommandType getDebugCommand(Context& inContext) {
-	if(inContext.attr==NULL) { return DebugCommandType::kDCTypeSystemError; }
-	auto itr=inContext.attr->find(kDebugChannelKey);
-	if(itr==inContext.attr->end()) { return DebugCommandType::kDCTypeSystemError; }
-	if(itr->second.dataType!=DataType::kTypeInt) {
-		return DebugCommandType::kDCTypeSystemError;
-	}
-	switch((DebugCommandType)itr->second.intValue) {
-		case DebugCommandType::kDCTypeInvalid:
-		case DebugCommandType::kDCTypeContinue:
-		case DebugCommandType::kDCTypeStepOver:
-		case DebugCommandType::kDCTypeStepIn:
-		case DebugCommandType::kDCTypeQuit:
-			return (DebugCommandType)itr->second.intValue;
-		default:
-			return DebugCommandType::kDCTypeSystemError;
-	}
-}
-
-static bool isOnDebugger(Context& inContext) {
-	if(inContext.attr==NULL) { return false; }
-	auto itr=inContext.attr->find(kDebugChannelKey);
-	return itr!=inContext.attr->end();
 }
 
 void InitDict_Debug() {
@@ -144,9 +95,7 @@ void InitDict_Debug() {
 	//   or
 	// W ---	ex: word-ptr breakpoint
 	Install(new Word("set-breakpoint",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
 		Word *targetWord=(Word *)GetWordPtr(inContext,tos);
 		if(targetWord==NULL) { return false; }
@@ -161,9 +110,7 @@ void InitDict_Debug() {
 	//   or
 	// W ---	ex: word-ptr breakpoint
 	Install(new Word("clear-breakpoint",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
 		Word *targetWord=(Word *)GetWordPtr(inContext,tos);
 		if(targetWord==NULL) { return false; }
@@ -176,7 +123,7 @@ void InitDict_Debug() {
 
 	// ---
 	Install(new Word("cont",WORD_FUNC {
-		return sendDebugCommand(inContext,DebugCommandType::kDCTypeContinue);
+		return sendDebugCommand(inContext,DebugCommand::Continue);
 	}));
 	
 	// _c is an alias to 'cont'.
@@ -184,7 +131,7 @@ void InitDict_Debug() {
 
 	// ---
 	Install(new Word("quit-debugger",WORD_FUNC {
-		return sendDebugCommand(inContext,DebugCommandType::kDCTypeQuit);
+		return sendDebugCommand(inContext,DebugCommand::Quit);
 	}));
 	
 	// _q is an alias to 'cont'.
@@ -192,14 +139,14 @@ void InitDict_Debug() {
 
 	// ---
 	Install(new Word("step-over",WORD_FUNC {
-		return sendDebugCommand(inContext,DebugCommandType::kDCTypeStepOver);
+		return sendDebugCommand(inContext,DebugCommand::StepOver);
 	}));
 	
 	// _n is an alias to 'step-over'.
 	Install(new Word("_n",Dict["step-over"]->code));
 
 	Install(new Word("step-in",WORD_FUNC {
-		return sendDebugCommand(inContext,DebugCommandType::kDCTypeStepIn);
+		return sendDebugCommand(inContext,DebugCommand::StepIn);
 	}));
 
 	// _s is an alias to 'step-in'.
@@ -210,7 +157,7 @@ static const Word *step(Context& inContext,bool inIsStepIn) {
 	const Word *word=*inContext.ip;
 	WordFunc **next=(WordFunc **)inContext.ip;
 	if(*next==NULL) { goto exitDebugger; }
-	if(word->param==NULL) {
+	if(word->param==NULL) { // the case of word is inner word (defined by C++).
 		std::string currentWordName;
 		const Word *currentWord=NULL;
 		if(inContext.IS.size()>0) {
@@ -236,8 +183,9 @@ static const Word *step(Context& inContext,bool inIsStepIn) {
 			return word;
 		} else {
 			// step over
+			const Word **ipBackup=inContext.ip;
 			inContext.Exec(word);
-			++inContext.ip;
+			inContext.ip=ipBackup+1;
 			if(inContext.IS.size()>0) {
 				const Word *currentWord = *inContext.IS.back();
 				return currentWord;
@@ -258,6 +206,11 @@ static void dump(const Word *inWord,Context& inContext) {
 	auto itr=inWord->addressOffsetToIndexMapper->find(currentPos);
 	if(itr==inWord->addressOffsetToIndexMapper->end()) {
 		fprintf(stderr,"SYSTEM ERROR: in dictDebug.dump.\n");
+		fprintf(stderr,"word =%s\n",inWord->longName.c_str());
+		fprintf(stderr,"param=%p\n",inWord->param);
+		fprintf(stderr,"ip   =%p\n",inContext.ip);
+		fprintf(stderr,"currentPos=%d\n",currentPos);
+		inWord->Dump();
 		exit(-1);
 	}	
 	int currentIndex=inWord->addressOffsetToIndexMapper->at(currentPos);
@@ -270,11 +223,11 @@ static void dump(const Word *inWord,Context& inContext) {
 	}
 }
 
-static bool sendDebugCommand(Context& inContext,DebugCommandType inDebugCommand) {
-	if(isOnDebugger(inContext)==false) {
-		return inContext.Error(NoParamErrorID::E_SHOULD_BE_EXECUTE_ON_DEBUGGER);
+static bool sendDebugCommand(Context& inContext,DebugCommand inDebugCommand) {
+	if(inContext.nowDebugging==false) {
+		return inContext.Error(NoParamErrorID::ShouldBeExecuteOnDebugger);
 	}
-	setDebugCommand(inContext,inDebugCommand);
-	NEXT;
+	inContext.debugCommand=inDebugCommand;
+	NEXT;	// needs 'inContext'.
 }
 

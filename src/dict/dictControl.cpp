@@ -9,7 +9,11 @@
 
 PP_API void ShowStack(Stack& inStack,const char *inStackName);
 
+static bool switchOrCondMain(Context& inContext,ControlBlockType inCBT);
+static bool otherwiseDropMain(Context& inContext,const char *inEpilogueWord);
+static int getStandardIfAlpha(Context& inContext);
 static int getStandardLoopChunkTop(Context& inContext);
+static bool genExitSwitchBlock(Context& inContext);
 
 /*---
   The Paraphrase standard iterative blocks are:
@@ -36,24 +40,24 @@ void InitDict_Control() {
 	}));
 
 	Install(new Word("exit",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeInt) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_INT,tos);
+		if(tos.dataType!=DataType::Int) {
+			return inContext.Error(InvalidTypeErrorID::TosInt,tos);
 		}
 		exit(tos.intValue);
 	}));
 
+	Install(new Word("panic",WORD_FUNC {
+		return false;
+	}));
+
 	Install(new Word("_branch-if-false",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=inContext.DS.back();
-		if(tos.dataType!=DataType::kTypeBool) {
+		if(tos.dataType!=DataType::Bool) {
 			inContext.DS.pop_back();
-			return inContext.Error(InvalidTypeErrorID::E_TOS_BOOL,tos);
+			return inContext.Error(InvalidTypeErrorID::TosBool,tos);
 		}
 		if( tos.boolValue ) {
 			inContext.ip+=2;	// Next
@@ -65,13 +69,11 @@ void InitDict_Control() {
 	}));
 
 	Install(new Word("_branch-if-true",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::kTypeBool) {
-			return inContext.Error(InvalidTypeErrorID::E_TOS_BOOL,tos);
+		if(tos.dataType!=DataType::Bool) {
+			return inContext.Error(InvalidTypeErrorID::TosBool,tos);
 		}
 
 		if( tos.boolValue ) {
@@ -89,7 +91,7 @@ void InitDict_Control() {
 
 	// SS:
 	//     +------------------+
-	//     | kSyntax_IF       |
+	//     | SyntaxIf         |
 	//     +------------------+
 	//     | 3 (==chunk size) |
 	//     +------------------+
@@ -100,7 +102,7 @@ void InitDict_Control() {
 	//         by processing the word 'else' or 'then'.
 	Install(new Word("if",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		inContext.Compile(std::string("_branch-if-false"));
 		TypedValue tvAlpha=inContext.MarkAndCreateEmptySlot();
@@ -108,68 +110,51 @@ void InitDict_Control() {
 		// build syntax-if chunk on SS.
 		inContext.SS.emplace_back(tvAlpha);
 		inContext.SS.emplace_back(3);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_IF);
+		inContext.SS.emplace_back(ControlBlockType::SyntaxIf);
 		NEXT;
 	}));
 
 	Install(new Word("else",WordLevel::Immediate,WORD_FUNC {
-		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);
-		}
-		if(inContext.SS.size()<3) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
-		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		   || tvSyntax.intValue!=(int)ControlBlockType::kSyntax_IF) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_IF);
-		}
-		int p=(int)inContext.SS.size()-1;
-		if(p-2<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
-		int slotForTheWordOfThen=p-2;
-		TypedValue& tvAlpha=inContext.SS.at(slotForTheWordOfThen);
-		if(tvAlpha.dataType!=DataType::kTypeAddress) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
-		int alpha=tvAlpha.intValue;
-		if(alpha<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		int alpha=getStandardIfAlpha(inContext);
+		if(alpha<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		// write an address of head of else-block
 		inContext.Compile(alpha,
-						  TypedValue(DataType::kTypeAddress,
+						  TypedValue(DataType::Address,
 									 inContext.GetNextThreadAddressOnCompile()+2));
 		inContext.Compile(std::string("_absolute-jump"));
 		TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
+		int slotForTheWordOfThen=(int)inContext.SS.size()-3;
 		inContext.SS.at(slotForTheWordOfThen)=tvAlpha2;
 		NEXT;
 	}));
 
 	Install(new Word("then",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);
+			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		}
 		if(inContext.SS.size()<3) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		   || tvSyntax.intValue!=(int)ControlBlockType::kSyntax_IF) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_IF);
+		if(tvSyntax.dataType!=DataType::CB
+		   || tvSyntax.intValue!=(int)ControlBlockType::SyntaxIf) {
+			return inContext.Error(NoParamErrorID::SyntaxMismatchIf);
 		}
 		int p=(int)inContext.SS.size()-1;
-		if(p-2<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(p-2<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		int slotForTheWordOfThen=p-2;
 		TypedValue& tvAlpha=inContext.SS.at(slotForTheWordOfThen);
-		if(tvAlpha.dataType!=DataType::kTypeAddress) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+		if(tvAlpha.dataType!=DataType::Address) {
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		int alpha=tvAlpha.intValue;
-		if(alpha<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(alpha<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		// write an address of head of else-block
 		inContext.Compile(alpha,
-			   			  TypedValue(DataType::kTypeAddress,
+			   			  TypedValue(DataType::Address,
 									 inContext.GetNextThreadAddressOnCompile()));
 		if(inContext.RemoveTopChunk()==false) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		if(inContext.EndControlBlock()==false) {
 			return false;
@@ -177,23 +162,35 @@ void InitDict_Control() {
 		NEXT;
 	}));
 
+	// equivalent: "else drop then"
+	Install(new Word("otherwise-drop",WordLevel::Immediate,WORD_FUNC {
+		if(otherwiseDropMain(inContext,"drop")==false) { return false; }
+		NEXT;
+	}));
+
+	// equivalent: "else 2drop then"
+	Install(new Word("otherwise-2drop",WordLevel::Immediate,WORD_FUNC {
+		if(otherwiseDropMain(inContext,"2drop")==false) { return false; }
+		NEXT;
+	}));
+
 	// equivalent: @r> +second/r> <=
 	Install(new Word("_repeat?+",WORD_FUNC {
 		const size_t n=inContext.RS.size();
-		if(n<2) { return inContext.Error(NoParamErrorID::E_RS_BROKEN); } 
+		if(n<2) { return inContext.Error(NoParamErrorID::RsBroken); } 
 
 		TypedValue& rsTos=ReadTOS(inContext.RS);
-		if(rsTos.dataType!=DataType::kTypeInt
-		  && rsTos.dataType!=DataType::kTypeLong
-		  && rsTos.dataType!=DataType::kTypeBigInt) {
-			return inContext.Error(InvalidTypeErrorID::E_RS_TOS_INT_OR_LONG_OR_BIGINT,rsTos);
+		if(rsTos.dataType!=DataType::Int
+		  && rsTos.dataType!=DataType::Long
+		  && rsTos.dataType!=DataType::BigInt) {
+			return inContext.Error(InvalidTypeErrorID::RsTosIntOrLongOrBigint,rsTos);
 		}
 
 		TypedValue& rsSecond=inContext.RS[n-2];
-		if(rsSecond.dataType!=DataType::kTypeInt
-		  && rsSecond.dataType!=DataType::kTypeLong
-		  && rsSecond.dataType!=DataType::kTypeBigInt) {
-			return inContext.Error(InvalidTypeErrorID::E_RS_SECOND_INT_OR_LONG_OR_BIGINT,rsSecond);
+		if(rsSecond.dataType!=DataType::Int
+		  && rsSecond.dataType!=DataType::Long
+		  && rsSecond.dataType!=DataType::BigInt) {
+			return inContext.Error(InvalidTypeErrorID::RsSecondIntOrLongOrBigint,rsSecond);
 		}
 
 		bool result;
@@ -206,20 +203,20 @@ void InitDict_Control() {
 	// equivalent: @r> +second/r> >=
 	Install(new Word("_repeat?-",WORD_FUNC {
 		const size_t n=inContext.RS.size();
-		if(n<2) { return inContext.Error(NoParamErrorID::E_RS_BROKEN); } 
+		if(n<2) { return inContext.Error(NoParamErrorID::RsBroken); } 
 
 		TypedValue& rsTos=ReadTOS(inContext.RS);
-		if(rsTos.dataType!=DataType::kTypeInt
-		  && rsTos.dataType!=DataType::kTypeLong
-		  && rsTos.dataType!=DataType::kTypeBigInt) {
-			return inContext.Error(InvalidTypeErrorID::E_RS_TOS_INT_OR_LONG_OR_BIGINT,rsTos);
+		if(rsTos.dataType!=DataType::Int
+		  && rsTos.dataType!=DataType::Long
+		  && rsTos.dataType!=DataType::BigInt) {
+			return inContext.Error(InvalidTypeErrorID::RsTosIntOrLongOrBigint,rsTos);
 		}
 
 		TypedValue& rsSecond=inContext.RS[n-2];
-		if(rsSecond.dataType!=DataType::kTypeInt
-		  && rsSecond.dataType!=DataType::kTypeLong
-		  && rsSecond.dataType!=DataType::kTypeBigInt) {
-			return inContext.Error(InvalidTypeErrorID::E_RS_SECOND_INT_OR_LONG_OR_BIGINT,rsSecond);
+		if(rsSecond.dataType!=DataType::Int
+		  && rsSecond.dataType!=DataType::Long
+		  && rsSecond.dataType!=DataType::BigInt) {
+			return inContext.Error(InvalidTypeErrorID::RsSecondIntOrLongOrBigint,rsSecond);
 		}
 
 		bool result;
@@ -231,43 +228,37 @@ void InitDict_Control() {
 	
 	// equivalent: r> 1+ >r
 	Install(new Word("_inc-loop-counter",WORD_FUNC {
-		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
-		}
+		if(inContext.RS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
 
 		TypedValue& tvCounter=ReadTOS(inContext.RS);
 		switch(tvCounter.dataType) {
-			case DataType::kTypeInt:	tvCounter.intValue++;		break;
-			case DataType::kTypeLong:	tvCounter.longValue++;		break;
-			case DataType::kTypeBigInt:	(*tvCounter.bigIntPtr)++;	break;
+			case DataType::Int:		tvCounter.intValue++;		break;
+			case DataType::Long:	tvCounter.longValue++;		break;
+			case DataType::BigInt:	(*tvCounter.bigIntPtr)++;	break;
 			default:
-				return inContext.Error(InvalidTypeErrorID::E_RS_TOS_INT_OR_LONG_OR_BIGINT,tvCounter);
+				return inContext.Error(InvalidTypeErrorID::RsTosIntOrLongOrBigint,tvCounter);
 		}
 		NEXT;
 	}));
 
 	// equivalent: r> 1- >r
 	Install(new Word("_dec-loop-counter",WORD_FUNC {
-		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
-		}
+		if(inContext.RS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
 
 		TypedValue& tvCounter=ReadTOS(inContext.RS);
 		switch(tvCounter.dataType) {
-			case DataType::kTypeInt:	tvCounter.intValue--;		break;
-			case DataType::kTypeLong:	tvCounter.longValue--;		break;
-			case DataType::kTypeBigInt:	(*tvCounter.bigIntPtr)--;	break;
+			case DataType::Int:		tvCounter.intValue--;		break;
+			case DataType::Long:	tvCounter.longValue--;		break;
+			case DataType::BigInt:	(*tvCounter.bigIntPtr)--;	break;
 			default:
-				return inContext.Error(InvalidTypeErrorID::E_RS_TOS_INT_OR_LONG_OR_BIGINT,tvCounter);
+				return inContext.Error(InvalidTypeErrorID::RsTosIntOrLongOrBigint,tvCounter);
 		}
 		NEXT;
 	}));
 
 	// equivalent: drop-rs drop-rs
 	Install(new Word("_loop-epilogue",WORD_FUNC {
-		if(inContext.RS.size()<2) {
-			return inContext.Error(NoParamErrorID::E_RS_BROKEN);
-		}
+		if(inContext.RS.size()<2) { return inContext.Error(NoParamErrorID::RsBroken); }
 		inContext.RS.pop_back();
 		inContext.RS.pop_back();
 		NEXT;
@@ -275,7 +266,7 @@ void InitDict_Control() {
 
 	// SS:
 	//    +------------------+
-	//    | kSyntax_FOR_PLUS |
+	//    | SyntaxForPlus    |
 	//    +------------------+
 	//    | 6 (==chunk size) |
 	//    +------------------+
@@ -296,10 +287,10 @@ void InitDict_Control() {
 	//		       ==  for+                                     next
 	Install(new Word("for+",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		inContext.Compile(std::string(">r"));	// target value
-		inContext.Compile(std::string("1-"));
+		inContext.Compile(std::string("_1-"));
 		inContext.Compile(std::string(">r"));	// current value
 		TypedValue tvAlpha1=inContext.MarkHere();	// come back here.
 		inContext.Compile(std::string("_inc-loop-counter"));
@@ -316,7 +307,7 @@ void InitDict_Control() {
 		inContext.SS.emplace_back(tvAlpha2);
 		inContext.SS.emplace_back(tvAlpha1);
 		inContext.SS.emplace_back(chunkSize);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_FOR_PLUS);
+		inContext.SS.emplace_back(ControlBlockType::SyntaxForPlus);
 
 		NEXT;
 	}));
@@ -324,10 +315,10 @@ void InitDict_Control() {
 	// SS: almost same as the word 'for+'.
 	Install(new Word("for-",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		inContext.Compile(std::string(">r"));	// target value
-		inContext.Compile(std::string("1-"));
+		inContext.Compile(std::string("_1+"));
 		inContext.Compile(std::string(">r"));	// current value
 		TypedValue tvAlpha1=inContext.MarkHere();	// come back here.
 		inContext.Compile(std::string("_dec-loop-counter"));
@@ -344,7 +335,7 @@ void InitDict_Control() {
 		inContext.SS.emplace_back(tvAlpha2);
 		inContext.SS.emplace_back(tvAlpha1);
 		inContext.SS.emplace_back(chunkSize);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_FOR_MINUS);
+		inContext.SS.emplace_back(ControlBlockType::SyntaxForMinus);
 
 		NEXT;
 	}));
@@ -353,9 +344,9 @@ void InitDict_Control() {
 		int chunkTop=getStandardLoopChunkTop(inContext);
 		if(chunkTop<0) { return false; }
 		int alpha5=GetAddress(inContext.SS,chunkTop-6);
-		if(alpha5<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(alpha5<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::kTypeAddress,alpha5));
+		inContext.Compile(TypedValue(DataType::Address,alpha5));
 		NEXT;
 	}));
 	
@@ -363,9 +354,9 @@ void InitDict_Control() {
 		int chunkTop=getStandardLoopChunkTop(inContext);
 		if(chunkTop<0) { return false; }
 		int alpha4=GetAddress(inContext.SS,chunkTop-5);
-		if(alpha4<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(alpha4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::kTypeAddress,alpha4));
+		inContext.Compile(TypedValue(DataType::Address,alpha4));
 		NEXT;
 	}));
 
@@ -374,12 +365,12 @@ void InitDict_Control() {
 		int chunkTop=getStandardLoopChunkTop(inContext);
 		if(chunkTop<0) { return false; }
 		int alpha2=GetAddress(inContext.SS,chunkTop-3);
-		if(alpha2<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(alpha2<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
 		inContext.Compile(std::string("_lit"));
 		inContext.Compile(TypedValue(false));
 		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::kTypeAddress,alpha2));
+		inContext.Compile(TypedValue(DataType::Address,alpha2));
 		NEXT;
 	}));
 
@@ -388,7 +379,7 @@ void InitDict_Control() {
 	// equivalent to DS.push(RS[RS.size-3])
 	Install(new Word("j",WORD_FUNC {
 		if(inContext.RS.size()<3) {
-			return inContext.Error(NoParamErrorID::E_RS_AT_LEAST_3);
+			return inContext.Error(NoParamErrorID::RsAtLeast3);
 		}
 		inContext.DS.emplace_back(inContext.RS[inContext.RS.size()-3]);
 		NEXT;
@@ -400,15 +391,15 @@ void InitDict_Control() {
 	Install(new Word("step",WordLevel::Immediate,WORD_FUNC {
 		const int chunkSize=6;
 		if(inContext.SS.size()<chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		  || (tvSyntax.intValue!=(int)ControlBlockType::kSyntax_FOR_PLUS
-			  && tvSyntax.intValue!=(int)ControlBlockType::kSyntax_FOR_MINUS)) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_FOR);
+		if(tvSyntax.dataType!=DataType::CB
+		  || (tvSyntax.intValue!=(int)ControlBlockType::SyntaxForPlus
+			  && tvSyntax.intValue!=(int)ControlBlockType::SyntaxForMinus)) {
+			return inContext.Error(NoParamErrorID::SyntaxMismatchFor);
 		}
-		if(tvSyntax.intValue==(int)ControlBlockType::kSyntax_FOR_PLUS) {
+		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxForPlus) {
 			inContext.Compile(std::string("std:_step+"));
 		} else {
 			inContext.Compile(std::string("std:_step-"));
@@ -418,25 +409,23 @@ void InitDict_Control() {
 
 	// step for count up.
 	Install(new Word("_step+",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
-		}
+
+		if(inContext.RS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
 		TypedValue& tvCounter=ReadTOS(inContext.RS);
+		
 		// tvCounter=tvCounter+tos-1
 		AssignOpToSecond(inContext,tvCounter,+,tos);
 		switch(tvCounter.dataType) {
-			case DataType::kTypeInt:		tvCounter.intValue--;		break;
-			case DataType::kTypeLong:		tvCounter.longValue--;		break;
-			case DataType::kTypeBigInt:		(*tvCounter.bigIntPtr)--;	break;
-			case DataType::kTypeFloat:		tvCounter.floatValue--;		break;
-			case DataType::kTypeDouble:		tvCounter.doubleValue--;	break;
-			case DataType::kTypeBigFloat:	(*tvCounter.bigFloatPtr)--;	break;
+			case DataType::Int:			tvCounter.intValue--;		break;
+			case DataType::Long:		tvCounter.longValue--;		break;
+			case DataType::BigInt:		(*tvCounter.bigIntPtr)--;	break;
+			case DataType::Float:		tvCounter.floatValue--;		break;
+			case DataType::Double:		tvCounter.doubleValue--;	break;
+			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)--;	break;
 			default:
-				inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+				inContext.Error(NoParamErrorID::SystemError);
 				exit(-1);
 		}
 		NEXT;
@@ -446,14 +435,14 @@ void InitDict_Control() {
 	Install(new Word("_step++",WORD_FUNC {
 		TypedValue& tvCounter=ReadTOS(inContext.RS);
 		switch(tvCounter.dataType) {
-			case DataType::kTypeInt:		tvCounter.intValue++;		break;
-			case DataType::kTypeLong:		tvCounter.longValue++;		break;
-			case DataType::kTypeBigInt:		(*tvCounter.bigIntPtr)++;	break;
-			case DataType::kTypeFloat:		tvCounter.floatValue++;		break;
-			case DataType::kTypeDouble:		tvCounter.doubleValue++;	break;
-			case DataType::kTypeBigFloat:	(*tvCounter.bigFloatPtr)++;	break;
+			case DataType::Int:			tvCounter.intValue++;		break;
+			case DataType::Long:		tvCounter.longValue++;		break;
+			case DataType::BigInt:		(*tvCounter.bigIntPtr)++;	break;
+			case DataType::Float:		tvCounter.floatValue++;		break;
+			case DataType::Double:		tvCounter.doubleValue++;	break;
+			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)++;	break;
 			default:
-				inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+				inContext.Error(NoParamErrorID::SystemError);
 				exit(-1);
 		}
 		NEXT;
@@ -461,27 +450,64 @@ void InitDict_Control() {
 
 	// step for count down.
 	Install(new Word("_step-",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_DS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(inContext.RS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
-		}
+
+		if(inContext.RS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
 		TypedValue& tvCounter=ReadTOS(inContext.RS);
+		
 		// tvCounter=tvCounter+tos+1
 		AssignOpToSecond(inContext,tvCounter,+,tos);
 		switch(tvCounter.dataType) {
-			case DataType::kTypeInt:		tvCounter.intValue++;		break;
-			case DataType::kTypeLong:		tvCounter.longValue++;		break;
-			case DataType::kTypeBigInt:		(*tvCounter.bigIntPtr)++;	break;
-			case DataType::kTypeFloat:		tvCounter.floatValue++;		break;
-			case DataType::kTypeDouble:		tvCounter.doubleValue++;	break;
-			case DataType::kTypeBigFloat:	(*tvCounter.bigFloatPtr)++;	break;
+			case DataType::Int:			tvCounter.intValue++;		break;
+			case DataType::Long:		tvCounter.longValue++;		break;
+			case DataType::BigInt:		(*tvCounter.bigIntPtr)++;	break;
+			case DataType::Float:		tvCounter.floatValue++;		break;
+			case DataType::Double:		tvCounter.doubleValue++;	break;
+			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)++;	break;
 			default:
-				inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+				inContext.Error(NoParamErrorID::SystemError);
 				exit(-1);
 		}
+		NEXT;
+	}));
+
+	// equivalent to "@r> swap _setValue".
+	// DS: localVarNo ---
+	Install(new Word("_setCounterValue",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::Int) {
+			return inContext.Error(InvalidTypeErrorID::TosInt,tos);
+		}
+		TypedValue& tvCounter=ReadTOS(inContext.RS);
+		if(tvCounter.IsNumber()==false) {
+			return inContext.Error(InvalidTypeErrorID::RsTosNumber,tvCounter);
+		}	
+		if(inContext.SetCurrentLocalVar(tos.intValue,tvCounter)==false) {
+			return inContext.Error(ErrorIdWithInt::InvalidLocalSlotIndex,tos.intValue);
+		}
+		NEXT;
+	}));
+
+	// ex: for+ `t as-counter some-programs next
+	// note: should be use in compile mode.
+	Install(new Word("as-counter",WordLevel::Immediate,WORD_FUNC {
+		TypedValue tvLocalVarName=inContext.GetLiteralFromThreadedCode();
+		if( tvLocalVarName.IsInvalid() ) { return false; }
+		if(tvLocalVarName.dataType!=DataType::Symbol) {
+			return inContext.Error(NoParamErrorID::InvalidUse);
+		}
+		int slotPos=inContext.newWord->GetLocalVarSlotPos(*tvLocalVarName.stringPtr);
+		if(slotPos<0) {
+			inContext.newWord->RegisterLocalVar(*tvLocalVarName.stringPtr);
+			slotPos=inContext.newWord->GetLocalVarSlotPos(*tvLocalVarName.stringPtr);
+		}
+		inContext.Compile(std::string("_lit"));
+		inContext.Compile(slotPos);
+		inContext.Compile(std::string("_setCounterValue"));
 		NEXT;
 	}));
 
@@ -492,7 +518,7 @@ void InitDict_Control() {
 	//
 	// SS:
 	//    +------------------+
-	//    | kSyntax_WHILE    |
+	//    | SyntaxWhile      |
 	//    +------------------+
 	//    | 7 (==chunk size) |
 	//    +------------------+
@@ -516,7 +542,7 @@ void InitDict_Control() {
 	// 	 <-- jump here by slot at alpha3
 	Install(new Word("while",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		TypedValue tvAlpha1=inContext.MarkHere();	// come back here.
 		TypedValue tvAlpha2,tvAlpha3,tvAlpha4;		// determined by the word 'do'.
@@ -528,7 +554,7 @@ void InitDict_Control() {
 		inContext.SS.emplace_back(tvAlpha1);	// alpha2
 		inContext.SS.emplace_back(tvAlpha1);	
 		inContext.SS.emplace_back(chunkSize);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_WHILE);
+		inContext.SS.emplace_back(ControlBlockType::SyntaxWhile);
 
 		NEXT;
 	}));
@@ -598,7 +624,7 @@ void InitDict_Control() {
 	//
 	// SS:
 	//    +------------------+
-	//    | kSyntax_LOOP     |
+	//    | SyntaxLoop       |
 	//    +------------------+
 	//    | 7 (==chunk size) |
 	//    +------------------+
@@ -616,12 +642,12 @@ void InitDict_Control() {
 	// cheked: repeat - OK, continue - OK, leave - OK, redo - OK.
 	Install(new Word("loop",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		// 9 == {jump,alpha4,
 		// 		 true,
-		// 		 branch-if-true, alpha4,
-		// 		 jump,beta,
+		// 		 branch-if-true, beta,
+		// 		 jump,alpha4,
 		// 		 jump,alpha4}
 		TypedValue tvAlpha4=inContext.MarkHere(9);
 
@@ -650,7 +676,7 @@ void InitDict_Control() {
 		inContext.SS.emplace_back(tvAlpha2);
 		inContext.SS.emplace_back(tvAlpha1);
 		inContext.SS.emplace_back(chunkSize);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_LOOP);
+		inContext.SS.emplace_back(ControlBlockType::SyntaxLoop);
 
 		NEXT;
 	}));
@@ -663,18 +689,18 @@ void InitDict_Control() {
 		if(chunkTop<0) { return false; }
 
 		int alpha1=GetAddress(inContext.SS,chunkTop-2);
-		if(alpha1<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(alpha1<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		int alpha3=GetAddress(inContext.SS,chunkTop-4);
-		if(alpha3<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
 		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::kTypeAddress,alpha1));
+		inContext.Compile(TypedValue(DataType::Address,alpha1));
 
-		TypedValue tvAddressToExit(DataType::kTypeAddress,
+		TypedValue tvAddressToExit(DataType::Address,
 								   inContext.GetNextThreadAddressOnCompile());
 		inContext.Compile(alpha3,tvAddressToExit);
 		if(inContext.RemoveTopChunk()==false) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		if(inContext.EndControlBlock()==false) { return false; }
 		NEXT;
@@ -685,23 +711,19 @@ void InitDict_Control() {
 		if(chunkTop<0) { return false; }
 
 		int alpha1=GetAddress(inContext.SS,chunkTop-2);
-		if(alpha1<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
+		if(alpha1<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		int alpha3=GetAddress(inContext.SS,chunkTop-4);
-		if(alpha3<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
+		if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
 		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::kTypeAddress,alpha1));
+		inContext.Compile(TypedValue(DataType::Address,alpha1));
 
-		TypedValue tvAddressToExit(DataType::kTypeAddress,
+		TypedValue tvAddressToExit(DataType::Address,
 								   inContext.GetNextThreadAddressOnCompile());
 		inContext.Compile(alpha3,tvAddressToExit);
 		inContext.Compile(std::string("2drop-rs"));
 		if(inContext.RemoveTopChunk()==false) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		if(inContext.EndControlBlock()==false) { return false; }
 
@@ -710,46 +732,40 @@ void InitDict_Control() {
 
 	Install(new Word("when",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);
+			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		}
 		const int chunkSize=7;
 		if(inContext.SS.size()<chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+		if(tvSyntax.dataType!=DataType::CB) {
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
-		if(tvSyntax.intValue!=(int)ControlBlockType::kSyntax_LOOP) {
-			return inContext.Error(InvalidTypeErrorID::E_SS_TOS_SHOULD_BE_LOOP,tvSyntax);
+		if(tvSyntax.intValue!=(int)ControlBlockType::SyntaxLoop) {
+			return inContext.Error(InvalidTypeErrorID::SsTosShouldBeLoop,tvSyntax);
 		}
 		int chunkTop=(int)inContext.SS.size()-1;
 		TypedValue& tvChunkSize=inContext.SS.at(chunkTop-1);
-		if(tvChunkSize.dataType!=DataType::kTypeInt) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+		if(tvChunkSize.dataType!=DataType::Int) {
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		if(tvChunkSize.intValue!=chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 
 		int alpha1=GetAddress(inContext.SS,chunkTop-2);
-		if(alpha1<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
+		if(alpha1<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
 		int alpha2=GetAddress(inContext.SS,chunkTop-3);
-		if(alpha2<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
+		if(alpha2<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
 		// now alpha1=alpha2
-		inContext.SS[chunkTop-2]=TypedValue(DataType::kTypeAddress,alpha2);
+		inContext.SS[chunkTop-2]=TypedValue(DataType::Address,alpha2);
 
 		// update address at alpha5
 		int alpha5=GetAddress(inContext.SS,chunkTop-6);
-		if(alpha5<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
+		if(alpha5<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		TypedValue whenAddress=inContext.MarkHere();
 		inContext.Compile(alpha5+1,whenAddress,true);
 		NEXT;
@@ -757,17 +773,15 @@ void InitDict_Control() {
 	
 	// for optimize
 	Install(new Word("_branchIfNotZero",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::E_RS_IS_EMPTY);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
 
 		TypedValue& tos=inContext.DS.back();
-		if((tos.dataType==DataType::kTypeInt && tos.intValue!=0)
-	      || (tos.dataType==DataType::kTypeLong && tos.longValue!=0) 
-		  || (tos.dataType==DataType::kTypeFloat && tos.floatValue!=0)
-		  || (tos.dataType==DataType::kTypeDouble && tos.doubleValue!=0)
-		  || (tos.dataType==DataType::kTypeBigInt && *tos.bigIntPtr!=0)
-		  || (tos.dataType==DataType::kTypeBigFloat && *tos.bigFloatPtr!=0)) {
+		if((tos.dataType==DataType::Int && tos.intValue!=0)
+	      || (tos.dataType==DataType::Long && tos.longValue!=0) 
+		  || (tos.dataType==DataType::Float && tos.floatValue!=0)
+		  || (tos.dataType==DataType::Double && tos.doubleValue!=0)
+		  || (tos.dataType==DataType::BigInt && *tos.bigIntPtr!=0)
+		  || (tos.dataType==DataType::BigFloat && *tos.bigFloatPtr!=0)) {
 			// BRANCH!
 			inContext.ip=(const Word**)(*(inContext.ip+1));
 		} else {
@@ -781,7 +795,7 @@ void InitDict_Control() {
 	// equivalent to "_repeat?+ branch-if-false"
 	Install(new Word("_branchWhenLoopEnded",WORD_FUNC {
 		const size_t n=inContext.RS.size();
-		if(n<2) { return inContext.Error(NoParamErrorID::E_RS_BROKEN); } 
+		if(n<2) { return inContext.Error(NoParamErrorID::RsBroken); } 
 
 		TypedValue& rsTos=inContext.RS.back();
 		TypedValue& rsSecond=inContext.RS[n-2];
@@ -821,7 +835,7 @@ void InitDict_Control() {
 	//
 	// SS:
 	//     +-----------------+
-	//     | kSyntax_SWITCH  |
+	//     | SyntaxSwitch    |
 	//     +-----------------+
 	//     | 5 (==chunkSize) |
 	//     +-----------------+
@@ -833,109 +847,116 @@ void InitDict_Control() {
 	//     +-----------------+     the next of the end of the case-block.
 	//
 	Install(new Word("switch",WordLevel::Immediate,WORD_FUNC {
-		if(inContext.BeginControlBlock()==false) {
-			return inContext.Error(NoParamErrorID::E_SYSTEM_ERROR);
+		if(switchOrCondMain(inContext,ControlBlockType::SyntaxSwitch)==false) {
+			return false;
 		}
-		inContext.Compile(std::string("_absolute-jump"));
-		int currentAddress=inContext.GetNextThreadAddressOnCompile();
-		inContext.Compile(TypedValue(DataType::kTypeAddress,currentAddress+3));
-		TypedValue tvAlpha1=inContext.MarkHere();
-		inContext.Compile(std::string("_absolute-jump"));
-		TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
-
-		inContext.SS.emplace_back(TypedValue()); // initial value of alpha3 is invalid.
-		inContext.SS.emplace_back(tvAlpha2);
-		inContext.SS.emplace_back(tvAlpha1);
-		const int chunkSize=5;
-		inContext.SS.emplace_back(chunkSize);
-		inContext.SS.emplace_back(ControlBlockType::kSyntax_SWITCH);
-
+		NEXT;
+	}));
+	Install(new Word("cond",WordLevel::Immediate,WORD_FUNC {
+		if(switchOrCondMain(inContext,ControlBlockType::SyntaxCond)==false) {
+			return false;
+		}
 		NEXT;
 	}));
 
 	Install(new Word("case",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);;
+			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);;
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		   || tvSyntax.intValue!=(int)ControlBlockType::kSyntax_SWITCH) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_SWITCH);
+		if(tvSyntax.dataType!=DataType::CB
+		   || (tvSyntax.intValue!=(int)ControlBlockType::SyntaxSwitch
+		   	   && tvSyntax.intValue!=(int)ControlBlockType::SyntaxCond)) {
+			return inContext.Error(NoParamErrorID::SyntaxMismatchSwitchCond);
 		}
 		TypedValue& tvChunkSize=ReadSecond(inContext.SS);
 		const int chunkSize=5;
-		if(tvChunkSize.dataType!=DataType::kTypeInt
+		if(tvChunkSize.dataType!=DataType::Int
 		   || tvChunkSize.intValue!=chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		int chunkTop=(int)inContext.SS.size()-1;
-		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		TypedValue& tvAlpha3=inContext.SS.at(chunkTop-4);
-		if(tvAlpha3.dataType==DataType::kTypeAddress) {
+		if(tvAlpha3.dataType==DataType::Address) {
+			if(genExitSwitchBlock(inContext)==false) { return false; }
 			TypedValue tvJumpHere=inContext.MarkHere();
 			int alpha3=tvAlpha3.intValue;
-			if(alpha3<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+			if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 			inContext.Compile(alpha3,tvJumpHere);
 		}
-		inContext.Compile(std::string("dup"));
+		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
+			inContext.Compile(std::string("dup"));
+		}
 		NEXT;
 	}));
 
 	Install(new Word("default",WordLevel::Immediate,WORD_FUNC {
+		if(inContext.Exec(std::string("case"))==false) { return false; }
+		TypedValue& tvSyntax=ReadTOS(inContext.SS);
+		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
+			inContext.Compile(std::string("drop"));
+		}
+		inContext.Compile(std::string("_lit"));
+		inContext.Compile(TypedValue(true));
+		NEXT;
+#if 0
 		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);;
+			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);;
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		   || tvSyntax.intValue!=(int)ControlBlockType::kSyntax_SWITCH) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_SWITCH);
+		if(tvSyntax.dataType!=DataType::CB
+		   || tvSyntax.intValue!=(int)ControlBlockType::SyntaxSwitch) {
+			return inContext.Error(NoParamErrorID::SyntaxMismatchSwitch);
 		}
 		TypedValue& tvChunkSize=ReadSecond(inContext.SS);
 		const int chunkSize=5;
-		if(tvChunkSize.dataType!=DataType::kTypeInt
+		if(tvChunkSize.dataType!=DataType::Int
 		   || tvChunkSize.intValue!=chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		int chunkTop=(int)inContext.SS.size()-1;
-		if(chunkTop-4<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-		}
+		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		TypedValue& tvAlpha3=inContext.SS.at(chunkTop-4);
-		if(tvAlpha3.dataType==DataType::kTypeAddress) {
+		if(tvAlpha3.dataType==DataType::Address) {
+			if(genExitSwitchBlock(inContext)==false) { return false; }
 			TypedValue tvJumpHere=inContext.MarkHere();
 			int alpha3=tvAlpha3.intValue;
-			if(alpha3<0) {
-				return inContext.Error(NoParamErrorID::E_SS_BROKEN);
-			}
+			if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 			inContext.Compile(alpha3,tvJumpHere);
 		}
-		inContext.SS.at(chunkTop-4)=TypedValue();	// invalid value
+		inContext.SS.at(chunkTop-4)=TypedValue();	// set alpha3=invalid value
 		NEXT;
+#endif
 	}));
 
 	Install(new Word("->",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.Exec(std::string("->>"))==false) { return false; }
-		inContext.Compile(std::string("drop"));
+		TypedValue& tvSyntax=ReadTOS(inContext.SS);
+		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
+			inContext.Compile(std::string("drop"));
+		}
 		NEXT;
 	}));
 
 	Install(new Word("->>",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);;
+			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);;
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		   || tvSyntax.intValue!=(int)ControlBlockType::kSyntax_SWITCH) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_SWITCH);
+		if(tvSyntax.dataType!=DataType::CB
+		   || (tvSyntax.intValue!=(int)ControlBlockType::SyntaxSwitch
+		   	   && tvSyntax.intValue!=(int)ControlBlockType::SyntaxCond)) {
+			return inContext.Error(NoParamErrorID::SyntaxMismatchSwitchCond);
 		}
 		TypedValue& tvChunkSize=ReadSecond(inContext.SS);
 		const int chunkSize=5;
-		if(tvChunkSize.dataType!=DataType::kTypeInt
+		if(tvChunkSize.dataType!=DataType::Int
 		   || tvChunkSize.intValue!=chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		int chunkTop=(int)inContext.SS.size()-1;
-		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
 		inContext.Compile(std::string("_branch-if-false"));
 		TypedValue tvNewAlpha3=inContext.MarkAndCreateEmptySlot();
@@ -944,62 +965,134 @@ void InitDict_Control() {
 	}));
 
 	Install(new Word("break",WordLevel::Immediate,WORD_FUNC {
-		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);
-		}
-		int chunkTop=inContext.GetChunkIndex((int)ControlBlockType::kOPEN_SWITCH_GROUP);
-		TypedValue& tvAlpha1=inContext.SS.at(chunkTop-2);
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(tvAlpha1);
+		if(genExitSwitchBlock(inContext)==false) { return false; }
 		NEXT;
 	}));
 
 	Install(new Word("dispatch",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);
+			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::kTypeCB
-		   || tvSyntax.intValue!=(int)ControlBlockType::kSyntax_SWITCH) {
-			return inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_SWITCH);
+		if(tvSyntax.dataType!=DataType::CB
+		   || (tvSyntax.intValue!=(int)ControlBlockType::SyntaxSwitch
+		   	   && tvSyntax.intValue!=(int)ControlBlockType::SyntaxCond)) {
+			return inContext.Error(NoParamErrorID::SyntaxMismatchSwitchCond);
 		}
 		TypedValue& tvChunkSize=ReadSecond(inContext.SS);
 		const int chunkSize=5;
-		if(tvChunkSize.dataType!=DataType::kTypeInt
+		if(tvChunkSize.dataType!=DataType::Int
 		   || tvChunkSize.intValue!=chunkSize) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		int chunkTop=(int)inContext.SS.size()-1;
-		if(chunkTop-4<0) { inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+		if(chunkTop-4<0) { inContext.Error(NoParamErrorID::SsBroken); }
 		TypedValue& tvAlpha2=inContext.SS.at(chunkTop-3);
-		if(tvAlpha2.dataType!=DataType::kTypeAddress || tvAlpha2.intValue<0) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+		if(tvAlpha2.dataType!=DataType::Address || tvAlpha2.intValue<0) {
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		TypedValue& tvAlpha3=inContext.SS.at(chunkTop-4);
-		TypedValue tvAddressOfEndOfSwitchBlock=inContext.MarkHere();
-		if(tvAlpha3.dataType==DataType::kTypeAddress) {
+		if(tvAlpha3.dataType==DataType::Address) {
+			if(genExitSwitchBlock(inContext)==false) { return false; }
 			int alpha3=tvAlpha3.intValue;
-			if(alpha3<0) { return inContext.Error(NoParamErrorID::E_SS_BROKEN); }
+			if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
+			TypedValue tvAddressOfEndOfSwitchBlock=inContext.MarkHere();
 			inContext.Compile(alpha3,tvAddressOfEndOfSwitchBlock);
 		}
+		TypedValue tvAddressOfEndOfSwitchBlock=inContext.MarkHere();
 		inContext.Compile(tvAlpha2.intValue,tvAddressOfEndOfSwitchBlock);
 
 		if(inContext.RemoveTopChunk()==false) {
-			return inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		if(inContext.EndControlBlock()==false) { return false; }
 		NEXT;
 	}));
 }
 
+static bool switchOrCondMain(Context& inContext,ControlBlockType inCBT) {
+	if(inContext.BeginControlBlock()==false) {
+		return inContext.Error(NoParamErrorID::SystemError);
+	}
+	inContext.Compile(std::string("_absolute-jump"));
+	int currentAddress=inContext.GetNextThreadAddressOnCompile();
+	inContext.Compile(TypedValue(DataType::Address,currentAddress+3));
+	TypedValue tvAlpha1=inContext.MarkHere();
+	inContext.Compile(std::string("_absolute-jump"));
+	TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
+
+	inContext.SS.emplace_back(TypedValue()); // initial value of alpha3 is invalid.
+	inContext.SS.emplace_back(tvAlpha2);
+	inContext.SS.emplace_back(tvAlpha1);
+	const int chunkSize=5;
+	inContext.SS.emplace_back(chunkSize);
+	inContext.SS.emplace_back(inCBT);
+	return true;
+}
+
+static bool otherwiseDropMain(Context& inContext,const char *inEpilogueWord) {
+	int alpha=getStandardIfAlpha(inContext);
+	if(alpha<0) { return inContext.Error(NoParamErrorID::SsBroken); }
+	// write an address of head of else-block
+	inContext.Compile(alpha,TypedValue(DataType::Address,
+							inContext.GetNextThreadAddressOnCompile()+2));
+	inContext.Compile(std::string("_absolute-jump"));
+	TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
+
+	// 'else - then' part
+	inContext.Compile(std::string(inEpilogueWord));
+
+	// 'then' process
+	assert(tvAlpha2.dataType==DataType::Address);
+	inContext.Compile(tvAlpha2.intValue,TypedValue(DataType::Address,
+								 inContext.GetNextThreadAddressOnCompile()));
+
+	if(inContext.RemoveTopChunk()==false) {
+		return inContext.Error(NoParamErrorID::SsBroken);
+	}
+	if(inContext.EndControlBlock()==false) { return false; }
+
+	return true;
+}
+
+static int getStandardIfAlpha(Context& inContext) {
+	if(inContext.CheckCompileMode()==false) {
+		inContext.Error(NoParamErrorID::ShouldBeCompileMode);
+		return -1;
+	}
+	if(inContext.SS.size()<3) {
+		inContext.Error(NoParamErrorID::SsBroken);
+		return -1;
+	}
+	TypedValue& tvSyntax=ReadTOS(inContext.SS);
+	if(tvSyntax.dataType!=DataType::CB
+	   || tvSyntax.intValue!=(int)ControlBlockType::SyntaxIf) {
+		inContext.Error(NoParamErrorID::SyntaxMismatchIf);
+		return -1;
+	}
+	int p=(int)inContext.SS.size()-1;
+	if(p-2<0) {
+		inContext.Error(NoParamErrorID::SsBroken);
+		return -1;
+	}
+	int slotForTheWordOfThen=p-2;
+	TypedValue& tvAlpha=inContext.SS.at(slotForTheWordOfThen);
+	if(tvAlpha.dataType!=DataType::Address) {
+		inContext.Error(NoParamErrorID::SsBroken);
+		return -1;
+	}
+	int alpha=tvAlpha.intValue;
+	return alpha;
+}
+
 static int getStandardLoopChunkTop(Context& inContext) {
 	const int chunkSize=7;
 	if(inContext.CheckCompileMode()==false) {
-		inContext.Error(NoParamErrorID::E_SHOULD_BE_COMPILE_MODE);
+		inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		goto onError;
 	}
 	if(inContext.SS.size()<chunkSize) {
-		inContext.Error(NoParamErrorID::E_SS_BROKEN);
+		inContext.Error(NoParamErrorID::SsBroken);
 		goto onError;
 	}
 
@@ -1007,18 +1100,18 @@ static int getStandardLoopChunkTop(Context& inContext) {
 		int i=(int)inContext.SS.size()-1;
 		while(i>=0) {
 			TypedValue& tvSyntax=inContext.SS[i];
-			if(tvSyntax.dataType!=DataType::kTypeCB) {
-				inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			if(tvSyntax.dataType!=DataType::CB) {
+				inContext.Error(NoParamErrorID::SsBroken);
 				goto onError;
 			}
 			if((tvSyntax.intValue & (int)ControlBlockType::kOPEN_LEAVABLE_LOOP_GROUP)==0) {
 				if(i<=0) {
-					inContext.Error(NoParamErrorID::E_SS_BROKEN);
+					inContext.Error(NoParamErrorID::SsBroken);
 					goto onError;
 				} else {
 					TypedValue& tvChunkSize=inContext.SS[i-1];
-					if(tvChunkSize.dataType!=DataType::kTypeInt) {
-						inContext.Error(NoParamErrorID::E_SS_BROKEN);
+					if(tvChunkSize.dataType!=DataType::Int) {
+						inContext.Error(NoParamErrorID::SsBroken);
 						goto onError;
 					}
 					i-=tvChunkSize.intValue;
@@ -1029,17 +1122,17 @@ static int getStandardLoopChunkTop(Context& inContext) {
 			}
 		}
 		if(i<chunkSize-1) {
-			inContext.Error(NoParamErrorID::E_SYNTAX_MISMATCH_LEAVABLE_LOOP_GROUP);
+			inContext.Error(NoParamErrorID::SyntaxMismatchLeavableLoopGroup);
 			goto onError;
 		} else {
 			int chunkTop=i;
 			TypedValue& tvChunkSize=inContext.SS.at(chunkTop-1);
-			if(tvChunkSize.dataType!=DataType::kTypeInt) {
-				inContext.Error(NoParamErrorID::E_SS_BROKEN);
+			if(tvChunkSize.dataType!=DataType::Int) {
+				inContext.Error(NoParamErrorID::SsBroken);
 				goto onError;
 			}
 			if(tvChunkSize.intValue!=chunkSize) {
-				inContext.Error(NoParamErrorID::E_SS_BROKEN);
+				inContext.Error(NoParamErrorID::SsBroken);
 				goto onError;
 			}
 			return chunkTop;
@@ -1048,5 +1141,16 @@ static int getStandardLoopChunkTop(Context& inContext) {
 
 onError:
 	return -1;
+}
+
+static bool genExitSwitchBlock(Context& inContext) {
+	if(inContext.CheckCompileMode()==false) {
+		return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
+	}
+	int chunkTop=inContext.GetChunkIndex((int)ControlBlockType::kOPEN_SWITCH_GROUP);
+	TypedValue& tvAlpha1=inContext.SS.at(chunkTop-2);
+	inContext.Compile(std::string("_absolute-jump"));
+	inContext.Compile(tvAlpha1);
+	return true;
 }
 

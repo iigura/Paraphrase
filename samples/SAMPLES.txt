@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.94.0)  by K.Iigura 
+Paraphrase sample programs' README (ver.0.95rc1)  by K.Iigura 
 
 　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
 い（\ は円マークを表します）。
@@ -11,28 +11,28 @@ Paraphrase sample programs' README (ver.0.94.0)  by K.Iigura
 
 -----
 
-99.pp
+99.p8e
     いわゆる九九を表示します。
-	実行方法： ../para 99.pp run
+	実行方法： ../para 99.p8e run
 
-aop.pp
+aop.p8e
     アスペクト指向プログラミングの例を示すものです。
     samples ディレクトリにて ../para などとして Paraphrase インタプリタを起動し、
 
-        "aop.pp" load
+        "aop.p8e" load
 
     とし、aop.pp を読み込みます。
-    次にワード hello を実行すると、様々な情報が表示されますが、hello の実体は
+    次にワード hello を実行すると、様々な情報が表示されます。しかし、hello の実体は
 
         "hello" : "HELLO" .cr ;
 
     です。つまり HELLO という表示以外はウィーブされたアドバイスによりなされている
     ものであり、その実体は myDocol ワードです。詳しくは aop.pp の中身を御覧ください。
 
-check-scriptFile-args.pp
+check-scriptFile-args.p8e
 	samples ディレクトリにて
 
-		../para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.pp
+		../para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.p8e
 
 	とすると、オプション E で指定された文字列を評価した上で、check-scrptFile-args.pp
 	が読み込まれて実行されます。check-scriptFile-args.pp は、スタックの様子を show す
@@ -44,15 +44,15 @@ check-scriptFile-args.pp
 	E オプションは、スクリプトファイルの後に記述しても、指定されたスクリプトファイル
 	よりも前に評価されますので、
 
-		../para check-scriptFile-args.pp -E "1 2.3 'str' ( a ( b c ) )" 
+		../para check-scriptFile-args.p8e -E "1 2.3 'str' ( a ( b c ) )" 
 
 	と書くこともできます。
 
-countPrimeMT-short.pp
+countPrimeMT-short.p8e
 	1 から 1,000 万までの素数を並列処理を用いて数えるプログラムです。samples ディ
     レクトリにて、
 
-		../para countPrimeMT-short.pp run
+		../para countPrimeMT-short.p8e run
 
 	とすると、計算か開始され
 
@@ -60,76 +60,89 @@ countPrimeMT-short.pp
 
 	という出力が得られます。
 
-dumpMPmt.pp
+dumpMPmt.p8e
 	samples ディレクトリにて、
 
-		../para dumpMPmt.pp run
+		../para dumpMPmt.p8e run
 
 	とすると、1 から 5000 までのメルセンヌ数のうち素数であるものを求めます。printf 
 	などの使い方の参考にして下さい。
 
-fact-tr.pp
+fact-tr.p8e
     ver. 0.93.0 より導入された末尾再帰（tail recursion）における最適化を示すプログ
     ラムです。詳細については、samples ディレクトリにて
 
-        ../para fact-tr.pp
+        ../para fact-tr.p8e
 
     としてみて下さい（引数に run と与えれば 100 の階乗を末尾再帰を使って求めます）。
 
-FizzBuzz.pp
+failure.p8e
+	終了コード -1 を返し、呼び出し側に必ず失敗を報告するプログラム例です。
+
+FizzBuzz.p8e
 	いわゆる FizzBuzz 問題を処理するワード FizzBuzz を定義します。samples ディレク
 	トリにて、
 
-		../para FizzBuzz.pp 1 10 for+ i FizzBuzz . next cr
+		../para FizzBuzz.p8e 1 10 for+ i FizzBuzz . next cr
 
     とすると、
 
 		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 
 
 	という出力が得られます。
-	../para FizzBuzz.pp run とすると 1 から 19 までの数値に対して処理が行われます。
+	../para FizzBuzz.p8e run とすると 1 から 19 までの数値に対して処理が行われます。
 
-Mersenne.pp
+Mersenne.p8e
     メルセンヌ数の素数性を判定します。詳細は
 
-        ../para Mersenne.pp help
+        ../para Mersenne.p8e help
 
     として、表示される使用方法を御覧ください。
 
-PE21mt.pp
+pass.p8e
+　　正常に終了したことを伝えるサンプルプログラムです。
+
+PE10mt.p8e
+　　200 万以下の全ての素数の和を求めて表示します。詳しくは
+
+　　　　../para PE10mt.p8e help
+
+    として、表示される使用方法を御覧ください。
+
+PE21mt.p8e
     2 から指定された数までの友愛数の和を並列処理にて求めます。samples ディレクト
     リにおいて、
 
-        ../para PE21mt.pp 10000 run
+        ../para PE21mt.p8e 10000 run
 
     などとします。この例では 2 から 10,000 までの友愛数とその総和を求めるという
     意味です。例えば、1000 を指定した場合は、220 と 284 という 1000 以下の友愛数が
     表示されるとともに、その合計である 504 という値が表示されます。
 
-PE25.pp
+PE25.p8e
 	Project Euler No.25 を解く、PE25 というワードが定義されています。このワードは、
 	1, 1 から始まるフィボナッチ数列に対し、TOS にある桁数を超える最初のフィボナッ
 	チ数列の項数を表示するものです。Project Euler No.25 では、1000 桁を超える最初
 	の項数を表示せよ、というのが問題ですので、samples ディレクトリにて
 
-		../para PE25.pp 1000 PE25 .cr
+		../para PE25.p8e 1000 PE25 .cr
 
 	とし、解くことができます（4782 と表示されるはずです）。
 
-PE56.pp
+PE56.p8e
     Project Euler No.56 を解くサンプルプログラムです。Project Euler No.56 は、
     0<a,b<100 において a^b を 10 進数で表示したとき、各桁を表す数字の和のうち最大
     となるものを示せ - というものです。
 
-        ../para PE56.pp run
+        ../para PE56.p8e run
 
     にて計算できます。
 
-zdk.pp
+zdk.p8e
 	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディ
     レクトリにて
 
-		../para zdk.pp run
+		../para zdk.p8e run
 
 	とすると、ズンドコキヨシ問題を処理する様子が表示されます。
 
@@ -153,7 +166,7 @@ pseudo_shebang.bat
 
 ---
 
-次のサンプルファイルは Linux や MacOS にて実行する場合に関係するファイルです。
+次のサンプルファイルは Linux や macOS にて実行する場合に関係するファイルです。
 
 shebang_example
     実行可能なスクリプトファイルを作成する例です。

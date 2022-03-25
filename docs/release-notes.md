@@ -1,124 +1,97 @@
-# Release Notes: Changes from version 0.93 to 0.94
+# Release Notes: Changes from version 0.94 to 0.95rc1
 
 ## Major changes
-* Added a debugger
-* Added pseudo-standard I/O functions
-* Support for aspect orientation programming
-* Words now have attribute information
-* Added associative array
-* Added invalid values (open to users)
-* Support for cross-references between Words
-* Added support for temporary word arguments
-* 'here-document' supported
+* Behavior of assignments to local variables were changed <br>
+    (from full-clone to reference)
+* Unnamed Word has been now memory management target
+* Debugger supports now multi-threaded
+* Symbol names starting with @ are allowed
+* Paraphrase program extension changed to .p8e
+* Add syntax highlighting file for Vim
 
 ## Changes to existing Words
-* Improved consistency of various loop processing
-* Specification change for 'switch - dispatch' blocks  
-     The Word 'case' is now required.
-* Specification change for 'while - repeat' blocks  
-     The Word 'do' is now required  
-     (this 'do' is a different Word with the same name than the previous 'do').
-* Specification change for 'for+' and 'for-' loops  
-     The specification has been changed to not include the end value.
-* Words with added functionality  
-     last, @last - Arrays are now supported.  
-     set, get - Added support for associative arrays.  
-     exec - now supports Standard Code.  
-     map, filter - Added support for the Word i.  
-     i - map, filter, find, and reduce are now supported.
-* Things that have changed and reappeared in function  
-     do
+* Symbols are now used as Word's names when defining Word.
+* In the switch-dispatch block, it is no longer necessary to write a ‘break'.
+* case , -&gt; , -&gt;&gt; , dispatch are now supports 'cond'.
+* ‘default’ now equivalent to ‘case true’.
+* docol is now an immediate Word.
+* The Word ‘i' now works within ‘foreach’ block.
+* Several Words now support to symbols:<br>
+    alias , def , update , defined? , forget , set-breakpoint , _b 
+* ‘dump’ now supports association array and symbol.
+* &gt;int , &gt;double now support string.
+* &gt;long , &gt;float now support string and address value.
+* &gt;symbol supports boolean.
+* &gt;word supports symbol and Word.
+* Enhanced functionality for multi-level loading.
+* Renamed de-list to ‘expand’ and now also supports arrays.
+* Unified behavior against to scalar value and each element of container in == and !=.
+* The behavior of outputting strings in a list by ‘.’ (dot) has changed.
+* Word ‘reduce' and 1+ , 1- , 2/ have been discontinued..
+* The following Words were debugged:
+    alias , printf , &gt;array , dup , for- , &gt;int , car , @car , cdr , @cdr<br>
+	pop-front , &gt;long , docol , expand
 
 ### Name change
-* Name change for word prefixes  
-     valid? to @valid?  
-     'type' to @type
-* Name changes due to frequency of word use  
-     'local' to local-decl  
-     local-with to 'local'
+* Several Words were renamed:<br>
+	| from           | to              |
+	|----------------|-----------------|
+	| &gt;INT        | &gt;big-int     |
+    | &gt;FLOAT      | &gt;big-float   |
+    | &gt;str        | &gt;string      |
+	| &gt;to-hex-str | &gt;hex         |
+	| local          | local-decl      |
+	| local-with     | local           |
+    | type           | @type           |
+	| type-name      | @type-name      |
+    | empty-str?     | @empty-str?     |
+	| not-empty-str? | @not-empty-str? |
+    | valid-index?   | @valid-index?   |
+    | pop-front      | @pop-front      |
+	| add            | @push-back      |
+	| append         | @append         |
+    | get            | @get            |
 
 ## Newly added Words
-* &lt;&lt;&lt;
-* &gt;&gt;&gt;
-* &gt;&gt;&gt;raw
-* &gt;array
-* &gt;mock-stdin
-* &gt;param
-* ...
-* +@
-* ++
-* -@
-* --
-* &ast;@
-* /@
-* %@
-* &#095;b
-* &#095;c
-* &#095;cb
-* &#095;n
-* &#095;s
-* @even?
-* @has-key?
-* @invalid?
-* @list?
-* @word-name
-* 2drop-rs
-* add-enter-char
-* at
-* clear-breakpoint
-* cont
-* default
-* default-docol
-* defined?
-* docol
-* end-with?
-* enum
-* even?
-* find
-* get-attr
-* get-line-from-mock-stdout
-* get-std-code
-* has-any-attr?
-* has-attr?
-* has-key?
-* invalid
-* invalid?
-* max
-* min
-* new-assoc
-* not-true?
-* raw&lt;&lt;&lt;
-* reduce
-* remove-attr
-* return
-* search
-* set-attr
-* set-breakpoint
-* set-code
-* set-worded-docol-caller
-* show-attr
-* show-trace
-* start-with
-* step-over
-* step-in
-* troff
-* tron
-* update
-* use-mock-stdin
-* use-mock-stdout
-* use-stdin
-* use-stdout
-* valid?
-* word-name
-* worded-docol-caller
+* :( , );
+* (< , >)
+* ++ , -- , &lt;- , += , -= , &lowast;= , /= , %=
+* +@ , -@ , &lowast;@ , /@ , %@
+* &gt;array , &gt;assoc , &gt;bool , &gt;list
+* &gt;int? , &gt;long? , &gt;float? , &gt;double?
+* @set-attr
+* @sqrt
+* @type&gt; , &gt;type
+* bool-type , int-type , float-type , double-type , word-type
+* array? , list? , assoc? , @array? , @assoc? , string?
+* int? , long? , big-int? , float? , double? , big-float?
+* append , pop-front , push-back
+* as-counter
+* cond
+* docol-target-word
+* is?
+* last-defined-word
+* map-local , map-let
+* otherwise-drop , otherwise-2drop
+* panic
+* replace-str , split-str-by , trim
+* reverse-foreach
+* round
+* self
+* set-delete-by-forget , clear-delete-by-forget , check-delete-by-forget
+* set-random-seed
+* sputf
+* this-word-is-removed
+* tron?
+* when
+* zip , min-zip , max-zip , max-zip-with
 
 ## About Language Processing System 'para'
-No specific changes.
+* Add show-size option
+* Changed exit status (now normal exit even in help and version displays)
 
 ## About the sample programs included in the package
-* PE56.pp, a sample program to calculate Project Euler No.56, was added  
-     PE56 is a sample program that calculates the largest sum of numbers in each digit when a^b is expressed as a decimal number, where a and b are numbers greater than 1 and less than 100, respectively.
-* Change of the file name of the sample program  
-     PE21mt-short.pp was renamed to PE21mt.pp.
-* Support for unit testing of sample programs  
-     Each sample program now supports the argument "test".
+* Lisp interpreter LisP8E was added to the sample program.
+* A test function has been added to the sample programs.
+* PE10mt.p8e, PolishNotation.p8e, fastInvSqrt.p8e, failure.p8e, pass.p8e  were added.
+

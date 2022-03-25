@@ -1,0 +1,14 @@
+// === debug util ===
+// ex:
+// 	`lisp8e-eval set-debug
+
+`debug-docol : self word-name "ENTER WORD=%s\n" putf show docol ;
+
+`debug-docol >word set-worded-docol-callee	// register debug-docol for worded-docol
+
+// sym --- 
+`debug-print : dup "%s=" putf , .cr ;
+
+// sym --- 
+`set-debug : >word worded-docol-caller set-code ;
+

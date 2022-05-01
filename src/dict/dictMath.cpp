@@ -243,8 +243,8 @@ void InitDict_Math() {
 			case DataType::BigInt:
 				break;
 			case DataType::Float:
-				tos.floatValue = tos.floatValue>=0 ? (int)(tos.floatValue+0.5f)
-												   : (int)(tos.floatValue-0.5f);
+				tos.floatValue = (float)(tos.floatValue>=0 ? (int)(tos.floatValue+0.5f)
+														   : (int)(tos.floatValue-0.5f));
 				break;
 			case DataType::Double:
 				tos.doubleValue = tos.doubleValue>=0 ? (int)(tos.doubleValue+0.5)

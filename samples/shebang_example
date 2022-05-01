@@ -1,5 +1,5 @@
 #!../para
 "DO NOT DISPLAY HELP" // it is dummy value to suppress help message.
-"PE21mt.pp" load
+"PE21mt.p8e" load
 10000 run-until
 

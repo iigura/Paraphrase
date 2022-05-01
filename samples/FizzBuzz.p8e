@@ -1,4 +1,4 @@
-// Usage: ../para FizzBuzz.pp 1 20 for+ i FizzBuzz . next cr
+// Usage: ../para FizzBuzz.p8e 1 20 for+ i FizzBuzz . next cr
 
 `help : <<<
 	----------
@@ -7,15 +7,15 @@
 
 	You can use it as:
 
-	\     ../para FizzBuzz.pp 1 20 for+ i FizzBuzz . next cr
+	\     ../para FizzBuzz.p8e 1 20 for+ i FizzBuzz . next cr
 
 	or as the same content can also be obtained by giving the argument "run".
 
-	\     ../para FizzBuzz.pp run
+	\     ../para FizzBuzz.p8e run
 
 	\         or
 
-	\     ../para FizzBuzz.pp test
+	\     ../para FizzBuzz.p8e test
 	----------
 	>>> write
 ;

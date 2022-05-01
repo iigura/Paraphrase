@@ -1,9 +1,9 @@
 `usage :
 	<<<
 		----------------------------------
-		usage: ../para PE21mt.pp run
+		usage: ../para PE21mt.p8e run
        \           or
-       \       ../para PE21mt.pp test
+       \       ../para PE21mt.p8e test
 		----------------------------------
 	>>> write
 ;

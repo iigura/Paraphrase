@@ -6,22 +6,22 @@ windows? if utf8>sjis then
 	prime or not. Depending on your computing environment, it may take a few
 	minutes to run.
 
-		usage: ../para Mersenne.pp N prime-test
+		usage: ../para Mersenne.p8e N prime-test
 
 		ex1: M26 = 2^23209-1
-		\    ../para Mersenne.pp 23209 prime-test
+		\    ../para Mersenne.p8e 23209 prime-test
 
 		ex2: M27 = 2^44497-1
-	    \    ../para Mersenne.pp 44497 prime-test
+	    \    ../para Mersenne.p8e 44497 prime-test
 
 	    ex3: M28 = 2^86243-1 .cr
-	    \    ../para Mersenne.pp 86243 prime-test
+	    \    ../para Mersenne.p8e 86243 prime-test
 
 		ex4: Perform a check around M28 (=2^86243-1).
-	    \    ../para Mersenne.pp run
+	    \    ../para Mersenne.p8e run
 
 		ex5: test this sample program.
-	    \    ../para Mersenne.pp test
+	    \    ../para Mersenne.p8e test
 	----------
 	>>> write
 ;

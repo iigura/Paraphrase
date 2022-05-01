@@ -5,9 +5,9 @@
 		Find the number of terms in the first Fibonacci sequence greater than 10^(N-1).
 		Where N is a given number of digits.
 
-		usage: ../para PE25.pp 1000 run
+		usage: ../para PE25.p8e 1000 run
 	   \             or
-	   \       ../para PE25.pp test
+	   \       ../para PE25.p8e test
 		-------------------------------------------------------------------------------
 	>>> write
 ;

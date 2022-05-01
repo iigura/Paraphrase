@@ -1,5 +1,5 @@
 // Polish notation example.
-// to test, ../para PolishNotation.pp test
+// to test, ../para PolishNotation.p8e test
 
 `sq : dup * ;	// square
 

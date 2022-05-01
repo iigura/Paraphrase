@@ -2,14 +2,14 @@ windows? if utf8>sjis then
 
 `help : <<<
 	----------------------------------
-	countPrimeMT-short.pp {run | test}
+	countPrimeMT-short.p8e {run | test}
 	----------------------------------
 	This program examines the number of primes that exist between 1 and 10 million.
 	It uses multi-threads and runs the investigation in parallel. It takes about 19
 	seconds on a Mac book air (Intel CPU) with 4 CPU threads.
 
 	Usage: In the samples directory
-    \    ... /para countPrimeMT-short.pp run
+    \    ... /para countPrimeMT-short.p8e run
 
 	and you should get the following output.
     \    numOfPrimes=664579 (2 ... 9999991)
@@ -62,6 +62,40 @@ then
 	@size 664579  check	// num of primes in [1,10^7].
 	@car  2       check	// 1st prime
 	@last 9999991 check	// last prime in [1,10^7].
+	drop
+	"GOOD" .cr
+;
+
+// for Raspberry Pi 4
+`calc-light : 
+	reset-pipes
+	// 奇数については並列処理で調べる
+	[ 3 1000000 for+ i >pipe 2 step next ]
+
+	[[	// 複数スレッドで検証作業（=woker thrread)
+		while-pipe
+			dup prime?-for-odd if >pipe else drop then
+		repeat
+	]]
+
+	( 2 ) while-pipe @append repeat { < } sort
+;
+
+`run-light :
+	calc-light
+	( "numOfPrimes=%d (%d ... %d)\n" )
+		over size @append
+		over car  @append
+		over last @append
+	printf
+	drop
+;
+
+`test-light :
+	calc-light
+	@size 78498  check	// num of primes in [1,10^6].
+	@car  2      check	// 1st prime
+	@last 999983 check	// last prime in [1,10^6].
 	drop
 	"GOOD" .cr
 ;

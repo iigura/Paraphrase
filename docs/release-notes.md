@@ -1,4 +1,4 @@
-# Release Notes: Changes from version 0.94 to 0.95rc1
+# Release Notes: Changes from version 0.94 to 0.95
 
 ## Major changes
 * Behavior of assignments to local variables were changed <br>
@@ -94,4 +94,8 @@
 * Lisp interpreter LisP8E was added to the sample program.
 * A test function has been added to the sample programs.
 * PE10mt.p8e, PolishNotation.p8e, fastInvSqrt.p8e, failure.p8e, pass.p8e  were added.
+
+## Other changes
+* Added test program driver test.bat for Windows (see 'samples' directory). 
+  (on macOS and Linux, you can use 'make test' to run tests).
 

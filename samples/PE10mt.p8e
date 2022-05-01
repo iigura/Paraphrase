@@ -1,16 +1,16 @@
 `help :
 	<<<
 		-------------------------------------------------------------------------------
-        PE10mt.pp - Solve Project Euler No. 10, which asks you to find the sum of all
-       \            prime numbers under 2 million.
+        PE10mt.p8e - Solve Project Euler No. 10, which asks you to find the sum of all
+       \             prime numbers under 2 million.
 
-		usage: ../para PE10mt.pp run
+		usage: ../para PE10mt.p8e run
 		note : the above command will show 142913828922
 	   \            or
-	   \       ../para PE10mt.pp N PE10mt .cr
+	   \       ../para PE10mt.p8e N PE10mt .cr
        \       N is an integer that indicates how far to probe.
        \       If only "run" is given as an argument, it means that N=2000000 is given.
-		test : ../para PE10mt.pp test
+		test : ../para PE10mt.p8e test
 		-------------------------------------------------------------------------------
 	>>> write
 ;

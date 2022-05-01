@@ -1037,7 +1037,7 @@ onExit:
 				if(tvCounter.dataType!=DataType::Int) {
 					return inContext.Error(NoParamErrorID::RsBroken);
 				}
-				tvCounter.intValue=i;
+				tvCounter.intValue=(int)i;
 
 				inContext.DS.emplace_back(tvList.listPtr->front());
 				if(inContext.Exec(lambda)==false) {

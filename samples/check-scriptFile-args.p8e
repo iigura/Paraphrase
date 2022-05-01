@@ -1,7 +1,7 @@
-// usage: para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.pp
+// usage: para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.p8e
 depth 0? if
-	"usage: para -E \"1 2.3 'str' ( a ( b c ) )\" check-scriptFile-args.pp" .cr
-	"  or : para -E \"1 2.3 'str' ( a ( b c ) )\" check-scriptFile-args.pp test" .cr
+	"usage: para -E \"1 2.3 'str' ( a ( b c ) )\" check-scriptFile-args.p8e" .cr
+	"  or : para -E \"1 2.3 'str' ( a ( b c ) )\" check-scriptFile-args.p8e test" .cr
 else
 	args size 0? if show then
 then

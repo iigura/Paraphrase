@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.95rc1"
+#define VERSION "0.95"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -86,8 +86,6 @@ static const char *getPrompt();
 static void printUsage();
 static void printVersion();
 static void showBuildInfo();
-
-void SetDeleteByForget();
 
 PP_API void InitErrorMessage();
 void InitDict_Word();
@@ -392,13 +390,13 @@ static void printVersion() {
 
 static void showBuildInfo() {
 	fprintf(stderr,"The memory consumption for each value is as follows (in bytes):\n");
-	fprintf(stderr,"\tsizeof(Word*)   =%lu\n",sizeof(Word*));
-	fprintf(stderr,"\tsizeof(Word**)  =%lu\n",sizeof(Word**));
-	fprintf(stderr,"\tsizeof(WordFunc)=%lu\n",sizeof(WordFunc));
-	fprintf(stderr,"\tsizeof(bool)    =%lu\n",sizeof(bool));
-	fprintf(stderr,"\tsizeof(int)     =%lu\n",sizeof(int));
-	fprintf(stderr,"\tsizeof(long)    =%lu\n",sizeof(long));
-	fprintf(stderr,"\tsizeof(float)   =%lu\n",sizeof(float));
-	fprintf(stderr,"\tsizeof(double)  =%lu\n",sizeof(double));
+	fprintf(stderr,"\tsizeof(Word*)   =%zu\n",sizeof(Word*));
+	fprintf(stderr,"\tsizeof(Word**)  =%zu\n",sizeof(Word**));
+	fprintf(stderr,"\tsizeof(WordFunc)=%zu\n",sizeof(WordFunc));
+	fprintf(stderr,"\tsizeof(bool)    =%zu\n",sizeof(bool));
+	fprintf(stderr,"\tsizeof(int)     =%zu\n",sizeof(int));
+	fprintf(stderr,"\tsizeof(long)    =%zu\n",sizeof(long));
+	fprintf(stderr,"\tsizeof(float)   =%zu\n",sizeof(float));
+	fprintf(stderr,"\tsizeof(double)  =%zu\n",sizeof(double));
 }
 

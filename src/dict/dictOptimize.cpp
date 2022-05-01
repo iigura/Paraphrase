@@ -99,6 +99,26 @@ void InitDict_Optimize() {
 		NEXT;
 	}));
 
+	Install(new Word("_dup_dec",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		switch(tos.dataType) {
+			case DataType::Int:	   inContext.DS.emplace_back(tos.intValue-1);  break;
+			case DataType::Long:   inContext.DS.emplace_back(tos.longValue-1); break;
+			case DataType::BigInt:
+				inContext.DS.emplace_back((*tos.bigIntPtr)-1);
+				break;
+			case DataType::Float:  inContext.DS.emplace_back(tos.floatValue-1);	 break;
+			case DataType::Double: inContext.DS.emplace_back(tos.doubleValue-1); break;
+			case DataType::BigFloat:
+				inContext.DS.emplace_back((*tos.bigFloatPtr)-1);
+				break;
+			default:
+				return inContext.Error(InvalidTypeErrorID::RsTosNumber,tos);
+		}
+		NEXT;		
+	}));
+
 	Install(new Word("_2_step+",WORD_FUNC {
 		if(inContext.RS.size()<1) { return inContext.Error(NoParamErrorID::RsIsEmpty); }
 		TypedValue& tvCounter=ReadTOS(inContext.RS);

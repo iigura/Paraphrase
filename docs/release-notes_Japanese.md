@@ -1,4 +1,4 @@
-# リリースノート：バージョン 0.94.0 から 0.95rc1 の変更点
+# リリースノート：バージョン 0.94.0 から 0.95 の変更点
 
 ## 主な変更
 * 局所変数への代入を参照に変更
@@ -93,4 +93,8 @@
 * Lisp インタプリタ LisP8E を同梱
 * 各サンプルプログラムにテスト機能を追加
 * PE10mt.p8e, PolishNotation.p8e, fastInvSqrt.p8e, failure.p8e, pass.p8e を追加
+
+## その他の変更
+* Windows 用のテストプログラムドライバ test.bat をsamples ディレクトリに追加しました
+ （macOS と Linux では、'make test' でテストを実行できます）。
 

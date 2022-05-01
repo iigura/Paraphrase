@@ -1,4 +1,4 @@
-# Paraphrase ver. 0.95rc1
+# Paraphrase ver. 0.95
 Copyright (c) 2018-2022 Koji Iigura  
 Released under the MIT license  
 [https://opensource.org/licenses/mit-license.php](
@@ -53,13 +53,14 @@ Windows, Linux, MacOS に対応しています。
 インストール不要で、すぐに実行できます。
 
 以下のリンク（Google Drive）をクリックし、それぞれのプラットフォーム用のパッケージを入手して下さい。
+なお Linux 版は Raspberry Pi4 の Ubuntu 用です。
 
 [https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ](
 https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ)
 
-Windows 版 para-0-95rc1-win.zip  
-Linux 版 para-0-95rc1-linux.tar.gz  
-MacOS 版 para-0-95rc1-mac.tar.gz  
+Windows 版 para-0-95-win.zip  
+Linux 版 para-0-95-linux.tar.gz  
+MacOS 版 para-0-95-mac.tar.gz  
 
 展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、

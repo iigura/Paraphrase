@@ -106,6 +106,7 @@ PP_API void InitOptPattern() {
 		OptPattern({getWord("std:_2"),getWord("std:_step+")},{getWord("std:_2_step+")}),
 
 		OptPattern({getWord("std:dup"),getWord("std:sqrt")},{getWord("std:@sqrt")}),
+		OptPattern({getWord("std:dup"),getWord("std:_dec")},{getWord("std:_dup_dec")}),
 
 		OptPattern({getWord("std:>"),getWord("std:_branch-if-false")},
 				   {getWord("std:_>_branch-if-false")}),

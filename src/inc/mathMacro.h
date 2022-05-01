@@ -238,6 +238,7 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 			case TypeCombinationForMathOP::LongBigInt: \
 				inTarget.bigIntPtr=new BigInt(inTarget.longValue OP *inTV.bigIntPtr); \
 				inTarget.dataType=DataType::BigInt; \
+				break; \
 			case TypeCombinationForMathOP::LongFloat: \
 				inTarget.floatValue=(float)inTarget.longValue OP inTV.floatValue; \
 				inTarget.dataType=DataType::Float; \
@@ -250,6 +251,7 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.bigFloatPtr \
 					=new BigFloat(inTarget.longValue OP *inTV.bigFloatPtr); \
 				inTarget.dataType=DataType::BigFloat; \
+				break; \
 			case TypeCombinationForMathOP::BigIntInt: \
 				*inTarget.bigIntPtr = *inTarget.bigIntPtr OP inTV.intValue; \
 				break; \
@@ -2426,6 +2428,7 @@ onError: \
 		case TypeCombinationForMathOP::LongBigInt: \
 			inTarget.bigIntPtr=new BigInt(inTarget.longValue % *inTV.bigIntPtr); \
 			inTarget.dataType=DataType::BigInt; \
+			break; \
 		case TypeCombinationForMathOP::BigIntInt: \
 			*inTarget.bigIntPtr %= inTV.intValue; \
 			break; \

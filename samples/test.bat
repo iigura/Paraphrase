@@ -1,55 +1,65 @@
 @echo on
-..\para 99.pp test
+..\para 99.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.pp test
+..\para -E "1 2.3 'str' ( a ( b c ) )" check-scriptFile-args.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para countPrimeMT-short.pp test
+..\para countPrimeMT-short.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para dumpMPmt.pp test
+..\para dumpMPmt.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para fact-tr.pp test
+..\para fact-tr.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para FizzBuzz.pp test
+..\para FizzBuzz.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para Mersenne.pp test
+..\para Mersenne.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para PE21mt.pp test
+..\para PE10mt.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para PE25.pp test
+..\para PE21mt.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para PE56.pp test
+..\para PE25.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
-..\para zdk.pp test
+..\para PE56.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
+..\para PolishNotation.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
+..\para zdk.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 

@@ -46,7 +46,7 @@ no_target:
 	@echo "for M1 MacOS:      make m1mac  or  make m1mac-debug"
 	@echo "for Linux:         make linux  or  make linux-debug"
 	@echo "for Windows:       please open windows/paraphrase.sln by VisualStudio."
-	@echo "for test:          make test   or  make test-failure"
+	@echo "for test:          make test   or  make test-light or make test-failure"
 
 macos: export CPPFLAGS=-std=c++1z -fomit-frame-pointer -fno-stack-check -O3 \
 		-D NDEBUG -D USE_NOEXCEPT -D USE_PTHREAD -D USE_READLINE \
@@ -165,6 +165,22 @@ test:
 	../para $(SAMPLES_DIR)/99.p8e test
 	../para -E "1 2.3 'str' ( a ( b c ) )" $(SAMPLES_DIR)/check-scriptFile-args.p8e test
 	../para $(SAMPLES_DIR)/countPrimeMT-short.p8e test
+	../para $(SAMPLES_DIR)/dumpMPmt.p8e test
+	../para $(SAMPLES_DIR)/fact-tr.p8e test
+	../para $(SAMPLES_DIR)/FizzBuzz.p8e test
+	../para $(SAMPLES_DIR)/Mersenne.p8e test
+	../para $(SAMPLES_DIR)/PE10mt.p8e test
+	../para $(SAMPLES_DIR)/PE21mt.p8e test
+	../para $(SAMPLES_DIR)/PE25.p8e test
+	../para $(SAMPLES_DIR)/PE56.p8e test
+	../para $(SAMPLES_DIR)/PolishNotation.p8e test
+	../para $(SAMPLES_DIR)/zdk.p8e test
+	@echo "===== The all test passed. ====="
+
+test-light:
+	../para $(SAMPLES_DIR)/99.p8e test
+	../para -E "1 2.3 'str' ( a ( b c ) )" $(SAMPLES_DIR)/check-scriptFile-args.p8e test
+	../para $(SAMPLES_DIR)/countPrimeMT-short.p8e test-light
 	../para $(SAMPLES_DIR)/dumpMPmt.p8e test
 	../para $(SAMPLES_DIR)/fact-tr.p8e test
 	../para $(SAMPLES_DIR)/FizzBuzz.p8e test

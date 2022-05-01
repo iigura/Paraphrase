@@ -1,16 +1,16 @@
 // for test
-//	../para 99.pp test
+//	../para 99.p8e test
 
 `help : <<<
 	=======================================================
 	This is a sample program of for+ ~ next loop.
 	This program outputs a Japanese multiplication table.
 
-	\tusage: ../para 99.pp run
+	\tusage: ../para 99.p8e run
 
 	\           or
 
-	\tusage: ../para 99.pp test
+	\tusage: ../para 99.p8e test
 	=======================================================
 	>>> write
 ;

@@ -2,17 +2,17 @@
 
 	This sample program shows factorial calculation by tail recursion.
 
-	\     usage: ../para fact-tr.pp 100LL fact .cr
+	\     usage: ../para fact-tr.p8e 100LL fact .cr
 
     Alternatively, if you just want to calculate the factorial of 100,
 	you can run it with the argument "run" as shown below.
 
-    \            ../para fact-tr.pp run
+    \            ../para fact-tr.p8e run
 
 	To test using the factorial of 100, it is sufficient to give "test"
 	as the argument (if it  success will be displayed  "GOOD").
 
-	\            ../para fact-tr.pp test
+	\            ../para fact-tr.p8e test
 
     >>> write
 ;

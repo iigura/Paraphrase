@@ -29,6 +29,9 @@
 	typedef std::mutex Mutex;
 	typedef std::condition_variable Cond;
 
+	#ifdef _WIN32
+		#pragma warning(disable : 26110)
+	#endif
 	#define initMutex(mtx) // do nothing
 	#define initCond(cnd)  // do nothing
 	inline void Lock(Mutex& inMutex)   { inMutex.lock();   }

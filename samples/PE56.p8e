@@ -1,12 +1,12 @@
 // Project Euler No.56
-// usage: ../para PE56.pp
+// usage: ../para PE56.p8e
 
 `help :
 	<<<
 		---------------------------
-		usage: ../para PE56.pp run
+		usage: ../para PE56.p8e run
 	   \           or
-	   \       ../para PE56.pp test
+	   \       ../para PE56.p8e test
 		---------------------------
 	>>> write
 ;

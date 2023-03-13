@@ -32,17 +32,13 @@ interactive? not if
 then
 
 `calc : 
-	reset-pipes
 	// 奇数については並列処理で調べる
-	[ 3 10000000 for+ i >pipe 2 step next ]
-
-	[[	// 複数スレッドで検証作業（=woker thrread)
+	[ 3 10000000 for+ i >pipe 2 step next
+	]>> >>[[	// 複数スレッドで検証作業（=woker thrread)
 		while-pipe
 			dup prime?-for-odd if >pipe else drop then
 		repeat
-	]]
-
-	( 2 ) while-pipe @append repeat { < } sort
+	]]> ( 2 ) while-pipe @append repeat { < } sort
 ;
 
 `run :
@@ -68,17 +64,13 @@ then
 
 // for Raspberry Pi 4
 `calc-light : 
-	reset-pipes
 	// 奇数については並列処理で調べる
-	[ 3 1000000 for+ i >pipe 2 step next ]
-
-	[[	// 複数スレッドで検証作業（=woker thrread)
+	[ 3 1000000 for+ i >pipe 2 step next
+	]>> >>[[	// 複数スレッドで検証作業（=woker thrread)
 		while-pipe
 			dup prime?-for-odd if >pipe else drop then
 		repeat
-	]]
-
-	( 2 ) while-pipe @append repeat { < } sort
+	]]> ( 2 ) while-pipe @append repeat { < } sort
 ;
 
 `run-light :

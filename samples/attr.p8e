@@ -1,0 +1,15 @@
+// Example of unit test by attribute function
+// usage: ../para attr.p8e test
+
+// word --- (may be) bool
+`unit-test :
+	@word? not if "error: TOS should be a word." .cr false return then
+	dup "test-code" has-attr? not if "no test code" .cr false return then
+	"test-code" get-attr eval
+;
+
+`twice : 2 * ;
+`twice >word 'test-code' '12 twice 24 ==' set-attr
+
+`test : `twice >word unit-test if "GOOD" .cr else "NG" .cr -1 exit then ;
+

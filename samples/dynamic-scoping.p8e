@@ -1,0 +1,41 @@
+`NG : "NG" .cr -1 exit ;
+
+// check behavior with lambda word.
+`test1 :
+	{ 1 `x local
+		{ 20 `y local
+			{ 300 `z local
+				`x , `y , + `z , +
+			} exec
+		} exec
+	} exec
+	321 != if NG then
+	"  test 1 is OK." .cr
+;
+
+// check behavior with word.
+`Z : 300 `z local `x , `y , + `z , + ;
+`Y :  20 `y local Z ;
+`X :   1 `x local Y ;
+`test2 :
+	X
+	321 != if NG then
+	"  test 2 is OK." .cr
+;
+
+// check behavior with multi thread.
+`result var
+`test3 :
+	[ 1 `x local
+		[ 20 `y local
+			[ 300 `z local
+				`x , `y , + `z , + >$result
+			]= join
+		]= join
+	]= join
+	$result> 321 != if NG then
+	"  test 3 is OK." .cr
+;
+
+`test : test1 test2 test3 "OK" .cr ;
+

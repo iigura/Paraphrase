@@ -33,32 +33,41 @@ bool Error(Context& inContext,
 bool Error(Context& inContext,const ErrorIdWith2int inErrorID,
 		   const int inIntValue1,const int inIntValue2);
 
-PP_API Context *GlobalContext=new Context(NULL,Level::Interpret,NULL,NULL,NULL);
+PP_API Context *GlobalContext=new Context(NULL,Level::Interpret);
 
 PP_API Context::Context(Context *inParent,Level inExecutionThreshold,
-				 std::shared_ptr<ChanMan> inFromParent,
-				 std::shared_ptr<ChanMan> inToParent,
 				 const std::vector<TypedValue> *inInitParamFromParent)
-  :parent(inParent),ExecutionThreshold(inExecutionThreshold),
-   fromParent(inFromParent),toParent(inToParent),
-   toChild(),fromChild(),toPipe(),
-   fromPipe(inParent!=NULL ? inParent->lastOutputPipe : NULL),
-   lastOutputPipe(),initParamForPBlock(),isInitParamBroadcast(true) {
+  :parent(inParent),ExecutionThreshold(inExecutionThreshold),threadIdx(-1),
+   toPipe(NULL),fromPipe(NULL),
+   initParamForPBlock(),isInitParamBroadcast(true),newWord(NULL) {
 	DS.reserve(DS_InitialStackSize);
 	RS.reserve(RS_InitialStackSize);
 	SS.reserve(SS_InitialStackSize);
 	IS.reserve(IS_InitialStackSize);
 
-	newWord=NULL;
-
-	if(inInitParamFromParent!=NULL) {
-		const size_t n=inInitParamFromParent->size();
-		for(size_t i=0; i<n; i++) {
-			DS.push_back(inInitParamFromParent->at(i));
-		}
-	}
+	if(inInitParamFromParent!=NULL) { BackInsert(&DS,inInitParamFromParent); }
 }
 
+PP_API Context::~Context() {
+	// empty
+	// printf("~CONTEXT: %p\n",this);
+	// fflush(stdout);
+}
+
+PP_API void Context::New_ToPipe() {
+	if(toPipe.get()!=nullptr) {
+		toPipe->CloseOnWrite();
+		toPipe.reset();
+	}
+	toPipe.reset(new ChanMan(1,">pipe"));
+}
+
+PP_API Context *Context::NewContextForCoroutine() {
+	//Context *newContext=new Context(this,
+	return NULL;
+
+
+}
 
 PP_API void Context::RemoveDefiningWord() {
 	if(newWord->shortName.length()!=0) {
@@ -89,45 +98,10 @@ PP_API bool Context::Exec(const Word *inWord) {
 	const Word **ipBackup=ip;
 		const Word *tmpThread[2]={inWord,NULL};
 		ip=tmpThread;
-		bool needLVEnv = inWord->numOfLocalVar>0;
-		if(needLVEnv) {
-			Env.push_back(LocalVarSlot(inWord->numOfLocalVar,TypedValue()));
-		}
 		bool ret=innerInterpreter(*this);
 		if(ret==false) { IS.clear(); }
-		if( needLVEnv ) { Env.pop_back(); }
 	ip=ipBackup;
 	return ret;
-}
-
-PP_API bool Context::Compile(const std::string& inWordName) {
-	const Word *wordPtr=GetWordPtr(inWordName);
-	if(wordPtr==NULL) { return false; }
-	Compile(TypedValue(wordPtr));
-	return true;
-}
-
-PP_API void Context::Compile(const TypedValue& inTypedValue) {
-	newWord->tmpParam->push_back(inTypedValue);
-}
-
-PP_API bool Context::Compile(int inAddress,
-							 const TypedValue& inTypedValue,
-							 bool inIsForceUpdate) {
-	if(newWord->tmpParam->size()<=inAddress) {
-		fprintf(stderr,"SYSTEM ERROR at Compile(addr,tv).\n");
-		return false;
-	}
-	TypedValue& emptySlot=newWord->tmpParam->at(inAddress);
-	if(inIsForceUpdate==false && emptySlot.dataType!=DataType::EmptySlot) {
-		fprintf(stderr,"SYSTEM ERROR at Compile(addr,tv).\n");
-		fprintf(stderr,"slot is not an empty slot.\n");
-		fprintf(stderr,"current slot is:");
-		emptySlot.Dump();
-		return false;
-	}
-	newWord->tmpParam->at(inAddress)=inTypedValue;
-	return true;
 }
 
 PP_API bool Context::BeginControlBlock() {
@@ -147,11 +121,10 @@ PP_API bool Context::EndControlBlock() {
 		return Error(InvalidTypeErrorID::RsTosThreshold,tvThreshold);
 	}
 	if(tvThreshold.intValue==(int)Level::Interpret) {
-		Compile(std::string("_semis"));
-		Word *newWordBackup=newWord;
-		FinishNewWord();
-		TypedValue elementToExec(newWordBackup);
-		newWord=NULL;
+		newWord->CompileWord("_semis");
+		TypedValue elementToExec(newWord);
+		newWord->BuildParam();
+		FinishWordDef();
 		ExecutionThreshold=(Level)tvThreshold.intValue;
 		return Exec(elementToExec);
 	} else {
@@ -159,7 +132,10 @@ PP_API bool Context::EndControlBlock() {
 	}
 }
 
-PP_API void Context::BeginNoNameWordBlock() {
+PP_API void Context::BeginNoNameWordBlock(ControlBlockType inCBT) {
+	assert(((int)inCBT & (int)ControlBlockType::kOPEN_LAMBDA_GROUP)!=0);
+
+	SS.emplace_back(TypedValue(inCBT));
 	RS.emplace_back(DataType::NewWord,newWord);
 	newWord=new Word(G_DocolAdvice);
 	RS.emplace_back(ExecutionThreshold);
@@ -167,6 +143,15 @@ PP_API void Context::BeginNoNameWordBlock() {
 }
 
 PP_API bool Context::EndNoNameWordBlock() {
+	if(SS.size()<1) { return Error(NoParamErrorID::SsBroken); }
+	TypedValue tvLambdaInfo=Pop(SS);
+	if(tvLambdaInfo.dataType!=DataType::CB) {
+		return Error(NoParamErrorID::SsBroken);
+	}
+	if((tvLambdaInfo.intValue & (int)ControlBlockType::kOPEN_LAMBDA_GROUP)==0) {
+		return Error(NoParamErrorID::SsBroken);
+	}
+
 	if(RS.size()<2) { return Error(NoParamErrorID::RsAtLeast2); }
 	TypedValue tvThreshold=Pop(RS);
 	if(tvThreshold.dataType!=DataType::Threshold) {
@@ -208,6 +193,39 @@ PP_API bool Context::EndListBlock() {
 	newWord=(Word *)newWordElement.wordPtr;
 	ExecutionThreshold=(Level)tvThreshold.intValue;
 	return true;
+}
+
+TypedValue Context::GetLocalVarValueByDynamic(std::string& inVarName,bool *outFound) {
+	if(Env.size()<1) { goto searchParentContext; }
+
+	int start;
+	for(start=(int)IS.size()-1; (*IS[start])->numOfLocalVar==0; start--) {
+		// empty
+	}
+	if(start<0) { goto searchParentContext; }
+
+	{
+		int offset = (*ip)->numOfLocalVar==0 ? 0 : 1;
+		for(int w=start,t=(int)Env.size()-1-offset; w>=0; w--) {
+			Word *word=(Word *)(*IS[w]);
+			if(word->numOfLocalVar==0) { continue; }
+			int slotPos=word->GetLocalVarSlotPos(inVarName);
+			if(slotPos>=0) {
+				*outFound=true;
+				return Env[t][slotPos].first;
+			}
+			t--;
+		}
+	}
+
+searchParentContext:
+	if(parent!=NULL) {
+		return parent->GetLocalVarValueByDynamic(inVarName,outFound);
+	} else {
+		printf("ERROR: no such local vars (var name:%s).\n",inVarName.c_str());
+		*outFound=false;
+		return TypedValue();
+	}
 }
 
 int Context::ReadThresholdBackup() {
@@ -287,7 +305,7 @@ PP_API bool Context::RemoveTopChunk() {
 
 PP_API void Context::CompileEmptySlot(const Level inThresholdBackup) {
 	TypedValue tv=TypedValue(DataType::EmptySlot,inThresholdBackup);
-	Compile(tv);
+	newWord->CompileValue(tv);
 }
 
 PP_API TypedValue Context::MarkAndCreateEmptySlot() {
@@ -300,6 +318,9 @@ PP_API int Context::GetNextThreadAddressOnCompile() const {
 	return (int)(newWord->tmpParam->size());
 }
 
+PP_API bool Context::IsListConstructing() const {
+	return newWord->type==WordType::List;
+}
 
 PP_API TypedValue Context::GetList() const {
 	assert(newWord->type==WordType::List);
@@ -329,22 +350,40 @@ PP_API TypedValue Context::GetLiteralFromThreadedCode(bool inIsRemoveFromThread,
 	}
 	CodeThread *thread=newWord->tmpParam;
 	int n=(int)thread->size();
-	if(n<1) {
-		Error(NoParamErrorID::SystemError);
-		exit(-1);
+	if(n<1) { goto onError; }
+
+	int litIndex;
+	bool multiple;
+	if(n>2 && (thread->at(n-1).dataType==DataType::Word
+			   || thread->at(n-1).dataType==DataType::DirectWord)
+	  && thread->at(n-1).wordPtr->longName=="std:create-working-value") {
+		litIndex=n-3;
+		multiple=true;
+		if(litIndex<0) { goto onError; }
+	} else {
+		litIndex=n-2;
+		multiple=false;
+		if(litIndex<0) { goto onError; }
 	}
-	if((thread->at(n-2).dataType!=DataType::Word
-		&& thread->at(n-2).dataType!=DataType::DirectWord)
-	  || thread->at(n-2).wordPtr->longName!="std:_lit") {
-		if( inPrintErrorMessage ) { Error(NoParamErrorID::InvalidUse); }
-		return TypedValue();
+
+	if((thread->at(litIndex).dataType!=DataType::Word
+		&& thread->at(litIndex).dataType!=DataType::DirectWord)
+	  || thread->at(litIndex).wordPtr->longName!="std:_lit") {
+		goto onError;
 	}
-	TypedValue tv=thread->at(n-1);
-	if( inIsRemoveFromThread ) {
-		thread->pop_back();
-		thread->pop_back();
+	{
+		TypedValue tv=thread->at(litIndex+1);
+		if( inIsRemoveFromThread ) {
+			thread->pop_back();
+			thread->pop_back();
+			if( multiple ) { thread->pop_back(); }
+		}
+		return tv;
 	}
-	return tv;
+
+onError:
+	if( inPrintErrorMessage ) { Error(NoParamErrorID::InvalidUse); }
+	return TypedValue();
 }
 
 PP_API bool Context::Error(const NoParamErrorID inErrorID) {
@@ -387,62 +426,6 @@ PP_API bool Context::Error_InvalidType(const InvalidTypeStrTvTvErrorID inErrorID
 	return ::Error(*this,inErrorID,inStr,inTV1,inTV2);
 }
 
-// tmpParam -> param
-static int getParamSize(const std::vector<TypedValue> *inTmpParam);
-
-PP_API void Context::FinishNewWord() {
-	newWord->numOfLocalVar=(int)newWord->localVarDict.size();
-	Optimize(newWord->tmpParam);
-	ReplaceTailRecursionToJump(newWord,newWord->tmpParam);
-
-	int paramSize=getParamSize(newWord->tmpParam);
-
-	const size_t n=newWord->tmpParam->size();
-	int *addressTransferMap=new int[paramSize];
-	size_t newIndex=0;
-	for(int i=0; i<n; i++) {
-		addressTransferMap[i]=(int)newIndex;
-		TypedValue tv=newWord->tmpParam->at(i);
-		switch(tv.dataType) {
-			case DataType::Address:
-			case DataType::DirectWord: newIndex++; break;
-
-			default:
-				newIndex += sizeof(TypedValue)%sizeof(WordFunc*)==0
-					 	  ? sizeof(TypedValue)/sizeof(WordFunc*)
-					 	  : sizeof(TypedValue)/sizeof(WordFunc*)+1;
-		}
-	}
-
-	const Word **wordPtrArray=new const Word*[paramSize+1];
-	std::unordered_map<int,int> *addressOffsetToIndexMapper
-		=new std::unordered_map<int,int>();
-	int dest=0;
-	for(int i=0; i<n; i++) {
-		addressOffsetToIndexMapper->insert({dest,i});
-		TypedValue& tv=newWord->tmpParam->at(i);
-		if(tv.dataType==DataType::DirectWord) {
-			wordPtrArray[dest]=tv.wordPtr;
-			dest++;
-		} else if(tv.dataType==DataType::Address) {
-			wordPtrArray[dest]
-				=(const Word*)(wordPtrArray+addressTransferMap[tv.intValue]);
-			dest++;
-		} else {
-			new((TypedValue*)(wordPtrArray+dest)) TypedValue(tv);
-			dest += TvSize;
- 		}
-	}
-	wordPtrArray[paramSize]=NULL;	// guard (end mark)
-
-	newWord->param=wordPtrArray;
-	newWord->addressOffsetToIndexMapper=addressOffsetToIndexMapper;
-	newWord->isForgetable=true;
-
-	lastDefinedWord=newWord;
-	newWord=NULL;
-}
-
 PP_API void Context::ShowIS() const {
 	int maxLength=-1;
 	for(int i=0; i<(int)IS.size(); i++) {
@@ -467,22 +450,6 @@ PP_API void Context::ShowIS() const {
 
 	for(int i=0; i<maxLength+2*2; i++) { putchar('-'); }
 	printf("\n");
-}
-
-static int getParamSize(const std::vector<TypedValue> *inTmpParam) {
-	const size_t n=inTmpParam->size();
-	size_t ret=0;
-	for(size_t i=0; i<n; i++) {
-		TypedValue tv=inTmpParam->at(i);
-		switch(tv.dataType) {
-			case DataType::Address:
-			case DataType::DirectWord:
-				ret++;
-				break;
-			default: ret += TvSize;
-		}
-	}
-	return (int)ret;
 }
 
 PP_API bool Context::IsInComment() {
@@ -559,8 +526,8 @@ PP_API bool Context::LeaveHereDocument() {
 			DS.emplace_back(hereDocStr);
 			break;
 		case Level::Compile:
-			Compile(std::string("_lit"));
-			Compile(TypedValue(hereDocStr));
+			newWord->CompileWord("_lit");
+			newWord->CompileValue(hereDocStr);
 			break;
 		default:
 			fprintf(stderr,"SYSTEM ERROR, invalid execution threshold (in >>>raw)\n");
@@ -570,10 +537,16 @@ PP_API bool Context::LeaveHereDocument() {
 	return true;
 }
 
+PP_API Context *NewContextForCoroutine(Context& inContext) {
+	Context *newContext=new Context(inContext.parent,inContext.ExecutionThreshold);
+
+
+return NULL;
+}
+
+
 void Error(const char *inWordName,const char *inFormat,...) {
-	if(inWordName!=NULL) {
-		fprintf(stderr,"ERROR '%s': ",inWordName);
-	}
+	if(inWordName!=NULL) { fprintf(stderr,"ERROR '%s': ",inWordName); }
 	va_list vl;
 	va_start(vl,inFormat);
 	vfprintf(stderr,inFormat,vl);

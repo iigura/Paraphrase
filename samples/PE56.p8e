@@ -36,13 +36,11 @@ then
 				i >big-int j tuple >pipe
 			next
 		next
-	]
-
-	[[	while-pipe
+	]>> >>[[	while-pipe
 			clone expand pow digit-sum
 			@append >pipe
 		repeat
-	]]
+	]]>
 
 	{	( max max-pattern ) local-decl
 	  	0 `max let

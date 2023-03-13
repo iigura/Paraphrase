@@ -95,6 +95,8 @@ enum class InvalidTypeErrorID {
 	TosArrayOrList, TosArrayOrListOrStringOrSymbol,
 	TosList,
 	TosFile,
+	TosChannel,
+	TosContext,
 	TosNumberOrString,
 	TosWp, // TosWpOrStdCode, TosAddress,
 	TosParamDest,
@@ -102,6 +104,7 @@ enum class InvalidTypeErrorID {
 	TosWpOrStringOrKV,
 	TosWpOrStringOrSymbolOrKV,
 	TosStdCode,
+	TosContextOrContainer,
 	TosCanNotConvertToBool,
 	TosCanNotConvertToString,
 	
@@ -115,12 +118,15 @@ enum class InvalidTypeErrorID {
 	SecondFile,
 	SecondThreshold,
 	SecondWp,
+	SecondContext,
+	SecondCB,
 
 	ThirdBool,
 	ThirdList,
 	ThirdString,
 	ThirdArrayOrListOrKV,
 	ThirdWp,
+	ThirdUserData,
 
 	RsTosIntOrLongOrBigint,
 	RsTosNumber,
@@ -142,6 +148,11 @@ enum class InvalidTypeErrorID {
 	LvNumber,
 
 	ElementShouldBeTuple,
+
+	ArrayElemContext,
+	ListElemContext,
+	KvElemContext,
+
 	CompiledLiteralShouldBeList,
 	CompiledLiteralShouldBeSymbolOrString,
 	CompiledLiteralShouldBeSymbolOrStringOrList,
@@ -162,6 +173,7 @@ enum class InvalidTypeStrTvTvErrorID {
 
 enum class ErrorIdWithString {
 	InvalidToken,
+	InvalidFormat,
 
 	CanNotFindTheWord, CanNotFindTheLocalVar,
 	CanNotInstallUnoverWritable, CanNotMakeShortenNameUnoverWritable,

@@ -30,6 +30,11 @@ void InitDict_LocalVar() {
 		NEXT;
 	}));	
 
+	// `x unprotect-local
+	// `x local `x unprotect
+	// `x local-decl
+	// `x unprotect-decl
+
 	// X slotPos ---
 	Install(new Word("_setValue",WORD_FUNC {
 		if(inContext.DS.size()<2) {
@@ -43,6 +48,25 @@ void InitDict_LocalVar() {
 		if(inContext.SetCurrentLocalVar(tos.intValue,second)==false) {
 			return inContext.Error(ErrorIdWithInt::InvalidLocalSlotIndex,tos.intValue);
 		}
+		NEXT;
+	}));
+
+	// X varName ---
+	Install(new Word("_setValueByDynamic",WORD_FUNC {
+#if 0
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tvVarName=Pop(inContext.DS);
+		if(tvVarName.dataType!=DataType::Symbol) {
+			return inContext.Error(InvalidTypeErrorID::TosSymbol,tvVarName);
+		}
+		TypedValue tvValue=Pop(inContext.DS);
+		if(inContext.SetLocalVarValueByDynamic(*tvVarName.stringPtr,tvValue)==false) {
+			return inContext.Error(ErrorIdWithString::CanNotFindTheLocalVar,
+								   *tvVarName.stringPtr);
+		}
+#endif
 		NEXT;
 	}));
 
@@ -163,7 +187,7 @@ void InitDict_LocalVar() {
 				}
 			}
 		}
-		inContext.Compile(std::string("_>param"));
+		inContext.newWord->CompileWord("_>param");
 		NEXT;
 	}));
 
@@ -258,9 +282,9 @@ void InitDict_LocalVar() {
 		}
 		int slotPos=inContext.newWord->GetLocalVarSlotPos("...");
 		if(slotPos>=0) {
-			inContext.Compile(std::string("_lit"));
-			inContext.Compile(slotPos);
-			inContext.Compile(std::string("_getValue"));
+			inContext.newWord->CompileWord("_lit");
+			inContext.newWord->CompileValue(slotPos);
+			inContext.newWord->CompileWord("_getValue");
 		} else {
 			return false;
 		}
@@ -270,17 +294,17 @@ void InitDict_LocalVar() {
 	Install(new Word(",",WordLevel::Immediate,WORD_FUNC {
 		TypedValue tv=inContext.GetLiteralFromThreadedCode(true,false);
 		if(tv.dataType==DataType::Invalid) {
-			inContext.Compile(std::string("_getValueByDynamic"));
+			inContext.newWord->CompileWord("_getValueByDynamic");
 		} else if(tv.dataType==DataType::Symbol) {
 			int slotPos=inContext.newWord->GetLocalVarSlotPos(*tv.stringPtr);
 			if(slotPos>=0) {
-				inContext.Compile(std::string("_lit"));
-				inContext.Compile(slotPos);
-				inContext.Compile(std::string("_getValue"));
+				inContext.newWord->CompileWord("_lit");
+				inContext.newWord->CompileValue(slotPos);
+				inContext.newWord->CompileWord("_getValue");
 			} else {
-				inContext.Compile(std::string("_lit"));
-				inContext.Compile(tv);
-				inContext.Compile(std::string("_getValueByDynamic"));
+				inContext.newWord->CompileWord("_lit");
+				inContext.newWord->CompileValue(tv);
+				inContext.newWord->CompileWord("_getValueByDynamic");
 			}
 		} else { // the case of tos.dataType==DataType::List
 			const int n=(int)tv.listPtr->size();
@@ -291,13 +315,13 @@ void InitDict_LocalVar() {
 				}
 				int slotPos=inContext.newWord->GetLocalVarSlotPos(*listElem.stringPtr);
 				if(slotPos>=0) {
-					inContext.Compile(std::string("_lit"));
-					inContext.Compile(slotPos);
-					inContext.Compile(std::string("_getValue"));
+					inContext.newWord->CompileWord("_lit");
+					inContext.newWord->CompileValue(slotPos);
+					inContext.newWord->CompileWord("_getValue");
 				} else {
-					inContext.Compile(std::string("_lit"));
-					inContext.Compile(*listElem.stringPtr);
-					inContext.Compile(std::string("_getValueByDynamic"));
+					inContext.newWord->CompileWord("_lit");
+					inContext.newWord->CompileValue(*listElem.stringPtr);
+					inContext.newWord->CompileWord("_getValueByDynamic");
 				}
 			}
 		}
@@ -310,17 +334,16 @@ void InitDict_LocalVar() {
 		if(tos.dataType!=DataType::Int) {
 			return inContext.Error(InvalidTypeErrorID::TosInt,tos);
 		}
-		assert(inContext.Env.size()>1);
+		assert(inContext.Env.size()>0);
 		const int slotPos=tos.intValue;
 		if(slotPos<0) { return inContext.Error(NoParamErrorID::SystemError); }
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		switch(tvLocalVar.dataType) {
 			case DataType::Int: 	 tvLocalVar.intValue++;		  break;
 			case DataType::Long: 	 tvLocalVar.longValue++;	  break;
 			case DataType::Float: 	 tvLocalVar.floatValue++;	  break;
 			case DataType::Double:	 tvLocalVar.doubleValue++;	  break;
 			case DataType::BigInt:	 (*tvLocalVar.bigIntPtr)++;	  break;
-			case DataType::BigFloat: (*tvLocalVar.bigFloatPtr)++; break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::LvNumber,tvLocalVar);
 		}
@@ -335,14 +358,13 @@ void InitDict_LocalVar() {
 		}
 		assert(inContext.Env.size()>1);
 		const int slotPos=tos.intValue;
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		switch(tvLocalVar.dataType) {
 			case DataType::Int: 	 tvLocalVar.intValue--;		  break;
 			case DataType::Long: 	 tvLocalVar.longValue--;	  break;
 			case DataType::Float: 	 tvLocalVar.floatValue--;	  break;
 			case DataType::Double:	 tvLocalVar.doubleValue--;	  break;
 			case DataType::BigInt:   (*tvLocalVar.bigIntPtr)--;	  break;
-			case DataType::BigFloat: (*tvLocalVar.bigFloatPtr)--; break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::LvNumber,tvLocalVar);
 		}
@@ -372,7 +394,7 @@ void InitDict_LocalVar() {
 	// 	t += 10
 	Install(new Word("_swap+=",WORD_FUNC {
 		int slotPos=checkForAssignOpRuntime(inContext);
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		TypedValue tvDelta=Pop(inContext.DS);
 		AssignOpToSecond(inContext,tvLocalVar,+,tvDelta);
 		NEXT;
@@ -383,7 +405,7 @@ void InitDict_LocalVar() {
 	// 	t -= 10
 	Install(new Word("_swap-=",WORD_FUNC {
 		int slotPos=checkForAssignOpRuntime(inContext);
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		TypedValue tvDelta=Pop(inContext.DS);
 		AssignOpToSecond(inContext,tvLocalVar,-,tvDelta);
 		NEXT;
@@ -391,7 +413,7 @@ void InitDict_LocalVar() {
 
 	Install(new Word("_swap*=",WORD_FUNC {
 		int slotPos=checkForAssignOpRuntime(inContext);
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		TypedValue tvScale=Pop(inContext.DS);
 		AssignOpToSecond(inContext,tvLocalVar,*,tvScale);
 		NEXT;
@@ -399,7 +421,7 @@ void InitDict_LocalVar() {
 
 	Install(new Word("_swap/=",WORD_FUNC {
 		int slotPos=checkForAssignOpRuntime(inContext);
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		TypedValue tvDiv=Pop(inContext.DS);
 		if( tvDiv.IsZero() ) {
 			return inContext.Error(NoParamErrorID::TosShouldBeNonZero);			
@@ -410,7 +432,7 @@ void InitDict_LocalVar() {
 
 	Install(new Word("_swap%=",WORD_FUNC {
 		int slotPos=checkForAssignOpRuntime(inContext);
-		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos];
+		TypedValue& tvLocalVar=(inContext.Env.back())[slotPos].first;
 		TypedValue tvDiv=Pop(inContext.DS);
 		if( tvDiv.IsZero() ) {
 			return inContext.Error(NoParamErrorID::TosShouldBeNonZero);			
@@ -459,7 +481,7 @@ void InitDict_LocalVar() {
 	   		}
 			for(int i=0; i<numOfLocalVar; i++) {
 				printf("  slot #%02d: local var name: '%s' ",i,lvInfo[i].c_str());
-				localVarSlot[i].Dump();
+				localVarSlot[i].first.Dump();
 			}
 		}
 		NEXT;
@@ -494,19 +516,19 @@ static bool mapLetBody(Context& inContext,const TypedValue& inTvLocalVarList,
 					   const char *inWordNameAtErrorMessage) {
 	// @size numOfVar != if error then
 	int numOfVar=(int)inTvLocalVarList.listPtr->size();
-	inContext.Compile(std::string("@size"));
-	inContext.Compile(std::string("_lit"));
-	inContext.Compile(numOfVar);
-	inContext.Compile(std::string("!="));
+	inContext.newWord->CompileWord("@size");
+	inContext.newWord->CompileWord("_lit");
+	inContext.newWord->CompileValue(numOfVar);
+	inContext.newWord->CompileWord("!=");
 	inContext.Exec(std::string("if"));
-	inContext.Compile(std::string("_lit"));
-	inContext.Compile(TypedValue(std::string("ERROR (")
-								 +std::string(inWordNameAtErrorMessage)
-								 +std::string(") : list size mismatch.")));
-	inContext.Compile(std::string(".cr"));
-	inContext.Compile(std::string("panic"));
+	inContext.newWord->CompileWord("_lit");
+	inContext.newWord->CompileValue(TypedValue(std::string("ERROR (")
+								 		  	   +std::string(inWordNameAtErrorMessage)
+								 		  	   +std::string(") : list size mismatch.")));
+	inContext.newWord->CompileWord(".cr");
+	inContext.newWord->CompileWord("panic");
 	inContext.Exec(std::string("then"));
-	inContext.Compile(std::string("expand"));
+	inContext.newWord->CompileWord("expand");
 	if(compileLet(inContext,inTvLocalVarList)==false) { return false; }
 	return true;
 }
@@ -515,12 +537,13 @@ static bool compileLet(Context& inContext,const TypedValue& inTV) {
 	if(inTV.dataType==DataType::Symbol) {
 		int slotPos=inContext.newWord->GetLocalVarSlotPos(*inTV.stringPtr);
 		if(slotPos<0) {
-			return inContext.Error(ErrorIdWithString::CanNotFindTheLocalVar,
-								   *inTV.stringPtr);
+			inContext.newWord->CompileWord("_lit");
+			inContext.newWord->CompileValue(inTV);
+			inContext.newWord->CompileWord("_setValueByDynamic");
 		}
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(slotPos);
-		inContext.Compile(std::string("_setValue"));
+		inContext.newWord->CompileWord("_lit");
+		inContext.newWord->CompileValue(slotPos);
+		inContext.newWord->CompileWord("_setValue");
 	} else { // the case of tos.dataType==DataType::List
 		const int n=(int)inTV.listPtr->size();
 		for(int i=n-1; i>=0; i--) {
@@ -533,9 +556,9 @@ static bool compileLet(Context& inContext,const TypedValue& inTV) {
 				return inContext.Error(ErrorIdWithString::CanNotFindTheLocalVar,
 									   *listElem.stringPtr);
 			}
-			inContext.Compile(std::string("_lit"));
-			inContext.Compile(slotPos);
-			inContext.Compile(std::string("_setValue"));
+			inContext.newWord->CompileWord("_lit");
+			inContext.newWord->CompileValue(slotPos);
+			inContext.newWord->CompileWord("_setValue");
 		}
 	}
 	return true;
@@ -549,9 +572,9 @@ static bool compileIncOrDec(Context& inContext,const char *inIncOrDecWordBodyNam
 		if(slotPos<0) {
 			return inContext.Error(ErrorIdWithString::CanNotFindTheLocalVar,*tv.stringPtr);
 		}
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(slotPos);
-		inContext.Compile(std::string(inIncOrDecWordBodyName));
+		inContext.newWord->CompileWord("_lit");
+		inContext.newWord->CompileValue(slotPos);
+		inContext.newWord->CompileWord(inIncOrDecWordBodyName);
 	}
 	return true;
 }
@@ -564,9 +587,9 @@ static bool assignOpMain(Context& inContext,const char *inRuntimeWord) {
 		return inContext.Error(ErrorIdWithString::CanNotFindTheLocalVar,
 							   *tvSymbol.stringPtr);
 	}
-	inContext.Compile(std::string("_lit"));
-	inContext.Compile(slotPos);
-	inContext.Compile(std::string(inRuntimeWord));
+	inContext.newWord->CompileWord("_lit");
+	inContext.newWord->CompileValue(slotPos);
+	inContext.newWord->CompileWord(inRuntimeWord);
 	return true;
 }
 
@@ -615,7 +638,7 @@ static int checkForAssignOpRuntime(Context& inContext) {
 		inContext.Error(InvalidTypeErrorID::TosInt,tvLocalVarSlotNo);
 		return -1;
 	}
-	assert(inContext.Env.size()>1);
+	assert(inContext.Env.size()>0);
 	const int slotPos=tvLocalVarSlotNo.intValue;
 	if(slotPos<0) {
 		inContext.Error(NoParamErrorID::SystemError);

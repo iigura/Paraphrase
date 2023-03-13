@@ -22,55 +22,24 @@ struct ChanMan {
 	volatile int NumOfReader;
 
 	ChanMan(const int inNumOfWriter,const char *inName) : IsOpen(true),name(inName),
-	  NumOfWriter(inNumOfWriter),NumOfReader(-1) {
+	  NumOfWriter(inNumOfWriter),NumOfReader(0) {
+		// printf("ChanMan create name='%s' NumOfWriter=%d\n",name,NumOfWriter);
 		assert(inNumOfWriter>0);
 		initMutex(mutex);
 		initCond(cond);
 	}
 
-	~ChanMan() {
-		assert(NumOfWriter<=0 && NumOfReader<=0);
-	}
+	PP_API ~ChanMan();
+	PP_API bool CanDestruct();
 
-	inline void SetNumOfReader(const int inNumOfReader) {
+	inline void IncNumOfReader() {
 		Lock(mutex);	
-			assert(NumOfReader<0);
-			NumOfReader=inNumOfReader;
+			NumOfReader++;
 		Unlock(mutex);
 	}
 
-	inline bool RemoveReader() {
-		bool ret=true;
-		Lock(mutex);	
-			if(NumOfReader<0) {	// rest-pipes on only initialized channel.
-				// empty
-			} else {
-				assert(NumOfReader>0);
-				NumOfReader--;
-				if(NumOfReader==0 && IsOpen) {
-					IsOpen=false;
-					if(fifoBuffer.size()==0) {
-						ret=false;
-					}
-					fifoBuffer.clear();			
-				}
-				NotifyOne(cond);
-			}
-		Unlock(mutex);	
-		return ret;
-	}
-
-	inline void CloseOnWrite() {
-		Lock(mutex);	
-			assert(NumOfWriter>0);
-			NumOfWriter--;
-			if(NumOfWriter==0) {
-				NotifyAll(cond);
-			} else {	
-				NotifyOne(cond);	
-			}
-		Unlock(mutex);	
-	}
+	PP_API bool RemoveReader();
+	PP_API void CloseOnWrite();
 
 	inline bool Send(const TypedValue& inTV) NOEXCEPT {
 		bool ret=true;

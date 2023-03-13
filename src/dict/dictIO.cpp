@@ -15,6 +15,7 @@
 #include "util.h"
 
 #ifdef _WIN32
+	#define NOMINMAX
 	#include <Windows.h>
 #else
 	#include <dlfcn.h>
@@ -34,6 +35,9 @@ static std::deque<char> gMockStdin;
 static bool gUseMockStdout=false;
 static std::deque<char> gMockStdout;
 
+static Mutex gMutexForConsoleOutput;
+
+
 static void *getCFuncPointer(Context& inContext,
 							 std::string *inLibPath,const char *inFuncName);
 static void printValue(const TypedValue& inTV,bool inTypePostfix=false);
@@ -44,7 +48,12 @@ static bool getlineFromMockStdin(std::string *outLine);
 
 static void toStdout(char inChar);
 
+void LockForConsoleOutput() { Lock(gMutexForConsoleOutput); }
+void UnlockForConsoleOutput() { Unlock(gMutexForConsoleOutput); }
+
 void InitDict_IO() {
+	initMutex(gMutexForConsoleOutput);
+
 	Install(new Word("thru",WORD_FUNC {
 		gCCC=kCCC_THRU;
 		NEXT;
@@ -176,6 +185,32 @@ void InitDict_IO() {
 			return inContext.Error(NoParamErrorID::FormatDataMismatch);
 		}
 		printStr(*tvFormatted.stringPtr);
+		NEXT;
+	}));
+
+	Install(new Word("putc",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.IsInteger()==false) {
+			return inContext.Error(InvalidTypeErrorID::TosIntOrLongOrBigint,tos);
+		}
+		int n=0;
+		if(tos.dataType==DataType::Int) {
+			n=tos.intValue;
+		} else if(tos.dataType==DataType::Long) {
+			if(tos.longValue<INT_MIN || INT_MAX<tos.longValue) {
+				return inContext.Error(NoParamErrorID::CanNotConvertToLongDueToOverflow);
+			}
+			n=(int)tos.longValue;
+		} else if(tos.dataType==DataType::BigInt) {
+			if(*tos.bigIntPtr<INT_MIN || INT_MAX<*tos.bigIntPtr) {
+				return inContext.Error(NoParamErrorID::CanNotConvertToLongDueToOverflow);
+			}
+			n=(int)*tos.bigIntPtr;
+		}
+		putc(n,stdout);
 		NEXT;
 	}));
 

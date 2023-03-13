@@ -13,7 +13,9 @@ static bool wordedDocolCaller(Context& inContext) {
 	if(gWordedDocol==NULL) { return inContext.Error(NoParamErrorID::NoWordedDocol); }
 	inContext.IS.emplace_back(inContext.ip);
 	if(gWordedDocol->numOfLocalVar>0) {
-		inContext.Env.push_back(LocalVarSlot(gWordedDocol->numOfLocalVar,TypedValue()));
+		inContext.Env.push_back(
+			LocalVarSlot(gWordedDocol->numOfLocalVar,
+				std::pair<TypedValue,bool>(TypedValue(),false)));
 	}
 	inContext.ip=gWordedDocol->param;
 	return true;
@@ -83,8 +85,9 @@ void InitDict_AOP() {
 		const Word *targetWord=*target;
 		inContext.IS.emplace_back(inContext.ip);
 		if(targetWord->numOfLocalVar>0) {
-			inContext.Env.push_back(LocalVarSlot(targetWord->numOfLocalVar,
-												 TypedValue()));
+			inContext.Env.push_back(
+				LocalVarSlot(targetWord->numOfLocalVar,
+					std::pair<TypedValue,bool>(TypedValue(),false)));
 		}
 		inContext.ip=targetWord->param;
 		return true;
@@ -102,8 +105,8 @@ void InitDict_AOP() {
 	// ローカル変数のクリアのため、_docolCleanUp を呼ぶ必要がある。<-- 本当か？
 	// Forth であれば、docol == _docolMain で良い。
 	Install(new Word("docol",WordLevel::Immediate,WORD_FUNC {
-		inContext.Compile(std::string("_docolMain"));
-		// inContext.Compile(std::string("_docolCleanUp"));
+		inContext.newWord->CompileWord("_docolMain");
+		// inContext.newWord->CompileWord("_docolCleanUp");
 		NEXT;
 	}));
 

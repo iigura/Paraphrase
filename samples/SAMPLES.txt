@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.95)  by K.Iigura 
+Paraphrase sample programs' README (ver.0.96)  by K.Iigura 
 
 　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
 い（\ は円マークを表します）。
@@ -14,6 +14,7 @@ Paraphrase sample programs' README (ver.0.95)  by K.Iigura
 99.p8e
     いわゆる九九を表示します。
 	実行方法： ../para 99.p8e run
+    ※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 aop.p8e
     アスペクト指向プログラミングの例を示すものです。
@@ -28,6 +29,12 @@ aop.p8e
 
     です。つまり HELLO という表示以外はウィーブされたアドバイスによりなされている
     ものであり、その実体は myDocol ワードです。詳しくは aop.p8e の中身を御覧ください。
+
+attr.p8e
+    ワードの属性に関するサンプルプログラムです。
+	本サンプルプログラムでは、ワード twice に test-code という属性を与え、
+	その属性の値として当該ワードのユニットテストプログラム（文字列）を格納します。
+	ワード test では、その属性値を用いてユニットテストを実施します。
 
 check-scriptFile-args.p8e
 	samples ディレクトリにて
@@ -48,6 +55,8 @@ check-scriptFile-args.p8e
 
 	と書くこともできます。
 
+    ※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
+
 countPrimeMT-short.p8e
 	1 から 1,000 万までの素数を並列処理を用いて数えるプログラムです。samples ディ
     レクトリにて、
@@ -59,6 +68,7 @@ countPrimeMT-short.p8e
 		numOfPrime=664579 (2 ... 9999991)
 
 	という出力が得られます。
+    ※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 dumpMPmt.p8e
 	samples ディレクトリにて、
@@ -67,6 +77,11 @@ dumpMPmt.p8e
 
 	とすると、1 から 5000 までのメルセンヌ数のうち素数であるものを求めます。printf 
 	などの使い方の参考にして下さい。
+    ※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
+
+dynamic-scoping.p8e
+    Paraphrase は、変数については動的スコープを採用しています。
+    その動作の様子を示すサンプルプログラムです。
 
 fact-tr.p8e
     ver. 0.93.0 より導入された末尾再帰（tail recursion）における最適化を示すプログ
@@ -75,22 +90,38 @@ fact-tr.p8e
         ../para fact-tr.p8e
 
     としてみて下さい（引数に run と与えれば 100 の階乗を末尾再帰を使って求めます）。
+    ※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 failure.p8e
 	終了コード -1 を返し、呼び出し側に必ず失敗を報告するプログラム例です。
 
-FizzBuzz.p8e
-	いわゆる FizzBuzz 問題を処理するワード FizzBuzz を定義します。samples ディレク
-	トリにて、
+fastInvSqrt.p8e
+    型情報を差し替えるサンプルプログラムです。
+    このプログラムでは、高速に逆数を平方根を計算します。
 
-		../para FizzBuzz.p8e 1 10 for+ i FizzBuzz . next cr
+FizzBuzz.p8e
+    いわゆる FizzBuzz 問題を処理するワード FizzBuzz を定義します。
+    samples ディレクトリにて、
+
+        ../para FizzBuzz.p8e 1 10 for+ i FizzBuzz . next cr
 
     とすると、
 
-		1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 
+        1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 
 
-	という出力が得られます。
-	../para FizzBuzz.p8e run とすると 1 から 19 までの数値に対して処理が行われます。
+    という出力が得られます。
+    ../para FizzBuzz.p8e run とすると 1 から 19 までの数値に対して処理が行われます。
+
+    ※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
+
+isPrime.p8e
+    他のサンプルプログラムで利用されるワードが格納されています。
+    順次割り算を行うことにより、与えられた値が素数であるか否かを判定するワード prime? が
+    定義されています。
+
+join.p8e
+    ワード join を使ったサンプルです。
+	並列処理の完了を待って、計算結果の集計を行います。
 
 Mersenne.p8e
     メルセンヌ数の素数性を判定します。詳細は
@@ -98,6 +129,7 @@ Mersenne.p8e
         ../para Mersenne.p8e help
 
     として、表示される使用方法を御覧ください。
+	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 pass.p8e
 　　正常に終了したことを伝えるサンプルプログラムです。
@@ -108,6 +140,7 @@ PE10mt.p8e
 　　　　../para PE10mt.p8e help
 
     として、表示される使用方法を御覧ください。
+	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 PE21mt.p8e
     2 から指定された数までの友愛数の和を並列処理にて求めます。samples ディレクト
@@ -118,6 +151,7 @@ PE21mt.p8e
     などとします。この例では 2 から 10,000 までの友愛数とその総和を求めるという
     意味です。例えば、1000 を指定した場合は、220 と 284 という 1000 以下の友愛数が
     表示されるとともに、その合計である 504 という値が表示されます。
+	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 PE25.p8e
 	Project Euler No.25 を解く、PE25 というワードが定義されています。このワードは、
@@ -128,6 +162,7 @@ PE25.p8e
 		../para PE25.p8e 1000 PE25 .cr
 
 	とし、解くことができます（4782 と表示されるはずです）。
+	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 PE56.p8e
     Project Euler No.56 を解くサンプルプログラムです。Project Euler No.56 は、
@@ -137,6 +172,7 @@ PE56.p8e
         ../para PE56.p8e run
 
     にて計算できます。
+	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 zdk.p8e
 	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディ
@@ -145,6 +181,7 @@ zdk.p8e
 		../para zdk.p8e run
 
 	とすると、ズンドコキヨシ問題を処理する様子が表示されます。
+	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
 -----
 

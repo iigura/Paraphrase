@@ -1,0 +1,38 @@
+// see Dmitry Stogov's Mabdelbrot
+// https://gist.github.com/dstogov/12323ad13d3240aee8f1
+//
+// usage: para mabdelbrot.p8e run
+
+"BAILOUT" 16 const!
+"MAX-ITERATIONS" 1000 const!
+
+// x y --- 0 or 1
+`iterate :
+	0.5 - ( ci cr ) local
+	0.0 0.0 ( zi zr ) local
+	0 `count local
+	( temp zr2 zi2 ) local-decl
+	while true do
+		`count ++
+		( zr zi ) , * `temp let
+		`zr , dup * `zr2 let
+		`zi , dup * `zi2 let
+		`zr2 , `zi2 , - `cr , + `zr let // zr=zr2-zi2+cr
+		`temp , dup + `ci , + `zi let
+		`zi2 , `zr2 , + {{ BAILOUT >lit }} > if `count , leave then
+		`count , {{ MAX-ITERATIONS >lit }} > if 0 leave then
+	repeat
+;
+
+`mandelbrot :
+	-39 38 for+
+		-39 38 for+
+			i 40.0 / j 40.0 / iterate
+			0? if "*" else " " then write
+		next
+		cr
+	next
+;
+
+`run : mandelbrot ;
+

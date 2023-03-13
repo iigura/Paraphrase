@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.95"
+#define VERSION "0.96"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -39,6 +39,7 @@
 
 #include "paraphrase.h"
 #include "externals.h"
+#include "threadMan.h"
 #include "word.h"
 #include "stack.h"
 #include "context.h"
@@ -46,6 +47,7 @@
 #include "optimizer.h"
 
 #ifdef _WIN32
+	#define NOMINMAX
 	#include <Windows.h>
 #endif
 
@@ -105,12 +107,18 @@ void InitDict_LocalVar();
 void InitDict_Optimize();
 void InitDict_AOP();
 void InitDict_Debug();
+// void InitDict_FFI();
 
 void RunningOnInteractive();
 
 int main(int argc,char *argv[]) {
 #if DEBUG || _DEBUG
 	printf("!!! THIS IS DEBUG VERSION !!!\n");
+	#if USE_PTHREAD
+		printf("### USE pthread\n");
+	#else
+		printf("### USE std::thread\n");
+	#endif
 	#ifdef _MSVC_LANG
 		TCHAR cdir[255];
 		GetCurrentDirectory(255,cdir);
@@ -139,6 +147,8 @@ static_assert(sizeof(double)>=sizeof(Word*)
 	InitOptPattern();
 	InitOuterInterpreter();
 	SetCurrentVocName("user");
+
+	StartThreadCollector();
 
 	if(gToEvalStr!="") {
 		OIResult result=OuterInterpreter(*GlobalContext,gToEvalStr);
@@ -202,6 +212,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
     	std::cout << result << std::endl;
 	}
 
+	StopThreadCollector();
 	return 0;
 }
 
@@ -225,6 +236,7 @@ static void initDict() {
 	InitDict_Optimize();
 	InitDict_AOP();
 	InitDict_Debug();
+//	InitDict_FFI();
 }
 
 static bool parseOption(int argc,char *argv[]) {
@@ -330,7 +342,12 @@ static bool initReadLineFunc() {
 				return GlobalContext->Error(ErrorIdWithString::CanNotOpenFile,
 											std::string(gInputFilePath));
 			}
-			std::filesystem::path argPath=std::filesystem::path(gInputFilePath);
+			std::string s=gInputFilePath;
+			std::filesystem::path argPath=std::filesystem::path(s);
+			if(argPath.parent_path()=="") {
+				s="./"+s;
+				argPath=std::filesystem::path(s);
+			}
 			std::filesystem::path argAbsDir=std::filesystem::absolute(argPath.parent_path());
 			SetScriptFileDir(argAbsDir.string());
 			if(gFileStream.peek()=='#') {
@@ -385,7 +402,7 @@ static void printUsage() {
 }
 
 static void printVersion() {
-	printf("Paraphrase %s  Copyright (C) 2018-2022 Koji Iigura <@paraphrase_lang>\n",kVersion);
+	printf("Paraphrase %s  Copyright (C) 2018-2023 Koji Iigura <@paraphrase_lang>\n",kVersion);
 }
 
 static void showBuildInfo() {

@@ -17,7 +17,6 @@ void InitDict_Optimize() {
 			case DataType::Float:		tos.floatValue+=1;		break;
 			case DataType::Double:		tos.doubleValue+=1;		break;
 			case DataType::BigInt:		*tos.bigIntPtr+=1;		break;
-			case DataType::BigFloat:	*tos.bigFloatPtr+=1;	break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::TosNumber,tos);
 		}
@@ -35,7 +34,6 @@ void InitDict_Optimize() {
 			case DataType::Float:		tos.floatValue-=1;	break;
 			case DataType::Double:		tos.doubleValue-=1;	break;
 			case DataType::BigInt:		*tos.bigIntPtr-=1;	break;
-			case DataType::BigFloat:	*tos.bigFloatPtr-=1;break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::TosNumber,tos);
 		}
@@ -52,7 +50,6 @@ void InitDict_Optimize() {
 			case DataType::Float:		tos.floatValue/=2.0f;	break;
 			case DataType::Double:		tos.doubleValue/=2.0;	break;
 			case DataType::BigInt:		*tos.bigIntPtr/=2;		break;
-			case DataType::BigFloat:	*tos.bigFloatPtr/=2.0;	break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::TosNumber,tos);
 		}
@@ -72,7 +69,6 @@ void InitDict_Optimize() {
 			case DataType::BigInt:		(*tvCounter.bigIntPtr)++;	break;
 			case DataType::Float:		tvCounter.floatValue++;		break;
 			case DataType::Double:		tvCounter.doubleValue++;	break;
-			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)++;	break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::RsTosNumber,tvCounter);
 		}
@@ -110,9 +106,6 @@ void InitDict_Optimize() {
 				break;
 			case DataType::Float:  inContext.DS.emplace_back(tos.floatValue-1);	 break;
 			case DataType::Double: inContext.DS.emplace_back(tos.doubleValue-1); break;
-			case DataType::BigFloat:
-				inContext.DS.emplace_back((*tos.bigFloatPtr)-1);
-				break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::RsTosNumber,tos);
 		}
@@ -128,7 +121,6 @@ void InitDict_Optimize() {
 			case DataType::BigInt:		(*tvCounter.bigIntPtr)++;	break;
 			case DataType::Float:		tvCounter.floatValue++;		break;
 			case DataType::Double:		tvCounter.doubleValue++;	break;
-			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)++;	break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::RsTosNumber,tvCounter);
 		}
@@ -525,7 +517,6 @@ void InitDict_Optimize() {
 			case DataType::BigInt: 	 *(tos.bigIntPtr) *= *(tos.bigIntPtr); 	   break;
 			case DataType::Float: 	 tos.floatValue *= tos.floatValue; 		   break;
 			case DataType::Double:	 tos.doubleValue	*= tos.doubleValue;	   break;
-			case DataType::BigFloat: *(tos.bigFloatPtr) *= *(tos.bigFloatPtr); break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::TosNumber,tos);
 		}
@@ -540,7 +531,6 @@ void InitDict_Optimize() {
 			case DataType::BigInt:		++*(tos.bigIntPtr);		break;
 			case DataType::Float:		++tos.floatValue;		break;
 			case DataType::Double:		++tos.doubleValue;		break;
-			case DataType::BigFloat:	++*(tos.bigFloatPtr);	break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::TosNumber,tos);
 		}
@@ -554,7 +544,6 @@ void InitDict_Optimize() {
 			case DataType::BigInt:		--*(tos.bigIntPtr);		break;
 			case DataType::Float:		--tos.floatValue;		break;
 			case DataType::Double:		--tos.doubleValue;		break;
-			case DataType::BigFloat:	--*(tos.bigFloatPtr);	break;
 			default:
 				return inContext.Error(InvalidTypeErrorID::TosNumber,tos);
 		}
@@ -566,7 +555,6 @@ void InitDict_Optimize() {
 	Install(new Word("_float*",WORD_FUNC    { FloatTwoOp(*); }));
 	Install(new Word("_double*",WORD_FUNC   { DoubleTwoOp(*); }));
 	Install(new Word("_bigInt*",WORD_FUNC   { BigIntTwoOp(*); }));
-	Install(new Word("_bigFloat*",WORD_FUNC { BigFloatTwoOp(*); }));
 
 	// equivalent to "dup 1 !="
 	Install(new Word("_@1!=",WORD_FUNC {
@@ -579,7 +567,6 @@ void InitDict_Optimize() {
 			case DataType::Float:		result=tos.floatValue!=1.0f;	break;
 			case DataType::Double:		result=tos.doubleValue!=1.0;	break;
 			case DataType::BigInt:		result=*(tos.bigIntPtr)!=1;		break;
-			case DataType::BigFloat:	result=*(tos.bigFloatPtr)!=1.0;	break;
 			default:
 				;	// empty
 		}

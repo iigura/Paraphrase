@@ -6,6 +6,7 @@
 #include "word.h"
 #include "context.h"
 #include "mathMacro.h"
+#include "optimizer.h"
 #include "util.h"
 
 static bool gRunningOnInteractive=false;
@@ -247,7 +248,7 @@ void InitDict_LangSys() {
 		} else {
 			TypedValue tv=inContext.GetLiteralFromThreadedCode();
 			if(tv.dataType==DataType::Invalid) {
-				inContext.Compile(std::string("_arg-begin"));
+				inContext.newWord->CompileWord("_arg-begin");
 			} else if(tv.dataType==DataType::Symbol || tv.dataType==DataType::String) {	
 				auto iter=Dict.find(*tv.stringPtr);
 				if(iter==Dict.end()) {
@@ -282,11 +283,11 @@ void InitDict_LangSys() {
 				if(tvWord.HasWordPtr(NULL)==false) {
 					return inContext.Error(NoParamErrorID::RsBroken);
 				}
-				inContext.Compile(tvWord);	
+				inContext.newWord->CompileValue(tvWord);	
 				goto finish;
 			}
 compileArgEnd:
-			inContext.Compile(std::string("_arg-end"));
+			inContext.newWord->CompileWord("_arg-end");
 		}
 finish:
 		NEXT;
@@ -321,19 +322,19 @@ static bool argEndBody(Context& inContext) {
 #define LVMathOp(inContext,OP) do { \
 	LocalVarSlot& localVarSlot=inContext.Env.back(); \
 	int src1=static_cast<int>((inLVOP & LVOP::src1Mask)>>8); \
-	TypedValue& tv1=localVarSlot[src1]; \
+	TypedValue& tv1=localVarSlot[src1].first; \
 	int src2=static_cast<int>((inLVOP & LVOP::src2Mask)>>4); \
-	TypedValue& tv2=localVarSlot[src2]; \
+	TypedValue& tv2=localVarSlot[src2].first; \
 	int dest=static_cast<int>((inLVOP & LVOP::destMask)); \
-	MathOp(localVarSlot[dest],tv1,OP,tv2); \
+	MathOp(localVarSlot[dest].first,tv1,OP,tv2); \
 } while(0)
 
 #define LVMathOpPush(inContext,OP) do { \
 	LocalVarSlot& localVarSlot=inContext.Env.back(); \
 	int src1=static_cast<int>((inLVOP & LVOP::src1Mask)>>8); \
-	TypedValue& tv1=localVarSlot[src1]; \
+	TypedValue& tv1=localVarSlot[src1].first; \
 	int src2=static_cast<int>((inLVOP & LVOP::src2Mask)>>4); \
-	TypedValue& tv2=localVarSlot[src2]; \
+	TypedValue& tv2=localVarSlot[src2].first; \
 	TypedValue result; \
 	MathOp(result,tv1,OP,tv2); \
 	LVOP dest=inLVOP & LVOP::destMask; \
@@ -351,9 +352,9 @@ static bool argEndBody(Context& inContext) {
 	int stack=static_cast<int>((inLVOP & LVOP::src1Mask)>>8); \
 	TypedValue tv1=Pop( ((LVOP)stack)==LVOP::sDS ? inContext.DS : inContext.RS); \
 	int src2=static_cast<int>((inLVOP & LVOP::src2Mask)>>4); \
-	TypedValue& tv2=localVarSlot[src2]; \
+	TypedValue& tv2=localVarSlot[src2].first; \
 	int dest=static_cast<int>((inLVOP & LVOP::destMask)); \
-	MathOp(localVarSlot[dest],tv1,OP,tv2); \
+	MathOp(localVarSlot[dest].first,tv1,OP,tv2); \
 } while(0)
 
 // outDest=srcTV OP
@@ -366,7 +367,6 @@ static bool argEndBody(Context& inContext) {
 		case DataType::BigInt:   outDest=TypedValue(*(srcTV.bigIntPtr) OP);   break; \
 		case DataType::Float:    outDest=TypedValue(srcTV.floatValue OP);     break; \
 		case DataType::Double: 	 outDest=TypedValue(srcTV.doubleValue OP);    break; \
-		case DataType::BigFloat: outDest=TypedValue(*(srcTV.bigFloatPtr) OP); break; \
 		default: fprintf(stderr,"SYSTEM ERROR\n"); exit(-1); \
 	} \
 } while(0)
@@ -381,7 +381,6 @@ static bool argEndBody(Context& inContext) {
 		case DataType::BigInt:  inStack.emplace_back(*(srcTV.bigIntPtr) OP);   break; \
 		case DataType::Float: 	inStack.emplace_back(srcTV.floatValue OP);     break; \
 		case DataType::Double:  inStack.emplace_back(srcTV.doubleValue OP);    break; \
-		case DataType::BigFloat:inStack.emplace_back(*(srcTV.bigFloatPtr) OP); break; \
 		default: fprintf(stderr,"SYSTEM ERROR\n"); exit(-1); \
 	} \
 } while(0)
@@ -395,11 +394,11 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 		case LVOP::MOD:	{
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src1=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv1=localVarSlot[src1];
+				TypedValue& tv1=localVarSlot[src1].first;
 				int src2=static_cast<int>((inLVOP & LVOP::src2Mask)>>4);
-				TypedValue& tv2=localVarSlot[src2];
+				TypedValue& tv2=localVarSlot[src2].first;
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
-				ModOp(localVarSlot[dest],tv1,tv2);
+				ModOp(localVarSlot[dest].first,tv1,tv2);
 			}
 			break;
 		case LVOP::INC: {
@@ -407,72 +406,67 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
 				if(src==dest) {
-					TypedValue& lv=localVarSlot[src];
+					TypedValue& lv=localVarSlot[src].first;
 					switch(lv.dataType) {
 						case DataType::Int:			lv.intValue++;			break;
 						case DataType::Long:		lv.longValue++;			break;
 						case DataType::BigInt:		(*lv.bigIntPtr)++;		break;
 						case DataType::Float:		lv.floatValue++;		break;
 						case DataType::Double:		lv.doubleValue++;		break;
-						case DataType::BigFloat:	(*lv.bigFloatPtr)++;	break;
 						default:
 							return inContext.Error(NoParamErrorID::SystemError);
 					}
 				} else {
-					TypedValue& tv=localVarSlot[src];
-					SetLocalVarWithSingleOP(localVarSlot[dest],tv,+1);
+					TypedValue& tv=localVarSlot[src].first;
+					SetLocalVarWithSingleOP(localVarSlot[dest].first,tv,+1);
 				}
 			}
 			break;
 		case LVOP::DEC: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
-				SetLocalVarWithSingleOP(localVarSlot[dest],tv,-1);
+				SetLocalVarWithSingleOP(localVarSlot[dest].first,tv,-1);
 			}
 			break;
 		case LVOP::TWC: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
-				SetLocalVarWithSingleOP(localVarSlot[dest],tv,*2);
+				SetLocalVarWithSingleOP(localVarSlot[dest].first,tv,*2);
 			}
 			break;
 		case LVOP::HLF: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
-				SetLocalVarWithSingleOP(localVarSlot[dest],tv,/2);
+				SetLocalVarWithSingleOP(localVarSlot[dest].first,tv,/2);
 			}
 			break;
 		case LVOP::PW2: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				int dest=static_cast<int>((inLVOP & LVOP::destMask));
 				switch(tv.dataType) {
 					case DataType::Int:
-						localVarSlot[dest]=TypedValue(tv.intValue*tv.intValue);
+						localVarSlot[dest].first=TypedValue(tv.intValue*tv.intValue);
 						break;
 					case DataType::Long:
-						localVarSlot[dest]=TypedValue(tv.longValue*tv.longValue);
+						localVarSlot[dest].first=TypedValue(tv.longValue*tv.longValue);
 						break;
 					case DataType::BigInt:
-						localVarSlot[dest]=TypedValue(*(tv.bigIntPtr)
+						localVarSlot[dest].first=TypedValue(*(tv.bigIntPtr)
 													  * (*(tv.bigIntPtr)));
 						break;
 					case DataType::Float:
-						localVarSlot[dest]=TypedValue(tv.floatValue*tv.floatValue);
+						localVarSlot[dest].first=TypedValue(tv.floatValue*tv.floatValue);
 						break;
 					case DataType::Double:
-						localVarSlot[dest]=TypedValue(tv.doubleValue*tv.doubleValue);
-						break;
-					case DataType::BigFloat:
-						localVarSlot[dest]=TypedValue(*(tv.bigFloatPtr)
-													  * (*(tv.bigFloatPtr)));
+						localVarSlot[dest].first=TypedValue(tv.doubleValue*tv.doubleValue);
 						break;
 					default:
 						fprintf(stderr,"SYSTEM ERROR\n");
@@ -487,9 +481,9 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 		case LVOP::ModPush:	{
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src1=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv1=localVarSlot[src1];
+				TypedValue& tv1=localVarSlot[src1].first;
 				int src2=static_cast<int>((inLVOP & LVOP::src2Mask)>>4);
-				TypedValue& tv2=localVarSlot[src2];
+				TypedValue& tv2=localVarSlot[src2].first;
 				TypedValue result;
 				ModOp(result,tv1,tv2);
 				LVOP dest=inLVOP & LVOP::destMask;
@@ -506,35 +500,35 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 		case LVOP::IncPush: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				OpThenPush(inContext.DS,tv,+1);
 			}
 			break;
 		case LVOP::DecPush: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				OpThenPush(inContext.DS,tv,-1);
 			}
 			break;
 		case LVOP::TwcPush: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				OpThenPush(inContext.DS,tv,*2);
 			}
 			break;
 		case LVOP::HlfPush: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				OpThenPush(inContext.DS,tv,/2);
 			}
 			break;
 		case LVOP::Pw2Push: {
 				LocalVarSlot& localVarSlot=inContext.Env.back(); 
 				int src=static_cast<int>((inLVOP & LVOP::src1Mask)>>8);
-				TypedValue& tv=localVarSlot[src];
+				TypedValue& tv=localVarSlot[src].first;
 				switch(tv.dataType) {
 					case DataType::Int:
 						inContext.DS.emplace_back(tv.intValue * tv.intValue);
@@ -551,10 +545,6 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 						break;
 					case DataType::Double:
 						inContext.DS.emplace_back(tv.doubleValue * tv.doubleValue);
-						break;
-					case DataType::BigFloat:
-						inContext.DS.emplace_back(
-							*(tv.bigFloatPtr) * (*(tv.bigFloatPtr)) );
 						break;
 					default:
 						fprintf(stderr,"SYSTEM ERROR\n");
@@ -573,9 +563,9 @@ static bool doLVOP(Context& inContext,LVOP inLVOP) {
 				TypedValue tv1= stack==LVOP::sDS ? Pop(inContext.DS)
 											   	 : Pop(inContext.RS);
 				int src2=static_cast<int>((inLVOP & LVOP::src2Mask)>>4);
-				TypedValue& tv2=localVarSlot[src2];
+				TypedValue& tv2=localVarSlot[src2].first;
 				int dest=static_cast<int>(inLVOP & LVOP::destMask);
-				ModOp(localVarSlot[dest],tv1,tv2);
+				ModOp(localVarSlot[dest].first,tv1,tv2);
 			}
 			break;
 		case LVOP::NOP:	return true;

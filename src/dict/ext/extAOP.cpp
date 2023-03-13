@@ -23,4 +23,3 @@ extern "C" PP_API bool docolWrapperExample(Context& inContext) {
 	printf("OUT:docolWrapperExample\n");
 	return true;
 }
-

@@ -9,6 +9,11 @@ if %errorlevel% lss 0 goto FAILED
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
+..\para attr.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
 ..\para countPrimeMT-short.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
@@ -19,12 +24,27 @@ if %errorlevel% lss 0 goto FAILED
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
+..\para dynamic-scoping.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
 ..\para fact-tr.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
+..\para fastInvSqrt.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
 ..\para FizzBuzz.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
+..\para join.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED
 

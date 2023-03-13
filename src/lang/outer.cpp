@@ -100,9 +100,9 @@ static bool doCompileLevel(Context& inContext,TypedValue& inTV) {
 		if(inContext.Exec(inTV)==false) { return false; }
 	} else {
 		if(inTV.dataType!=DataType::DirectWord) {
-			inContext.Compile(std::string("_lit"));
+			inContext.newWord->CompileWord("_lit");
 		}
-		inContext.Compile(inTV);
+		inContext.newWord->CompileValue(inTV);
 	}
 	return true;
 }
@@ -111,10 +111,10 @@ static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inTok
 		if((int)inTV.wordPtr->level>=(int)inContext.ExecutionThreshold) {
 			if(inContext.Exec(inTV)==false) { return false; }
 		} else {
-			inContext.Compile(TypedValue(inToken,DataType::Symbol));
+			inContext.newWord->CompileValue(TypedValue(inToken,DataType::Symbol));
 		}
 	} else {
-		inContext.Compile(inTV);
+		inContext.newWord->CompileValue(inTV);
 	}
 	return true;
 }

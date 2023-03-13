@@ -14,6 +14,7 @@
 
 struct Word;
 struct Context;
+struct ChanMan;
 
 #include "thread.h"
 #include "paraphrase.h"
@@ -23,7 +24,6 @@ struct Context;
 
 typedef bool (*WordFunc)(Context& inContext) NOEXCEPT;
 typedef boost::multiprecision::cpp_int BigInt;
-typedef boost::multiprecision::cpp_dec_float_100 BigFloat;
 
 enum class Level;	// see context.h
 
@@ -47,25 +47,31 @@ enum class DataType {
 	BigInt	=kType_HeavyMask | 2,
 	Float	=3,
 	Double	=4,
-	BigFloat=kType_HeavyMask | 5,
 
 	String=kType_HeavyMask | 20,
+	Symbol=kType_HeavyMask | 21,
+
 	Word=30,
 
 	Array=kType_HeavyMask | 41,
 	List =kType_HeavyMask | 42,
 	KV   =kType_HeavyMask | 43,
 
-	Symbol=kType_HeavyMask | 60,
-	EoC =70,	// no values
-	File=kType_HeavyMask | 80,
-	EoF	=81,	// no values
+	EoC =50,	// no values
 
-	StdCode=99,	// use stdCodePtr
+	File=kType_HeavyMask | 60,
+	EoF	=61,	// no values
 
-	MiscInt=90,	// use intValue as misc. data.
-	LVOP=100,		// use intValue as LVOP.
-	CB =200,		// use intValue as CB (Control Block) info.
+	Context=kType_HeavyMask | 70,
+	Channel=kType_HeavyMask | 75,
+
+	StdCode=80,	// use stdCodePtr
+
+	UserData=kType_HeavyMask | 99,
+
+	MiscInt=800,	// use intValue as misc. data.
+	LVOP   =810,	// use intValue as LVOP.
+	CB 	   =820,	// use intValue as CB (Control Block) info.
 };
 
 inline int GetMathOpType(DataType inType1,DataType inType2) {
@@ -80,44 +86,32 @@ enum class TypeCombinationForMathOP {
 	IntBigInt	=MathOpCombi(DataType::Int,DataType::BigInt),
 	IntFloat	=MathOpCombi(DataType::Int,DataType::Float),
 	IntDouble	=MathOpCombi(DataType::Int,DataType::Double),
-   	IntBigFloat	=MathOpCombi(DataType::Int,DataType::BigFloat),
 
 	LongInt	 	 =MathOpCombi(DataType::Long,DataType::Int),
 	LongLong	 =MathOpCombi(DataType::Long,DataType::Long),
 	LongBigInt	 =MathOpCombi(DataType::Long,DataType::BigInt),
 	LongFloat	 =MathOpCombi(DataType::Long,DataType::Float),
 	LongDouble	 =MathOpCombi(DataType::Long,DataType::Double),
-	LongBigFloat =MathOpCombi(DataType::Long,DataType::BigFloat),
 
 	BigIntInt   	=MathOpCombi(DataType::BigInt,DataType::Int),
    	BigIntLong  	=MathOpCombi(DataType::BigInt,DataType::Long),
 	BigIntBigInt	=MathOpCombi(DataType::BigInt,DataType::BigInt),
 	BigIntFloat 	=MathOpCombi(DataType::BigInt,DataType::Float),
 	BigIntDouble	=MathOpCombi(DataType::BigInt,DataType::Double),
-	BigIntBigFloat	=MathOpCombi(DataType::BigInt,DataType::BigFloat),
 
 	FloatInt   		=MathOpCombi(DataType::Float,DataType::Int),
 	FloatLong  		=MathOpCombi(DataType::Float,DataType::Long),
    	FloatBigInt  	=MathOpCombi(DataType::Float,DataType::BigInt),
 	FloatFloat		=MathOpCombi(DataType::Float,DataType::Float),
 	FloatDouble		=MathOpCombi(DataType::Float,DataType::Double),
-	FloatBigFloat	=MathOpCombi(DataType::Float,DataType::BigFloat),
 
 	DoubleInt  		=MathOpCombi(DataType::Double,DataType::Int),
 	DoubleLong  	=MathOpCombi(DataType::Double,DataType::Long),
 	DoubleBigInt  	=MathOpCombi(DataType::Double,DataType::BigInt),
 	DoubleFloat		=MathOpCombi(DataType::Double,DataType::Float),
 	DoubleDouble	=MathOpCombi(DataType::Double,DataType::Double),
-	DoubleBigFloat	=MathOpCombi(DataType::Double,DataType::BigFloat),
 
-	BigFloatInt  	 =MathOpCombi(DataType::BigFloat,DataType::Int),
-	BigFloatLong  	 =MathOpCombi(DataType::BigFloat,DataType::Long),
-	BigFloatBigInt   =MathOpCombi(DataType::BigFloat,DataType::BigInt),
-	BigFloatFloat	 =MathOpCombi(DataType::BigFloat,DataType::Float),
-	BigFloatDouble	 =MathOpCombi(DataType::BigFloat,DataType::Double),
-	BigFloatBigFloat =MathOpCombi(DataType::BigFloat,DataType::BigFloat),
-
-	kInvalidMathOpTypeThreshold=BigFloatBigFloat+1,
+	kInvalidMathOpTypeThreshold=BigIntBigInt+1,
 };
 
 // int value for DataType::MiscInt
@@ -147,6 +141,35 @@ enum class ControlBlockType {
 
 	kOPEN_ARG_GROUP=0x2000,
 	SyntaxArgBegin=kOPEN_ARG_GROUP | 0x01,
+
+	kOPEN_LAMBDA_GROUP=0x4000,
+	NewSimpleLambda						=kOPEN_LAMBDA_GROUP | 0x01,
+
+	kTHREAD=0x8000 | kOPEN_LAMBDA_GROUP,
+	kTHREAD_INFO_MASK=0xFF,
+	kThreadMask_Open_ThreadOutputAsInput	=0x01,	// >[  , >[[
+	kThreadMask_Open_TosChanAsInput			=0x02,	// >>[ , >>[[
+	kThreadMask_Open_TosBroadcast			=0x04,	// [-> , [[->
+	kThreadMask_Open_PushTosListElem		=0x08,	// [=> , [[=>
+	kThreadMask_Close_ThreadOutputAsInput	=0x10,	// ]>  , ]]>
+	kThreadMask_Close_PushOutputChan		=0x20,	// ]>> , ]]>>
+	kThreadMask_Close_PushContext			=0x40,	// ]=  , ]]=
+	//  [ ... ]  kTHREAD_INFO
+	// >[ ... ]  kTHREAD_INFO | kThreadMask_Open_ThreadOutputAsInput
+	// >[ ... ]> kTHREAD_INFO | kThreadMask_Open_ThreadOutputAsInput | kThreadMask_Close_ThreadOutputAsInput
+	
+	OpenSimpleThread 	    = kTHREAD,	// [ , [[
+	OpenConnectedThread     = kTHREAD | kThreadMask_Open_ThreadOutputAsInput, // >[ , >[[
+	OpenTosChanConnectThread= kTHREAD | kThreadMask_Open_TosChanAsInput // >>[ , >>[[
+};
+
+struct UserData {
+	void *dataPtr;
+	std::string memo;
+
+	UserData():dataPtr(NULL),memo("") { /* empty */ }
+	UserData(void *inDataPtr,std::string inMemo)
+	  :dataPtr(inDataPtr),memo(inMemo) { /* empty */ }
 };
 
 struct TypedValue {
@@ -171,20 +194,21 @@ struct TypedValue {
 		std::shared_ptr< std::deque<TypedValue> > listPtr;
 		std::shared_ptr< std::unordered_map<TypedValue,TypedValue,TvHash> > kvPtr;
 		std::shared_ptr<File> filePtr;
+		std::shared_ptr<Context> contextPtr;
+		std::shared_ptr<ChanMan> channelPtr;
 
 		BigInt *bigIntPtr;
-		BigFloat *bigFloatPtr;
 
 		WordFunc stdCodePtr;
+
+		std::shared_ptr<UserData> userDataPtr;
 	};
 
 #ifdef _MSVC_LANG
 	#pragma warning(push)
 	#pragma warning(disable:26495)
 #endif
-	TypedValue():dataType(DataType::Invalid) {
-		// empty
-	}
+	TypedValue():dataType(DataType::Invalid) { /* empty */ }
 
 	TypedValue(DataType inDataType):dataType(inDataType) {
 		assert(inDataType==DataType::EoC || inDataType==DataType::EoF);
@@ -194,7 +218,7 @@ struct TypedValue {
 	  :dataType(inSrc.dataType) {
 		if(((int)inSrc.dataType & kType_HeavyMask)==0) {
 			// simple memcpy for primitive data.
-			// note: double is a most large primitive.
+			// note: double is a most largest primitive.
 			doubleValue=inSrc.doubleValue;
 		} else {
 			switch(inSrc.dataType) {
@@ -205,11 +229,6 @@ struct TypedValue {
 				case DataType::BigInt:
 					bigIntPtr=new BigInt();
 					*bigIntPtr=*inSrc.bigIntPtr;
-					break;
-
-				case DataType::BigFloat:
-					bigFloatPtr=new BigFloat();
-					*bigFloatPtr=*inSrc.bigFloatPtr;
 					break;
 
 				case DataType::String:
@@ -237,6 +256,18 @@ struct TypedValue {
 					new(&filePtr) std::shared_ptr<File>(inSrc.filePtr);
 					break;
 
+				case DataType::UserData:
+					new(&userDataPtr) std::shared_ptr<UserData>(inSrc.userDataPtr);
+					break;
+
+				case DataType::Context:
+					new(&contextPtr) std::shared_ptr<Context>(inSrc.contextPtr);
+					break;
+
+				case DataType::Channel:
+					new(&channelPtr) std::shared_ptr<ChanMan>(inSrc.channelPtr);
+					break;
+					
 				default:
 					fprintf(stderr,"SYSTEM ERROR at TypedValue copy constructor.\n");
 					exit(-1);
@@ -293,13 +324,6 @@ struct TypedValue {
 		// empty
 	}
 
-#if 0
-	TypedValue(DebugCommandType inDCT)
-	  :dataType(DataType::Int),intValue((int)inDCT) {
-		// empty
-	}
-#endif
-
 	TypedValue(long inLongValue):dataType(DataType::Long),longValue(inLongValue) {
 		// empty
 	}
@@ -315,11 +339,6 @@ struct TypedValue {
 
 	TypedValue(double inDoubleValue):dataType(DataType::Double) {
 		doubleValue=inDoubleValue;
-	}
-
-	TypedValue(const BigFloat& inBigFloat)
-	  :dataType(DataType::BigFloat),bigFloatPtr(new BigFloat(inBigFloat)) {
-		// empty
 	}
 
 	TypedValue(const std::string& inStringValue)
@@ -356,8 +375,13 @@ struct TypedValue {
 		new(&filePtr) std::shared_ptr<File>(inFile);
 	}
 
-	TypedValue(const Word **inIPValue)
-	  :dataType(DataType::IP),ipValue(inIPValue) {
+	PP_API TypedValue(Context *inContextPtr);
+	PP_API TypedValue(ChanMan *inChannel);
+	TypedValue(std::shared_ptr<ChanMan> inChannel):dataType(DataType::Channel) {
+		new(&channelPtr) std::shared_ptr<ChanMan>(inChannel);
+	}
+
+	TypedValue(const Word **inIPValue):dataType(DataType::IP),ipValue(inIPValue) {
 		// empty
 	}
 
@@ -373,6 +397,11 @@ struct TypedValue {
 
 	TypedValue(WordFunc inStdCodePtr)
 	  :dataType(DataType::StdCode),stdCodePtr(inStdCodePtr) {
+		// empty
+	}
+
+	TypedValue(void *inUserDataPtr,std::string inMemo)
+	  :dataType(DataType::UserData),userDataPtr(new UserData(inUserDataPtr,inMemo)) {
 		// empty
 	}
 #ifdef _MSVC_VER
@@ -393,9 +422,12 @@ struct TypedValue {
 			case DataType::List:	listPtr.reset();	break;
 			case DataType::KV:		kvPtr.reset();		break;
 			case DataType::File:	filePtr.reset();	break;
+			case DataType::Context:	contextPtr.reset(); break;
+			case DataType::Channel:	channelPtr.reset();	break;
 
 			case DataType::BigInt:		delete(bigIntPtr);		break;
-			case DataType::BigFloat:	delete(bigFloatPtr);	break;
+
+			case DataType::UserData:	userDataPtr.reset();	break;
 
 			default:
 				;	// empty
@@ -417,9 +449,12 @@ struct TypedValue {
 				case DataType::List: 	listPtr.reset();	break;
 				case DataType::KV:		kvPtr.reset();		break;
 				case DataType::File:	filePtr.reset();	break;
+				case DataType::Context:	contextPtr.reset();	break;
+				case DataType::Channel: channelPtr.reset(); break;
 
 				case DataType::BigInt:		delete(bigIntPtr);		break;
-				case DataType::BigFloat:	delete(bigFloatPtr);	break;
+
+				case DataType::UserData:	userDataPtr.reset();	break;
 
 				default:
 					;	// dummy
@@ -462,21 +497,30 @@ struct TypedValue {
 					dataType=DataType::File;
 					return *this;
 
+				case DataType::Context:
+					new(&contextPtr) std::shared_ptr<Context>(inSrc.contextPtr);
+					dataType=DataType::Context;
+					return *this;
+
+				case DataType::Channel:
+					new(&channelPtr) std::shared_ptr<ChanMan>(inSrc.channelPtr);
+					dataType=DataType::Channel;
+					return *this;
+
 				case DataType::BigInt:
 					bigIntPtr=new BigInt();
 					*bigIntPtr=*inSrc.bigIntPtr;
 					dataType=DataType::BigInt;
 					return *this;
 
-				case DataType::BigFloat:
-					bigFloatPtr=new BigFloat();
-					*bigFloatPtr=*inSrc.bigFloatPtr;
-					dataType=DataType::BigFloat;
-					return *this;
-
 				case DataType::StdCode:
 					dataType=DataType::StdCode;
 					stdCodePtr=inSrc.stdCodePtr;
+					return *this;
+
+				case DataType::UserData:
+					new(&userDataPtr) std::shared_ptr<UserData>(inSrc.userDataPtr);
+					dataType=DataType::UserData;
 					return *this;
 
 				default:
@@ -538,12 +582,6 @@ struct TypedValue {
 				*bigIntPtr=*inSrc.bigIntPtr;
 				break;
 
-			case DataType::BigFloat:
-				assert(dataType==DataType::BigFloat
-					   && inSrc.dataType==DataType::BigFloat);
-				*bigFloatPtr=*inSrc.bigFloatPtr;
-				break;
-
 			case DataType::ParamDest:
 			case DataType::IP:
 				dataType=inSrc.dataType;
@@ -589,6 +627,23 @@ struct TypedValue {
 				stdCodePtr=inSrc.stdCodePtr;
 				break;
 
+			case DataType::UserData:
+				dataType=inSrc.dataType;
+				userDataPtr.reset();
+				new(&userDataPtr) std::shared_ptr<UserData>(inSrc.userDataPtr);
+				break;
+
+			case DataType::Context:
+				dataType=inSrc.dataType;
+				contextPtr.reset();
+				new(&contextPtr) std::shared_ptr<Context>(inSrc.contextPtr);
+				break;
+
+			case DataType::Channel:
+				dataType=inSrc.dataType;
+				new(&channelPtr) std::shared_ptr<ChanMan>(inSrc.channelPtr);
+				break;
+
 			default:
 				fprintf(stderr,"SYSTEM ERROR on TypedValue operator=\n");
 				fprintf(stderr,"dest type is '%s'\n",GetTypeStr().c_str());
@@ -613,10 +668,6 @@ struct TypedValue {
 				delete(bigIntPtr);
 				intValue=inValue;
 				break;
-			case DataType::BigFloat:
-				delete(bigFloatPtr);
-				intValue=inValue;
-				break;
 			default:
 				switch(dataType) {
 					case DataType::Lambda:	lambdaPtr.reset();	break;
@@ -631,6 +682,9 @@ struct TypedValue {
 					case DataType::List: 	listPtr.reset();	break;
 					case DataType::KV:		kvPtr.reset();		break;
 					case DataType::File:	filePtr.reset();	break;
+					case DataType::Context:	contextPtr.reset();	break;
+					case DataType::Channel: channelPtr.reset();	break;
+					case DataType::UserData:userDataPtr.reset();break;
 
 					default:
 						;	// dummy
@@ -655,10 +709,6 @@ struct TypedValue {
 				delete(bigIntPtr);
 				floatValue=inValue;
 				break;
-			case DataType::BigFloat:
-				delete(bigFloatPtr);
-				floatValue=inValue;
-				break;
 			default:
 				switch(dataType) {
 					case DataType::Lambda:	lambdaPtr.reset();	break;
@@ -673,6 +723,9 @@ struct TypedValue {
 					case DataType::List: 	listPtr.reset();	break;
 					case DataType::KV:		kvPtr.reset();		break;
 					case DataType::File:	filePtr.reset();	break;
+					case DataType::Context:	contextPtr.reset();	break;
+					case DataType::Channel:	channelPtr.reset();	break;
+					case DataType::UserData:userDataPtr.reset();break;
 
 					default:
 						;	// dummy
@@ -697,10 +750,6 @@ struct TypedValue {
 				delete(bigIntPtr);
 				doubleValue=inValue;
 				break;
-			case DataType::BigFloat:
-				delete(bigFloatPtr);
-				doubleValue=inValue;
-				break;
 			default:
 				switch(dataType) {
 					case DataType::Lambda:	lambdaPtr.reset();	break;
@@ -715,6 +764,9 @@ struct TypedValue {
 					case DataType::List: 	listPtr.reset();	break;
 					case DataType::KV:		kvPtr.reset();		break;
 					case DataType::File:	filePtr.reset();	break;
+					case DataType::Context:	contextPtr.reset();	break;
+					case DataType::Channel: channelPtr.reset();	break;
+					case DataType::UserData:userDataPtr.reset();break;
 
 					default:
 						;	// dummy
@@ -728,7 +780,6 @@ struct TypedValue {
 		switch(dataType) {
 			case DataType::Invalid:
 			case DataType::BigInt:
-			case DataType::BigFloat:
 			case DataType::EoC:
 			case DataType::EoF:
 				return std::hash<int>()((int)dataType);
@@ -801,8 +852,11 @@ struct TypedValue {
 					return hash;
 				}
 
-			case DataType::File:
-				return std::hash<File*>()(filePtr.get());
+			case DataType::File: return std::hash<File*>()(filePtr.get());
+			case DataType::Context: return std::hash<Context*>()(contextPtr.get());
+			case DataType::Channel: return std::hash<ChanMan*>()(channelPtr.get());
+			case DataType::UserData: return std::hash<UserData*>()(userDataPtr.get());
+
 			default:
 				fprintf(stderr, "SYSTEM ERROR: TypedValue::Hash().");
 				exit(-1);
@@ -810,6 +864,7 @@ struct TypedValue {
 	}
 
 	inline bool IsInvalid() const { return dataType==DataType::Invalid; }
+	inline bool IsValid()   const { return dataType!=DataType::Invalid; }
 
 	inline bool HasWordPtr(const Word **outWordPtr) const {
 		if(dataType==DataType::Word
@@ -827,13 +882,16 @@ struct TypedValue {
 		}
 	}
 
+	inline bool HasStringPtr() const {
+		return dataType==DataType::String || dataType==DataType::Symbol;
+	}
+
 	inline bool IsNumber() const {
 		return dataType==DataType::Int
 			|| dataType==DataType::Long
 			|| dataType==DataType::Float
 			|| dataType==DataType::Double
-			|| dataType==DataType::BigInt
-			|| dataType==DataType::BigFloat;
+			|| dataType==DataType::BigInt;
 	}
 
 	inline bool IsZero() const {
@@ -841,8 +899,7 @@ struct TypedValue {
 			|| (dataType==DataType::Long     && longValue==0)
 			|| (dataType==DataType::Float    && floatValue==0) 
 			|| (dataType==DataType::Double   && doubleValue==0)
-			|| (dataType==DataType::BigInt   && *bigIntPtr==0)
-			|| (dataType==DataType::BigFloat && *bigFloatPtr==0);
+			|| (dataType==DataType::BigInt   && *bigIntPtr==0);
 	}
 
 	inline bool IsInteger() const {
@@ -857,7 +914,7 @@ struct TypedValue {
 			|| dataType==DataType::KV;
 	}
 
-	int GetLevel() const;
+	PP_API int GetLevel() const;
 
 	PP_API double ToDouble(Context& inContext);
 	PP_API float  ToFloat(Context& inContext);
@@ -908,7 +965,6 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 		case DataType::BigInt:		return *inTV1.bigIntPtr  ==*inTV2.bigIntPtr;
 		case DataType::Float: 		return inTV1.floatValue  ==inTV2.floatValue;
 		case DataType::Double:		return inTV1.doubleValue ==inTV2.doubleValue;
-		case DataType::BigFloat:	return *inTV1.bigFloatPtr==*inTV2.bigFloatPtr;
 
 		case DataType::Symbol:
 		case DataType::String:
@@ -943,11 +999,13 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 		case DataType::KV:
 			return (*inTV1.kvPtr.get())==(*inTV2.kvPtr.get());
 
-		case DataType::File:
-			return inTV1.filePtr.get()==inTV2.filePtr.get();
+		case DataType::File: return inTV1.filePtr.get()==inTV2.filePtr.get();
+		case DataType::Context: return inTV1.contextPtr.get()==inTV2.contextPtr.get();
+		case DataType::Channel: return inTV1.channelPtr.get()==inTV2.channelPtr.get();
+		case DataType::StdCode: return inTV1.stdCodePtr==inTV2.stdCodePtr;
 
-		case DataType::StdCode:
-			return inTV1.stdCodePtr==inTV2.stdCodePtr;
+		case DataType::UserData:
+			return inTV1.userDataPtr.get()->dataPtr==inTV2.userDataPtr.get()->dataPtr;
 
 		default:
 			fprintf(stderr,"SYSTEM ERROR TypedValue Op==\n");
@@ -973,3 +1031,8 @@ PP_API TypedValue FullClone(TypedValue& inTV);
 PP_API bool IsValidDataTypeValue(DataType inDataType);
 
 PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2);
+
+inline bool IsThreadInfo(TypedValue& inTV) {
+	return inTV.dataType==DataType::CB
+		   && (inTV.intValue & (int)ControlBlockType::kTHREAD)!=0;
+}

@@ -9,8 +9,6 @@ static bool compileLambda(Context& inContext,TypedValue& inLambda);
 static bool constant(Context& inContext,
 					 const std::string *inName,const TypedValue& inValue,
 					 bool inOverwriteCheck);
-static bool setAttrBody(Context& inContext,
-						TypedValue& ioWord,TypedValue& inKey,TypedValue& inValue);
 
 void InitDict_Word() {
 	Install(new Word("_lit",WORD_FUNC {
@@ -49,15 +47,7 @@ void InitDict_Word() {
 	}));
 
 	Install(new Word("_semis",WORD_FUNC {
-		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IpsBroken); }
-		inContext.ip=inContext.IS.back();
-		inContext.IS.pop_back();
-//const Word *w=inContext.GetCurrentWord();
-//printf("SEMIS: word=%s env size=%d\n",w->shortName.c_str(),(int)inContext.Env.size());
-		if((*inContext.ip)->numOfLocalVar>0) {
-			assert(inContext.Env.size()>0);
-			inContext.Env.pop_back();
-		}
+		if(Semis(inContext)==false) { return false; }
 		NEXT;
 	}));
 
@@ -99,8 +89,9 @@ void InitDict_Word() {
 		if(inContext.newWord==NULL) {
 			return inContext.Error(NoParamErrorID::ShouldBeExecutedInDefinition);
 		}
-		inContext.Compile(std::string("_semis"));
-		inContext.FinishNewWord();
+		inContext.newWord->CompileWord("_semis");
+		inContext.newWord->BuildParam();
+		inContext.FinishWordDef();
 		inContext.SetInterpretMode();
 		NEXT;
 onError:
@@ -154,7 +145,7 @@ onError:
 		newWord->tmpParam=srcWord->tmpParam;
 		newWord->localVarDict=srcWord->localVarDict;
 		newWord->LVOpHint=srcWord->LVOpHint;
-		if(srcLambda!=NULL) { newWord->paramSrcWord=srcLambda; }
+		if(srcLambda!=NULL) { newWord->paramSrcWordHolder=srcLambda; }
 		Install(newWord);
 
 		NEXT;
@@ -198,7 +189,7 @@ onError:
 		destWord->tmpParam=srcWord->tmpParam;
 		destWord->localVarDict=srcWord->localVarDict;
 		destWord->LVOpHint=srcWord->LVOpHint;
-		if(srcLambda!=NULL) { destWord->paramSrcWord=srcLambda; }
+		if(srcLambda!=NULL) { destWord->paramSrcWordHolder=srcLambda; }
 
 		NEXT;
 	}));
@@ -427,12 +418,12 @@ onError:
 		const int paramSize=2+TvSize*2+MutexSize;
 		newWord->param=new const Word*[paramSize];
 		
-		const Word *lit=GetWordPtr(std::string("_lit"));
+		const Word *lit=GetWordPtr("_lit");
 		if(lit==NULL) {
 			return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
 								   std::string("_lit"));
 		}
-		const Word *semis=GetWordPtr(std::string("_semis"));
+		const Word *semis=GetWordPtr("_semis");
 		if(semis==NULL) {
 			return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
 								   std::string("_semis"));
@@ -456,22 +447,24 @@ onError:
 			// define >$varName (ex: >$x)
 			std::string toVarName((">$"+*tos.stringPtr.get()).c_str());
 			Word *toVar=new Word(&toVarName);
+			toVar->CompileWord(tos.stringPtr->c_str());
+			toVar->CompileWord("store");
+			toVar->CompileWord("_semis");
+			toVar->BuildParam();
 			inContext.newWord=toVar;
-			inContext.Compile(std::string(*tos.stringPtr.get()));
-			inContext.Compile(std::string("store"));
-			inContext.Compile(std::string("_semis"));
-			inContext.FinishNewWord();
+			inContext.FinishWordDef();
 			Dict[toVar->shortName]=toVar;
 			Dict[toVar->longName ]=toVar;
 
-			// dfine $varName> (ex: $x>)
+			// define $varName> (ex: $x>)
 			std::string fromVarName((("$"+*tos.stringPtr.get())+">").c_str());
 			Word *fromVar=new Word(&fromVarName);
+			fromVar->CompileWord(tos.stringPtr->c_str());
+			fromVar->CompileWord("fetch");
+			fromVar->CompileWord("_semis");
+			fromVar->BuildParam();
 			inContext.newWord=fromVar;
-			inContext.Compile(std::string(*tos.stringPtr.get()));
-			inContext.Compile(std::string("fetch"));
-			inContext.Compile(std::string("_semis"));
-			inContext.FinishNewWord();
+			inContext.FinishWordDef();
 			Dict[fromVar->shortName]=fromVar;
 			Dict[fromVar->longName ]=fromVar;
 		inContext.newWord=newWordBackup;
@@ -523,17 +516,16 @@ onError:
 	// left_curly
 	Install(new Word("{",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
-		inContext.BeginNoNameWordBlock();
+		inContext.BeginNoNameWordBlock(ControlBlockType::NewSimpleLambda);
 		NEXT;
 	}));
 
 	Install(new Word("}",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
-		inContext.Compile(std::string("_semis"));
-		Word *newWordBackup=inContext.newWord;
-		inContext.FinishNewWord();
-		//TypedValue tvWord(DataType::Word,newWordBackup);
-		TypedValue tvWord((std::shared_ptr<const Word>(newWordBackup)));
+		inContext.newWord->CompileWord("_semis");
+		inContext.newWord->BuildParam();
+		inContext.FinishWordDef();
+		TypedValue tvWord((std::shared_ptr<const Word>(inContext.lastDefinedWord)));
 		if(inContext.EndNoNameWordBlock()==false) { return false; }
 		switch(inContext.ExecutionThreshold) {
 			case Level::Interpret:
@@ -541,7 +533,7 @@ onError:
 				break;
 			case Level::Compile:
 				assert(inContext.newWord!=NULL);
-				inContext.Compile(std::string("_lit"));
+				inContext.newWord->CompileWord("_lit");
 				if(compileLambda(inContext,tvWord)==false) { return false; }
 				break;
 			case Level::Symbol:
@@ -558,7 +550,7 @@ onError:
 	Install(new Word("{{",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
 		inContext.RS.emplace_back((int)inContext.DS.size());
-		inContext.BeginNoNameWordBlock();
+		inContext.BeginNoNameWordBlock(ControlBlockType::NewSimpleLambda);
 		NEXT;
 	}));
 
@@ -567,10 +559,10 @@ onError:
 		if(inContext.CheckCompileMode()==false) {
 			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		}
-		inContext.Compile(std::string("_semis"));
-		Word *newWordBackup=inContext.newWord;
-		inContext.FinishNewWord();
-		TypedValue tvWord(DataType::Word,newWordBackup);
+		inContext.newWord->CompileWord("_semis");
+		inContext.newWord->BuildParam();
+		inContext.FinishWordDef();
+		TypedValue tvWord(DataType::Word,inContext.lastDefinedWord);
 		if(inContext.EndNoNameWordBlock()==false) { return false; }
 		if(inContext.Exec(tvWord)==false) { return false; }
 		TypedValue tv=Pop(inContext.RS);
@@ -585,10 +577,10 @@ onError:
 		if(inContext.CheckCompileMode()==false) {
 			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		}
-		inContext.Compile(std::string("_semis"));
-		Word *newWordBackup=inContext.newWord;
-		inContext.FinishNewWord();
-		TypedValue tvWord(DataType::Word,newWordBackup);
+		inContext.newWord->CompileWord("_semis");
+		inContext.newWord->BuildParam();
+		inContext.FinishWordDef();
+		TypedValue tvWord(DataType::Word,inContext.lastDefinedWord);
 		if(inContext.EndNoNameWordBlock()==false) { return false; }
 		if(inContext.Exec(tvWord)==false) { return false; }
 		TypedValue tv=Pop(inContext.RS);
@@ -603,8 +595,8 @@ onError:
 				case Level::Compile:
 					assert(inContext.newWord!=NULL);
 					for(int i=tv.intValue; i<inContext.DS.size(); i++) {
-						inContext.Compile(std::string("_lit"));
-						inContext.Compile(inContext.DS[i]);
+						inContext.newWord->CompileWord("_lit");
+						inContext.newWord->CompileValue(inContext.DS[i]);
 					}
 					inContext.DS.erase(inContext.DS.begin()+tv.intValue,
 									   inContext.DS.end());
@@ -612,7 +604,7 @@ onError:
 				case Level::Symbol:
 					assert(inContext.newWord!=NULL);
 					for(int i=tv.intValue; i<inContext.DS.size(); i++) {
-						inContext.Compile(inContext.DS[i]);
+						inContext.newWord->CompileValue(inContext.DS[i]);
 					}
 					inContext.DS.erase(inContext.DS.begin()+tv.intValue,
 									   inContext.DS.end());
@@ -626,12 +618,10 @@ onError:
 	}));
 
 	Install(new Word(">lit",WORD_FUNC {
-		if(inContext.DS.size()<1) {
-			return inContext.Error(NoParamErrorID::DsIsEmpty);
-		}
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(tos);
+		inContext.newWord->CompileWord("_lit");
+		inContext.newWord->CompileValue(tos);
 		NEXT;
 	}));
 
@@ -643,7 +633,7 @@ onError:
 			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);
 		}
 		TypedValue tos=Pop(inContext.DS);
-		inContext.Compile(tos);
+		inContext.newWord->CompileValue(tos);
 		NEXT;
 	}));
 
@@ -717,7 +707,9 @@ onError:
 		NEXT;
 	}));
 
-	// attribute
+	// --------------------------------
+	// 	attribute
+	// --------------------------------
 
 	// W Xk Xv ---
 	// Xk : key for attribute
@@ -730,7 +722,7 @@ onError:
 		TypedValue tvValue=Pop(inContext.DS);
 		TypedValue tvKey=Pop(inContext.DS);
 		TypedValue tvWord=Pop(inContext.DS);
-		if(setAttrBody(inContext,tvWord,tvKey,tvValue)==false) { return false; }
+		if(SetAttr(inContext,tvWord,tvKey,tvValue)==false) { return false; }
 		NEXT;
 	}));
 
@@ -742,7 +734,7 @@ onError:
 		TypedValue tvValue=Pop(inContext.DS);
 		TypedValue tvKey=Pop(inContext.DS);
 		TypedValue& tvWord=ReadTOS(inContext.DS);
-		if(setAttrBody(inContext,tvWord,tvKey,tvValue)==false) { return false; }
+		if(SetAttr(inContext,tvWord,tvKey,tvValue)==false) { return false; }
 		NEXT;
 	}));
 
@@ -811,13 +803,7 @@ onError:
 			return inContext.Error(InvalidTypeErrorID::SecondWp,tvWord);
 		}
 		Word *word=(Word *)wordPtr;
-		bool result;
-		if(word->attr==NULL) {
-			result=false;
-		} else {
-			size_t numOfCounts=word->attr->count(tvKey);
-			result = numOfCounts!=0;
-		}
+		bool result=HasAttr(word,tvKey);	
 		inContext.DS.emplace_back(result);
 		NEXT;
 	}));
@@ -896,9 +882,9 @@ static bool compileLambda(Context& inContext,TypedValue& inLambda) {
 			return inContext.Error(NoParamErrorID::DsIsEmpty);
 		}
 		TypedValue tos=Pop(inContext.DS);
-		inContext.Compile(tos);
+		inContext.newWord->CompileValue(tos);
 	} else {
-		inContext.Compile(inLambda);
+		inContext.newWord->CompileValue(inLambda);
 	}
 	return true;
 }
@@ -914,32 +900,12 @@ static bool constant(Context& inContext,
 	}
 
 	Word *newWord=new Word(inName);
-	Word *newWordBackup=inContext.newWord;
-	inContext.newWord=newWord;
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(inValue);
-		inContext.Compile(std::string("_semis"));
-		inContext.FinishNewWord();
-	inContext.newWord=newWordBackup;
+	newWord->CompileWord("_lit");
+	newWord->CompileValue(inValue);
+	newWord->CompileWord("_semis");
+	newWord->BuildParam();
 	Dict[newWord->shortName]=newWord;
 	Dict[newWord->longName ]=newWord;
-	return true;
-}
-
-static bool setAttrBody(Context& inContext,
-						TypedValue& ioWord,TypedValue& inKey,TypedValue& inValue) {
-	const Word *wordPtr;
-	if(ioWord.HasWordPtr(&wordPtr)==false) {
-		return inContext.Error(InvalidTypeErrorID::ThirdWp,ioWord);
-	}
-	Word *word=(Word *)wordPtr;
-	if(word->attr==NULL) { word->attr=new Attr(); }
-	auto itr=word->attr->find(inKey);
-	if(itr==word->attr->end()) {
-		word->attr->insert({inKey,inValue});
-	} else {
-		itr->second=inValue;
-	}
 	return true;
 }
 

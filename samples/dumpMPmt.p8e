@@ -72,16 +72,15 @@ then
 	next
 
 	// check 4...5000 by multi-thread
-	reset-pipes
-	[ 5 $N> for+ i >pipe 2 step next ]
-	[[
+	// reset-pipes
+	[ 5 $N> for+ i >pipe 2 step next
+	]>> >>[[
 		while-pipe
 			dup prime? if
 				dup lucas-lehmer-test-fast if >pipe then
 			then
 		repeat
-	]]
-	while-pipe @append repeat { < } sort
+	]]> while-pipe @append repeat { < } sort
 ;
 
 // T ---

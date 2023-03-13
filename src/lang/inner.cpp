@@ -7,7 +7,7 @@
 
 PP_API bool InnerInterpreter(Context& inContext) NOEXCEPT {
 	do {
-		if((**(WordFunc **)inContext.ip)(inContext)==false) { return false; }
+		if((**((WordFunc **)inContext.ip))(inContext)==false) { return false; }
 	} while(*inContext.ip!=NULL);
 	return true;
 }

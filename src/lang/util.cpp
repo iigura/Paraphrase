@@ -42,3 +42,8 @@ PP_API TypedValue GetFormattedString(const char *inFmt,TypedValue& inTV) {
 	}
 }
 
+PP_API void ExitOnSystemError(const char *inFuncName) {
+	fprintf(stderr,"SYSTEM ERROR (%s).\n",inFuncName);
+	exit(-1);
+}
+

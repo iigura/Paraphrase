@@ -22,4 +22,3 @@ extern "C" PP_API bool stdCodeHello(Context& /* inContext */) {
 	printf("hello by StdCode.\n");
 	return true;
 }
-

@@ -1,6 +1,7 @@
 #include <boost/format.hpp>
 
 #include "word.h"
+#include "chan.h"
 #include "typedValue.h"
 #include "stack.h"
 #include "context.h"
@@ -8,11 +9,16 @@
 const BigInt gBI_DBL_MAX(DBL_MAX);
 const BigInt gBI_FLT_MAX(FLT_MAX);
 
-const BigFloat gBF_DBL_MAX(DBL_MAX);
-const BigFloat gBF_FLT_MAX(FLT_MAX);
-
 static std::string disAsmLVOP(int inLVOP);
 static std::string controlBlockNameStr(const ControlBlockType inCBT);
+
+PP_API TypedValue::TypedValue(Context *inContextPtr):dataType(DataType::Context) {
+	new(&contextPtr) std::shared_ptr<Context>(inContextPtr);
+}
+
+PP_API TypedValue::TypedValue(ChanMan *inChannel):dataType(DataType::Channel) {
+	new(&channelPtr) std::shared_ptr<ChanMan>(inChannel);
+}
 
 PP_API double TypedValue::ToDouble(Context& inContext) {
 	switch(dataType) {
@@ -24,14 +30,6 @@ PP_API double TypedValue::ToDouble(Context& inContext) {
 			const BigInt& bigInt=*bigIntPtr;
 			if(abs(bigInt)<=gBI_DBL_MAX) {
 				return static_cast<double>(bigInt);
-			} else {
-				inContext.Error(NoParamErrorID::CanNotConvertToDoubleDueToOverflow);
-			}
-		}
-		case DataType::BigFloat: {
-			const BigFloat& bigFloat=*bigFloatPtr;
-			if(abs(bigFloat)<gBF_DBL_MAX) {
-				return static_cast<double>(bigFloat);
 			} else {
 				inContext.Error(NoParamErrorID::CanNotConvertToDoubleDueToOverflow);
 			}
@@ -56,14 +54,6 @@ PP_API float TypedValue::ToFloat(Context& inContext) {
 				inContext.Error(NoParamErrorID::CanNotConvertToFloatDueToOverflow);
 			}
 		}
-		case DataType::BigFloat: {
-			const BigFloat& bigFloat=*bigFloatPtr;
-			if(abs(bigFloat)<=gBF_FLT_MAX) {
-				return static_cast<float>(*bigFloatPtr);
-			} else {
-				inContext.Error(NoParamErrorID::CanNotConvertToFloatDueToOverflow);
-			}
-		}
 		default:
 			inContext.Error(InvalidTypeErrorID::TosCanNotConvertToFloat,*this);
 	}
@@ -72,9 +62,6 @@ PP_API float TypedValue::ToFloat(Context& inContext) {
 
 PP_API TypedValue FullClone(TypedValue& inTV) {
 	switch(inTV.dataType) {
-		case DataType::String:
-		case DataType::Symbol:
-			return TypedValue(*inTV.stringPtr);
 		case DataType::Array: {
 				Array<TypedValue> *srcPtr=inTV.arrayPtr.get();
 				Lock(srcPtr->mutex);
@@ -126,7 +113,6 @@ PP_API std::string TypedValue::GetTypeStr() const {
 		case DataType::BigInt:		return std::string("bigInt");
 		case DataType::Float:		return std::string("float");
 		case DataType::Double:		return std::string("double");
-		case DataType::BigFloat:	return std::string("bigFloat");
 		case DataType::String:		return std::string("string");
 		case DataType::MayBeAWord:	return std::string("mayBeAWord");
 		case DataType::Word:		return std::string("word");
@@ -138,12 +124,17 @@ PP_API std::string TypedValue::GetTypeStr() const {
 		case DataType::Symbol:		return std::string("symbol");
 		case DataType::File:		return std::string("file");
 		case DataType::EoF:			return std::string("eof");
+		case DataType::Context:		return std::string("context");
+		case DataType::Channel:		return std::string("channel");
 
 		case DataType::MiscInt:	return std::string("(MISC-INT)");
 		case DataType::LVOP:		return std::string("(LVOP)");
 		case DataType::CB:			return std::string("(CBT)");
 
 		case DataType::StdCode:	return std::string("stdCode");
+
+		case DataType::UserData: return std::string("userData");
+
 		default: ;	// empty
 	}
 	fprintf(stderr,"UNKNOWN dataType=%d\n",(int)dataType);
@@ -153,7 +144,7 @@ PP_API std::string TypedValue::GetTypeStr() const {
 static void printIndent(int inIndent);
 static std::string indentStr(int inIndent);
 
-int TypedValue::GetLevel() const {
+PP_API int TypedValue::GetLevel() const {
 	return dataType==DataType::DirectWord ? (int)wordPtr->level : 0;
 }
 
@@ -301,10 +292,6 @@ PP_API std::string TypedValue::GetValueString(int inIndent,
 			ret=bigIntPtr->str();
 			if( inTypePostfix ) { ret+="LL"; }
 			break;
-		case DataType::BigFloat:
-			ret=bigFloatPtr->str();
-			if( inTypePostfix ) { ret+="g"; }
-			break;
 
 		case DataType::Symbol:
 		case DataType::MayBeAWord:
@@ -322,7 +309,16 @@ PP_API std::string TypedValue::GetValueString(int inIndent,
 			ret=(boost::format("(file-pointer: %p)")%filePtr.get()).str();
 			break;
 		
-		case DataType::EoF:	ret="(EoF)";	break;
+		case DataType::EoF:		ret="(EoF)";		break;
+
+		case DataType::Context:
+			ret=(boost::format("(context-pointer: %p)")%contextPtr.get()).str();
+			break;
+
+		case DataType::Channel:
+			ret=(boost::format("(channel-pointer: %p ")%channelPtr.get()).str();
+			ret+=std::string("name='")+channelPtr->name+"')";
+			break;
 		
 		case DataType::LVOP:	ret=disAsmLVOP(intValue);	break;
 
@@ -333,6 +329,11 @@ PP_API std::string TypedValue::GetValueString(int inIndent,
 				strm << (void*)stdCodePtr;
 				ret=strm.str();
 			}
+			break;
+
+		case DataType::UserData:
+			ret=(boost::format("(%p ")%userDataPtr.get()).str();
+			ret+=std::string("memo='")+userDataPtr.get()->memo+"')";
 			break;
 
 		default:
@@ -462,9 +463,26 @@ static std::string controlBlockNameStr(const ControlBlockType inCBT) {
 			break;
 		case ControlBlockType::SyntaxSwitch: ret="(switch)"; break;
 
-		default:
-			fprintf(stderr,"SYSTEM ERROR at controlBlockNameStr().\n");
-			exit(-1);
+		default: {
+				if(((int)inCBT & (int)ControlBlockType::kTHREAD)!=0) {
+					ret="(thread-info:";
+					if(((int)inCBT & (int)ControlBlockType::kThreadMask_Open_ThreadOutputAsInput)!=0) {
+						ret+=">[ ";
+					} else if(((int)inCBT & (int)ControlBlockType::kThreadMask_Open_TosChanAsInput)!=0) {
+						ret+=">>[ ";
+					} else {
+						ret+="[ ";
+					}
+					if(((int)inCBT & (int)ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)!=0) {
+						ret+=" ]>)";
+					} else {
+						ret+=" ])";
+					}
+				} else {
+					fprintf(stderr,"SYSTEM ERROR at controlBlockNameStr().\n");
+					exit(-1);
+				}
+			}
 	}
 	return ret;
 }
@@ -492,7 +510,6 @@ PP_API bool IsValidDataTypeValue(DataType inDataType) {
 		case DataType::BigInt:
 		case DataType::Float:
 		case DataType::Double:
-		case DataType::BigFloat:
 		case DataType::String:
 		case DataType::MayBeAWord:
 		case DataType::Word:
@@ -510,6 +527,8 @@ PP_API bool IsValidDataTypeValue(DataType inDataType) {
 		case DataType::CB:
 
 		case DataType::StdCode:
+
+		case DataType::UserData:
 			return true;
 		default:
 			;	// empty
@@ -527,7 +546,6 @@ PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
 				case DataType::BigInt:	return inTV1.intValue==*inTV2.bigIntPtr;
 				case DataType::Float:	return inTV1.intValue==inTV2.floatValue;
 				case DataType::Double:	return inTV1.intValue==inTV2.doubleValue;
-				case DataType::BigFloat:return inTV1.intValue==*inTV2.bigFloatPtr;
 				default:				return false;
 			}
 			break;
@@ -538,7 +556,6 @@ PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
 				case DataType::BigInt:	return inTV1.longValue==*inTV2.bigIntPtr;
 				case DataType::Float:	return inTV1.longValue==inTV2.floatValue;
 				case DataType::Double:	return inTV1.longValue==inTV2.doubleValue;
-				case DataType::BigFloat:return inTV1.longValue==*inTV2.bigFloatPtr;
 				default:				return false;
 			}
 			break;
@@ -549,9 +566,6 @@ PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
 				case DataType::BigInt:	return *inTV1.bigIntPtr==*inTV2.bigIntPtr;
 				case DataType::Float:	return *inTV1.bigIntPtr==inTV2.floatValue;
 				case DataType::Double:	return *inTV1.bigIntPtr==inTV2.doubleValue;
-				case DataType::BigFloat: {
-					return BigFloat(*inTV1.bigIntPtr)==*inTV2.bigFloatPtr;
-				}
 				default:				return false;
 			}
 			break;
@@ -562,7 +576,6 @@ PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
 				case DataType::BigInt:	return inTV1.floatValue==*inTV2.bigIntPtr;
 				case DataType::Float:	return inTV1.floatValue==inTV2.floatValue;
 				case DataType::Double:	return inTV1.floatValue==inTV2.doubleValue;
-				case DataType::BigFloat:return inTV1.floatValue==*inTV2.bigFloatPtr;
 				default:				return false;
 			}
 			break;
@@ -573,20 +586,6 @@ PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
 				case DataType::BigInt:	return inTV1.doubleValue==*inTV2.bigIntPtr;
 				case DataType::Float:	return inTV1.doubleValue==inTV2.floatValue;
 				case DataType::Double:	return inTV1.doubleValue==inTV2.doubleValue;
-				case DataType::BigFloat:return inTV2.doubleValue==*inTV2.bigFloatPtr;
-				default:				return false;
-			}
-			break;
-		case DataType::BigFloat:
-			switch(inTV2.dataType) {
-				case DataType::Int:		return *inTV1.bigFloatPtr==inTV2.intValue;
-				case DataType::Long:	return *inTV1.bigFloatPtr==inTV2.longValue;
-				case DataType::BigInt: {
-					return *inTV1.bigFloatPtr==BigFloat(*inTV2.bigIntPtr);
-				}
-				case DataType::Float:	return *inTV1.bigFloatPtr==inTV2.floatValue;
-				case DataType::Double:	return *inTV1.bigFloatPtr==inTV2.doubleValue;
-				case DataType::BigFloat:return *inTV1.bigFloatPtr==*inTV2.bigFloatPtr;
 				default:				return false;
 			}
 			break;
@@ -630,4 +629,3 @@ PP_API bool IsSameValue(const TypedValue& inTV1,const TypedValue& inTV2) {
 			return false;
 	}
 }
-

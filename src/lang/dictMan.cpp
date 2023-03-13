@@ -105,6 +105,11 @@ PP_API void Uninstall(const Word *inTargetWord) {
 	}
 }
 
+PP_API const Word *GetWordPtr(const char *inWordName) {
+    auto iter=Dict.find(std::string(inWordName));
+	return iter==Dict.end() ? NULL : iter->second;
+}
+
 PP_API void Alias(const char *inNewName,const char *inSrcName) {
 	auto dictIter=Dict.find(std::string(inSrcName));
 	if(dictIter==Dict.end()) {
@@ -136,21 +141,4 @@ static bool ambigous(Context& inContext) NOEXCEPT {
 	NEXT;
 }
 
-/****
-                    Word
-IP---> Word* ----->+---------+
-      (WordFunc*)  |WordFunc-+-->function
-                   |         |
-****/
-PP_API bool Docol(Context& inContext) NOEXCEPT {
-	inContext.IS.emplace_back(inContext.ip);
-	const Word *word=(*inContext.ip);
-// printf("DOCOL: word=%s IN env size=%d\n",word->shortName.c_str(),(int)inContext.Env.size());
-	if(word->numOfLocalVar>0) {
-// printf("DOCOL: Word=%s PUSH ENV (env size=%d)\n",word->shortName.c_str(),(int)inContext.Env.size());
-		inContext.Env.push_back(LocalVarSlot(word->numOfLocalVar,TypedValue()));
-	}
-	inContext.ip=word->param;
-	return true;
-}
 

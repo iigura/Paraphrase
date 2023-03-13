@@ -35,18 +35,19 @@ then
 // 2 ... N
 // N ---
 `PE10mt :
-	reset-pipes
-
-	/* scatter */
-	[-> 5 swap for+ i >pipe 2 step next ]
-
-	/* worker */
-	[[ while-pipe dup prime?-for-odd if >pipe otherwise-drop repeat ]]
+	// reset-pipes
+	[-> /* scatter */
+		5 swap for+ i >pipe 2 step next
+	]>> >>[[
+		/* worker */
+		while-pipe dup prime?-for-odd if >pipe otherwise-drop repeat
+	]]>
 
 	/* gather: total */
 	2 3 + >big-int
 	while-pipe + repeat
 ;
+
 
 `runMain : 2000000 PE10mt ;
 `run : runMain .cr ;

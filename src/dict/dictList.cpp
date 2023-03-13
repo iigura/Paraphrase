@@ -10,6 +10,9 @@
 #include "context.h"
 #include "mathMacro.h"
 
+extern void LockForConsoleOutput();
+extern void UnlockForConsoleOutput();
+
 static bool expandBody(Context& inContext,TypedValue& inTypedValue);
 static bool hasElement(TypedValue& inTvList,TypedValue& inElement);
 
@@ -23,6 +26,9 @@ void InitDict_List() {
 	Install(new Word(")",WordLevel::Level2,WORD_FUNC {
 		if( inContext.IsInComment() ) { NEXT; }
 
+		if(inContext.IsListConstructing()==false) {
+			return inContext.Error(NoParamErrorID::ListMismatch);
+		}
 		TypedValue tvList=inContext.GetList();
 		if(inContext.EndListBlock()==false) { return false; }
 
@@ -32,12 +38,13 @@ void InitDict_List() {
 				break;
 			case Level::Compile:	
 				if(inContext.newWord==NULL) { goto newWord_is_NULL; }
-				inContext.Compile(std::string("_lit"));
-				inContext.Compile(tvList);
+				inContext.newWord->CompileWord("_lit");
+				inContext.newWord->CompileValue(tvList);
+				inContext.newWord->CompileWord("create-working-value");
 				break;
 			case Level::Symbol:
 				if(inContext.newWord==NULL) { goto newWord_is_NULL; }
-				inContext.Compile(tvList);
+				inContext.newWord->CompileValue(tvList);
 				break;
 			default:
 				inContext.Error(NoParamErrorID::SystemError);
@@ -56,22 +63,11 @@ newWord_is_NULL:
 		if(inContext.ExecutionThreshold==Level::Interpret) {
 			inContext.DS.emplace_back(new List());
 		} else if(inContext.newWord->type==WordType::List) {
-			inContext.Compile(new List());
+			inContext.newWord->CompileValue(new List());
 		} else {
-			inContext.Compile(std::string("_create-empty-list"));
+			inContext.newWord->CompileWord("_create-empty-list");
+			inContext.newWord->CompileWord("create-working-value");
 		}
-
-#if 0
-		if(inContext.ExecutionThreshold!=Level::Interpret) {
-			if(inContext.newWord->type==WordType::List) {
-				inContext.Compile(new List());
-			} else {
-				inContext.Compile(std::string("_create-empty-list"));
-			}
-		} else {
-			inContext.DS.emplace_back(new List());
-		}
-#endif
 		NEXT;
 	}));
 	Install(new Word("_create-empty-list",WORD_FUNC {
@@ -1167,8 +1163,11 @@ onExit:
 					case DataType::Float:	fmt=fmt%tv.floatValue;	break;
 					case DataType::Double:	fmt=fmt%tv.doubleValue;	break;
 					case DataType::Symbol: {
+							bool found=false;
 							TypedValue varValue
-								=inContext.GetLocalVarValue(*tv.stringPtr.get());
+							  =inContext.GetLocalVarValueByDynamic(*tv.stringPtr.get(),
+							  									   &found);
+							if(found==false) { return false; }
 							switch(varValue.dataType) {
 								case DataType::Int:
 								  	fmt=fmt%varValue.intValue;
@@ -1184,7 +1183,6 @@ onExit:
 									break;
 
 								case DataType::Symbol:	// don't double-reference.
-								case DataType::BigFloat:
 								case DataType::BigInt:
 								default:
 									fmt=fmt%varValue.GetValueString(kNoIndent).c_str();
@@ -1192,13 +1190,13 @@ onExit:
 						}
 						break;
 
-					// case DataType::BigFloat:
-					// case DataType::BigInt:
 					default:
 						fmt=fmt%tv.GetValueString(kNoIndent).c_str();
 				}
 			}
-			std::cout << fmt;
+			LockForConsoleOutput();
+				std::cout << fmt;
+			UnlockForConsoleOutput();
 		} catch(...) {
 			return inContext.Error(NoParamErrorID::FormatDataMismatch);
 		}

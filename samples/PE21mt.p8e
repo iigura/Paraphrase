@@ -15,7 +15,7 @@ then
 // n --- d-func-value
 // For more information about d-func-value, see https://projecteuler.net/problem=21 .
 `d-func :
-	0 ( `n `result ) local
+	0 ( n result ) local
 	1 `n , 2 / 1 + for+
 		`n , i % 0 == if `result , i + `result let then
 	next
@@ -30,10 +30,9 @@ then
 	`n , 1 + new-array
 
 	`n , 
-	[-> `n local 2 `n , 1 + for+ i >pipe next ]
-	[[ while-pipe dup d-func tuple >pipe repeat ]]
-
-	while-pipe /* array (t d-value-of-t) */
+	[-> `n local 2 `n , 1 + for+ i >pipe next
+	]>> >>[[ while-pipe dup d-func tuple >pipe repeat
+	]]> while-pipe /* array (t d-value-of-t) */
 		expand @set
 	repeat
 	0 0 @set	// d(0):=0
@@ -46,11 +45,11 @@ then
 	tuple	// array ( from to ) 
 
 	/* init DS by the TOS (list:( from to )). */
-	[-> expand /* from to */ 1 + for+ i >pipe next ]
+	[-> expand /* from to */ 1 + for+ i >pipe next ]>>
 
 	/* --- worker --- */
 	/* init DS by the TOS (array). */
-	[[->	// TOS is 'd-value' array.
+	>>[[->	// TOS is 'd-value' array.
  		while-pipe
 			`t local
 			`t , @get `t , == if continue then	// skip if t is perfect number.
@@ -58,10 +57,10 @@ then
 				@get `t , == if `t , >pipe then
 			otherwise-drop
 		repeat
-	]]
+	]]>>
 
 	/* --- gather (or reduce) --- */
-	[ () while-pipe @append repeat >pipe ] 
+	>>[ () while-pipe @append repeat >pipe ]>
 	pipe>
 ;
 

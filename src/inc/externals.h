@@ -13,7 +13,9 @@ PP_API extern std::unordered_map<std::string,const Word*> Dict;
 PP_API extern unsigned int G_NumOfCores;
 PP_API extern TypedValue G_ARGS;
 
-PP_API extern bool Docol(Context& inContext) NOEXCEPT;
+#ifdef USE_G_DOCOL_ADVICE // for MSVC dll
+	PP_API extern WordFunc G_DocolAdvice;
+#endif
 
 PP_API extern void SetTraceOn();
 PP_API extern void SetTraceOff();

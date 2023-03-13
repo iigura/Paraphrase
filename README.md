@@ -1,5 +1,5 @@
-# Paraphrase ver. 0.95
-Copyright (c) 2018-2022 Koji Iigura  
+# Paraphrase ver. 0.96
+Copyright (c) 2018-2023 Koji Iigura  
 Released under the MIT license  
 [https://opensource.org/licenses/mit-license.php](
 https://opensource.org/licenses/mit-license.php)
@@ -11,33 +11,35 @@ Paraphrase はマルチコアに対応した Forth 系言語です。
 並列処理も簡単に記述できます。
 
     // サンプルプログラム： 1 から 1,000 万までの素数を数える
-    "prime?" :
+    `prime? :
         switch
-            case 1 ==    -> false break
-            case 2 ==    -> true  break
-            case 2 % 0?  -> false break
-            default
-                true swap dup sqrt ceil >int 1+ 3 swap
-                for+ dup i % 0? if swap drop false swap leave then 2 step next drop
+            case 1 ==    -> false
+            case 2 ==    -> true
+            case 2 % 0?  -> false
+            default ->> dup sqrt ceil >int 1+ 3 swap
+                        for+
+                            dup i % 0? if drop false return then 2 step
+                        next
+                        drop true
         dispatch
     ;
 
     reset-pipes
 
     // 奇数については並列処理で調べる
-    [ /* scatter */  3 10000000 for+ i >pipe 2 step next ]
+    [ /* scatter */  3 10000000 for+ i >pipe 2 step next ]>>
 
     // 複数スレッドで検証作業（=woker thrread)
-    [[
+    >>[[
         while-pipe
             dup prime? if >pipe else drop then
         repeat
-    ]]
+    ]]>
 
     // gather
     () 2 dup prime? if append then // 2 については、ここで調査
-    while-pipe append repeat { < } sort
-    ( "numOfPrimes=%d (%d ... %d)\n" {{ @size }}, {{ @car }}, {{ last >here }} ) printf
+    while-pipe @append repeat { < } sort
+    ( "numOfPrimes=%d (%d ... %d)\n" {{ @size }}, {{ @car }}, {{ last }}, ) printf
 
 上のプログラムの出力
 
@@ -52,15 +54,15 @@ Windows, Linux, MacOS に対応しています。
 ダウンロードして解凍（展開）するだけです。  
 インストール不要で、すぐに実行できます。
 
-以下のリンク（Google Drive）をクリックし、それぞれのプラットフォーム用のパッケージを入手して下さい。
-なお Linux 版は Raspberry Pi4 の Ubuntu 用です。
+以下のリンク（Google Drive）をクリックし、
+それぞれのプラットフォーム用のパッケージを入手して下さい。
 
 [https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ](
 https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ)
 
-Windows 版 para-0-95-win.zip  
-Linux 版 para-0-95-linux.tar.gz  
-MacOS 版 para-0-95-mac.tar.gz  
+Windows 版 para-0-96-win.zip  
+Linux 版 para-0-96-linux.tar.gz  
+MacOS 版 para-0-96-mac.tar.gz  
 
 展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、

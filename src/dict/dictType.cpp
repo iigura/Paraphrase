@@ -66,13 +66,6 @@ redo:
 				}
 				tos.intValue=static_cast<int>(*tos.bigIntPtr);
 				break;
-			case DataType::BigFloat:
-				if(*tos.bigFloatPtr<INT_MIN || INT_MAX<*tos.bigFloatPtr) {
-					return inContext.Error(NoParamErrorID
-										   ::CanNotConvertToIntDueToOverflow);
-				}
-				tos.intValue=static_cast<int>(*tos.bigFloatPtr);
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -111,9 +104,6 @@ redo:
 			case DataType::BigInt:
 				result = INT_MIN<=*tos.bigIntPtr && *tos.bigIntPtr<=INT_MAX;
 				break;				
-			case DataType::BigFloat:
-				result = INT_MIN<=*tos.bigFloatPtr && *tos.bigFloatPtr<=INT_MAX;
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -161,13 +151,6 @@ redo:
 				}
 				tos.longValue=static_cast<long>(*tos.bigIntPtr);
 				break;
-			case DataType::BigFloat:
-				if(*tos.bigFloatPtr<LONG_MIN || LONG_MAX<*tos.bigFloatPtr) {
-					return inContext.Error(NoParamErrorID
-										   ::CanNotConvertToLongDueToOverflow);
-				}
-				tos.longValue=static_cast<long>(*tos.bigFloatPtr);
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -204,9 +187,6 @@ redo:
 			case DataType::Double:
 				result = LONG_MIN<=tos.doubleValue && tos.doubleValue<=LONG_MAX;
 				break;
-			case DataType::BigFloat:
-				result = LONG_MIN<=*tos.bigFloatPtr && *tos.bigFloatPtr<=LONG_MAX;
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -235,9 +215,6 @@ redo:
 			case DataType::Float:  bigInt=static_cast<BigInt>(tos.floatValue);  break;
 			case DataType::Double: bigInt=static_cast<BigInt>(tos.doubleValue); break;
 			case DataType::BigInt: /* do nothing */ break;
-			case DataType::BigFloat:
-				bigInt=static_cast<BigInt>(*tos.bigFloatPtr);
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -296,17 +273,6 @@ redo:
 				tos.floatValue=(float)tos.doubleValue;
 				tos.dataType=DataType::Float;
 				break;
-			case DataType::BigFloat: {
-					if(*tos.bigFloatPtr>FLT_MAX || *tos.bigFloatPtr<-FLT_MAX) {
-						return inContext.Error(
-								NoParamErrorID::CanNotConvertToFloatDueToOverflow);
-					}
-					float f=tos.ToFloat(inContext);
-					delete tos.bigFloatPtr;
-					tos.floatValue=f;
-					tos.dataType=DataType::Float;
-				}
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -342,9 +308,6 @@ redo:
 				break;
 			case DataType::Double:
 				result = -FLT_MAX<=tos.doubleValue && tos.doubleValue<=FLT_MAX;
-				break;
-			case DataType::BigFloat: 
-				result = -FLT_MAX<=*tos.bigFloatPtr && *tos.bigFloatPtr<=FLT_MAX;
 				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
@@ -395,17 +358,6 @@ redo:
 			case DataType::Double:
 				// do nothing
 				break;
-			case DataType::BigFloat: {
-					if(*tos.bigFloatPtr>DBL_MAX || *tos.bigFloatPtr<-DBL_MAX) {
-						return inContext.Error(
-								NoParamErrorID::CanNotConvertToDoubleDueToOverflow);
-					}
-					double t=tos.ToDouble(inContext);
-					delete tos.bigFloatPtr;
-					tos.doubleValue=t;
-					tos.dataType=DataType::Double;
-				}
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -439,9 +391,6 @@ redo:
 				result = kBigInt_Minus_DBL_MAX<=*tos.bigIntPtr
 						 && *tos.bigIntPtr<=kBigInt_DBL_MAX;
 				break;
-			case DataType::BigFloat:
-				result = -DBL_MAX<=*tos.bigFloatPtr && *tos.bigFloatPtr<=DBL_MAX;
-				break;
 			case DataType::String: {
 					TypedValue tv=GetTypedValue(*tos.stringPtr);
 					if( tv.IsNumber() ) {
@@ -459,44 +408,6 @@ redo:
 		NEXT;
 	}));
 
-	Install(new Word(">big-float",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		TypedValue tos=Pop(inContext.DS);
-redo:
-		BigFloat bigFloat;
-		switch(tos.dataType) {
-			case DataType::Int: 	bigFloat=tos.intValue;		break;
-			case DataType::Long: 	bigFloat=tos.longValue;		break;
-			case DataType::Float:  	bigFloat=tos.floatValue;	break;
-			case DataType::Double: 	bigFloat=tos.doubleValue;	break;
-			case DataType::BigInt:
-				bigFloat=static_cast<BigFloat>(*tos.bigIntPtr);
-				break;
-			case DataType::BigFloat:
-			   	/* do nothing */
-				break;
-			case DataType::String: {
-					TypedValue tv=GetTypedValue(*tos.stringPtr);
-					if( tv.IsNumber() ) {
-						tos=tv;
-						goto redo;
-					} else {
-						return inContext.Error(InvalidTypeErrorID
-											   ::TosNumberOrString,tv);
-					}
-				}
-				break;
-			default:
-	  			return inContext.Error(InvalidTypeErrorID::TosNumberOrString,tos);
-		}
-		if(tos.dataType!=DataType::BigFloat) {
-			inContext.DS.emplace_back(bigFloat);
-		} else {
-			inContext.DS.emplace_back(*tos.bigFloatPtr);
-		}
-		NEXT;
-	}));
-
 	Install(new Word(">bool",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
@@ -506,7 +417,6 @@ redo:
 			case DataType::Float:	tos.boolValue = tos.floatValue!=0.0f;		break;
 			case DataType::Double:	tos.boolValue = tos.doubleValue!=0.0;		break;
 			case DataType::BigInt: 	tos=TypedValue((*tos.bigIntPtr)!=0); 		break;
-			case DataType::BigFloat:tos=TypedValue((*tos.bigFloatPtr)!=0.0); 	break;
 			case DataType::Bool:	/* do nothing */							break;
 			case DataType::String: 	tos=TypedValue(tos.stringPtr->length()>0);	break;
 			case DataType::Address:	tos.boolValue = tos.intValue!=0;			break;
@@ -651,7 +561,7 @@ redo:
 			TypedValue tos=Pop(inContext.DS);
 			const Word *word;
 			if(tos.dataType==DataType::String || tos.dataType==DataType::Symbol) {
-				word=GetWordPtr(*tos.stringPtr);
+				word=GetWordPtr(tos.stringPtr->c_str());
 				if(word==NULL) {
 					return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
 										   *tos.stringPtr);
@@ -699,12 +609,12 @@ next:
 		if(queryTosType(inContext,DataType::Double)==false) { return false; }
 		NEXT;
 	}));
-	Install(new Word("big-float?",WORD_FUNC {
-		if(queryTosType(inContext,DataType::BigFloat)==false) { return false; }
-		NEXT;
-	}));
 	Install(new Word("string?",WORD_FUNC {
 		if(queryTosType(inContext,DataType::String)==false) { return false; }
+		NEXT;
+	}));
+	Install(new Word("word?",WORD_FUNC {
+		if(queryTosType(inContext,DataType::Word)==false) { return false; }
 		NEXT;
 	}));
 
@@ -718,6 +628,11 @@ next:
 	}));
 	Install(new Word("assoc?",WORD_FUNC {
 		if(queryTosType(inContext,DataType::KV)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("@word?",WORD_FUNC {
+		if(lookAheadQueryTosType(inContext,DataType::Word)==false) { return false; }
 		NEXT;
 	}));
 
@@ -790,10 +705,6 @@ next:
 			case DataType::BigInt:
 				if(second.dataType!=DataType::BigInt) { break; }
 				result = tos.bigIntPtr == second.bigIntPtr;
-				break;
-			case DataType::BigFloat:
-				if(second.dataType!=DataType::BigFloat) { break; }
-				result = tos.bigFloatPtr == second.bigFloatPtr;
 				break;
 			case DataType::StdCode:
 				if(second.dataType!=DataType::StdCode) { break; }

@@ -694,6 +694,20 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
                			"現在の TOS は %s です。" },
 	  }
 	},
+	{ InvalidTypeErrorID::TosChannel, {
+		{ PPLang::EN,	"TOS should be a Channel.\n"
+                		"current TOS type is %s." },
+		{ PPLang::JP, "TOS がチャネルではありません。\n"
+               			"現在の TOS は %s です。" },
+	  }
+	},
+	{ InvalidTypeErrorID::TosContext, {
+		{ PPLang::EN,	"TOS should be a Context.\n"
+                		"current TOS type is %s." },
+		{ PPLang::JP, "TOS がコンテキストではありません。\n"
+               			"現在の TOS は %s です。" },
+	  }
+	},
 	// { InvalidTypeErrorID::TosBoolOrWp, {
 	//	{ PPLang::EN,	"TOS should be a bool or a word pointer.\n"
     //            		"current TOS type is %s." },
@@ -769,6 +783,16 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 		{ PPLang::EN,	"TOS should be a std-code. "
 						"Current TOS type is %s." },
 		{ PPLang::JP,	"TOS が標準コードではありません。"
+						"現在の TOS は %s です。" },
+	  }
+	},
+
+	{ InvalidTypeErrorID::TosContextOrContainer, {
+		{ PPLang::EN,	"TOS should be a Context or a container "
+						"(i.e. list, array or associateve array. "
+						"Current TOS type is %s." },
+		{ PPLang::JP,	"TOS がコンテキストまたはコンテナ"
+						"（リスト、配列、連想配列）ではありません。"
 						"現在の TOS は %s です。" },
 	  }
 	},
@@ -885,7 +909,21 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 	{ InvalidTypeErrorID::SecondWp, {
 		{ PPLang::EN,	"The Second should be a word.\n"
                 		"current the Second type is %s.\n" },
-		{ PPLang::JP, "セカンドがワードではありません。\n"
+		{ PPLang::JP,	"セカンドがワードではありません。\n"
+                		"現在のセカンドは %s です。" },
+	  }
+	},
+	{ InvalidTypeErrorID::SecondContext, {
+		{ PPLang::EN,	"The Second should be a Context.\n"
+                		"current the Second type is %s.\n" },
+		{ PPLang::JP,	"セカンドがコンテキストではありません。\n"
+                		"現在のセカンドは %s です。" },
+	  }
+	},
+	{ InvalidTypeErrorID::SecondCB, {
+		{ PPLang::EN,	"The Second should be a Control-Block-Info.\n"
+                		"current the Second type is %s.\n" },
+		{ PPLang::JP,	"セカンドが制御ブロック情報ではありません。\n"
                 		"現在のセカンドは %s です。" },
 	  }
 	},
@@ -921,11 +959,18 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 	  }
 	},
 	{ InvalidTypeErrorID::ThirdWp, {
-		{ PPLang::EN,	"The third should be an a word. "
+		{ PPLang::EN,	"The third should be a word. "
 						"Current Third type is %s." },
 		{ PPLang::JP,	"スタックの 3 番目の要素がワードではありません。"
 						"現在の 3 番目の要素は %s です。" },
 	  }
+	},
+	{ InvalidTypeErrorID::ThirdUserData, {
+	  	{ PPLang::EN,	"The third should be an user-data. "
+						"Current Third type is %s." },
+		{ PPLang::JP,	"スタックの 3 番目の要素がユーザーデータではありません。"
+						"現在の 3 番目の要素は %s です。" },
+	  },
 	},
 
 	{ InvalidTypeErrorID::RsTosIntOrLongOrBigint, {
@@ -1033,6 +1078,28 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 	  }
 	},
 
+	{ InvalidTypeErrorID::ArrayElemContext, {
+		{ PPLang::EN,	"The array element should be a Context."
+						"The element type is %s." },
+		{ PPLang::JP,	"配列の要素はコンテナでなければなりません。"
+						"要素の型は %s でした。" },
+	  }
+	},
+	{ InvalidTypeErrorID::ListElemContext, {
+		{ PPLang::EN,	"The list element should be a Context."
+						"The element type is %s." },
+		{ PPLang::JP,	"リストの要素はコンテナでなければなりません。"
+						"要素の型は %s でした。" },
+	  }
+	},
+	{ InvalidTypeErrorID::KvElemContext, {
+		{ PPLang::EN,	"The associative array element should be a Context."
+						"The element type is %s." },
+		{ PPLang::JP,	"連想配列の要素はコンテナでなければなりません。"
+						"要素の型は %s でした。" },
+	  }
+	},
+
 	{ InvalidTypeErrorID::CompiledLiteralShouldBeList, {
 		{ PPLang::EN,	"The compiled literal should be a list.\n"
 						"current literal type is %s." },
@@ -1099,6 +1166,11 @@ static ErrorWithStringMessageDict gErrorWithStringMessageDict {
 	{ ErrorIdWithString::InvalidToken, {
 		{ PPLang::EN,	"Invalid token: '%s'." },
 		{ PPLang::JP,	"無効なトークン '%s' です。" },
+	  }
+	},
+	{ ErrorIdWithString::InvalidFormat, {
+	  	{ PPLang::EN,	"Invalid format: '%s'." },
+		{ PPLang::JP,	"無効な書式 '%s' です。" },
 	  }
 	},
 	{ ErrorIdWithString::CanNotFindTheWord, {

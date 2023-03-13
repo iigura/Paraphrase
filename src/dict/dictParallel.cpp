@@ -4,18 +4,158 @@
 
 #include "externals.h"
 #include "typedValue.h"
+#include "threadMan.h"
 #include "stack.h"
 #include "word.h"
 #include "context.h"
+#include "util.h"
 
+static bool execBody(Context& inContext,int inNumOfParallels);
 static bool closeParallelBlock(Context& inContext,int inNumOfParallels);
-static void execParallel(Context& inContext,TypedValue& inTVExec,
+static bool execParallel(Context& inContext,
+						 TypedValue& inTvExec,TypedValue& inTvLambdaInfo,
 						 int inNumOfParallels=-1);
-static void *kicker(void *inContext);
+static void newChildThreads(std::vector<TypedValue> *outThreads,
+							Context *inParent,
+							TypedValue inTvExec,int inNumOfParallels);
+static TypedValue runThreads(std::vector<TypedValue> &inThreads);
+static void *kicker(void *inKickerArg);
+static bool threadInfoUpdate(Context& inContext,ControlBlockType inAdditionalThreadInfo);
+static bool joinMain(Context& inContext,const TypedValue& inTV);
+
+// [ ... ]
+// 	スレッド生成時に、入力用のパイプは作らず、出力用のパイプのみを作る。
+//
+// >[ ... ]
+// 現在のコンテキストの >pipe 用チャネルをを新しく作るスレッドの
+// pipe> 用のチャネルとして設定する。
+// '[ parent get.>pipe ctx set.pipe> ... ]' と同値
+//
+// >>[ ... ]
+// 	スレッド生成時に、TOS にあるチャネルを入力用パイプとして設定する。
+// 	出力用パイプは新たに生成する。
+//	注：">>" は TOS にあるチャネルを用いることを表す。
+//
+// [ ... ]>
+// 現在のコンテキストの pipe> 用チャネルに、新しく作るスレッドで
+// 作成された出力用チャネルを設定する（上書きする）。
+// 使い方
+// 	[ ... ]> while-pipe ... repeat
+//
+// [ ... ]=
+// 生成したスレッドのコンテキストをスタックに積む。
+// 注："=" は生成したスレッドのコンテキストをスレッドに積むことを意味する。
+//
+// [ ... ]=>
+// 生成したスレッドのコンテキストをスタックに積み、
+// 生成したスレッドの出力用チャネルを現在のコンテキストの
+// 入力用チャネルとして設定する。
+//
+// [ ... ]>>
+// 生成したスレッドの出力用チャネルをスタックに積む。
+// 使い方
+//  [ ...  ]>> >>[[ ... ]]
+//
+// [ ... ]=>>
+// 生成したスレッドのコンテキストと出力用チャネルをスタックに積む。
+// ワード ']=>>' は --- ctx chan 
 
 void InitDict_Parallel() {
 	Install(new Word("[",WordLevel::Immediate,WORD_FUNC {
-		inContext.BeginNoNameWordBlock();
+		inContext.BeginNoNameWordBlock(ControlBlockType::OpenSimpleThread);
+		NEXT;
+	}));
+
+	Install(new Word(">[",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock(ControlBlockType::OpenConnectedThread);
+		NEXT;
+	}));
+
+	Install(new Word(">>[",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock(ControlBlockType::OpenTosChanConnectThread);
+		NEXT;
+	}));
+	
+	// ctx ---
+	// same as '>['
+	Install(new Word(">[[",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock(ControlBlockType::OpenConnectedThread);
+		NEXT;
+	}));
+
+	// ctx ---
+	// same as '=>['
+	Install(new Word(">>[[",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock(ControlBlockType::OpenTosChanConnectThread);
+		NEXT;
+	}));
+
+	Install(new Word("[->",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenSimpleThread
+		  | (int)ControlBlockType::kThreadMask_Open_TosBroadcast));
+		NEXT;
+	}));
+
+	Install(new Word(">[->",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenConnectedThread
+		  | (int)ControlBlockType::kThreadMask_Open_TosBroadcast));
+		NEXT;
+	}));
+
+	Install(new Word(">>[->",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenTosChanConnectThread
+		  | (int)ControlBlockType::kThreadMask_Open_TosBroadcast));
+		NEXT;
+	}));
+
+	// same as '['
+	Install(new Word("[[",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock(ControlBlockType::OpenSimpleThread);
+		NEXT;
+	}));
+
+	Install(new Word("[[->",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenSimpleThread
+		  | (int)ControlBlockType::kThreadMask_Open_TosBroadcast));
+		NEXT;
+	}));
+
+	Install(new Word(">[[->",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenConnectedThread
+		  | (int)ControlBlockType::kThreadMask_Open_TosBroadcast));
+		NEXT;
+	}));
+
+	Install(new Word(">>[[->",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenTosChanConnectThread
+		  | (int)ControlBlockType::kThreadMask_Open_TosBroadcast));
+		NEXT;
+	}));
+
+	Install(new Word("[[=>",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenSimpleThread
+		  | (int)ControlBlockType::kThreadMask_Open_PushTosListElem));
+		NEXT;
+	}));
+
+	Install(new Word(">[[=>",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenConnectedThread
+		  | (int)ControlBlockType::kThreadMask_Open_PushTosListElem));
+		NEXT;
+	}));
+
+	Install(new Word(">>[[=>",WordLevel::Immediate,WORD_FUNC {
+		inContext.BeginNoNameWordBlock((ControlBlockType)(
+			(int)ControlBlockType::OpenTosChanConnectThread
+		  | (int)ControlBlockType::kThreadMask_Open_PushTosListElem));
 		NEXT;
 	}));
 
@@ -24,8 +164,45 @@ void InitDict_Parallel() {
 		NEXT;
 	}));
 
-	Install(new Word("[[",WordLevel::Immediate,WORD_FUNC {
-		inContext.BeginNoNameWordBlock();
+	Install(new Word("]=",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_PushContext)
+		  ==false) { return false; }
+		if(closeParallelBlock(inContext,1)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)
+		  ==false) { return false; }
+		if(closeParallelBlock(inContext,1)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]=>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)
+		   ==false) { return false; }
+		threadInfoUpdate(inContext,ControlBlockType::kThreadMask_Close_PushContext);
+		if(closeParallelBlock(inContext,1)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]>>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_PushOutputChan)
+		  ==false) { return false; }
+		if(closeParallelBlock(inContext,1)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]=>>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_PushOutputChan)
+		  ==false) { return false; }
+		threadInfoUpdate(inContext,ControlBlockType::kThreadMask_Close_PushContext);
+		if(closeParallelBlock(inContext,1)==false) { return false; }
 		NEXT;
 	}));
 
@@ -36,90 +213,103 @@ void InitDict_Parallel() {
 		if(closeParallelBlock(inContext,numOfCores)==false) { return false; }
 		NEXT;
 	}));
-	
-	Install(new Word("_exec/single",WORD_FUNC {
+
+	Install(new Word("]]=",WordLevel::Immediate,WORD_FUNC {
+		const int numOfCores = inContext.isInitParamBroadcast
+							 ? G_NumOfCores
+							 : (int)inContext.initParamForPBlock.listPtr->size();
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_PushContext)
+		  ==false) { return false; }
+		if(closeParallelBlock(inContext,numOfCores)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]]>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)
+		  ==false) {
+			return false;
+		}
+		const int numOfCores = inContext.isInitParamBroadcast
+							 ? G_NumOfCores
+							 : (int)inContext.initParamForPBlock.listPtr->size();
+		if(closeParallelBlock(inContext,numOfCores)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]]=>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)
+		  ==false) {
+			return false;
+		}
+		threadInfoUpdate(inContext,ControlBlockType::kThreadMask_Close_PushContext);
+		const int numOfCores = inContext.isInitParamBroadcast
+							 ? G_NumOfCores
+							 : (int)inContext.initParamForPBlock.listPtr->size();
+		if(closeParallelBlock(inContext,numOfCores)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]]>>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_PushOutputChan)
+		  ==false) { return false; }
+		if(closeParallelBlock(inContext,-1)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("]]=>>",WordLevel::Immediate,WORD_FUNC {
+		if(threadInfoUpdate(inContext,
+							ControlBlockType::kThreadMask_Close_PushOutputChan)
+		  ==false) { return false; }
+		threadInfoUpdate(inContext,ControlBlockType::kThreadMask_Close_PushContext);
+		if(closeParallelBlock(inContext,-1)==false) { return false; }
+		NEXT;
+	}));
+
+	// ctx --- chan
+	Install(new Word("get-output-chan",WORD_FUNC {
+		// TODO		
+
+		NEXT;
+	}));
+
+	// single thread ( for [ ... ]= ).
+	// 	ctx ---
+	// 		or
+	// multi thread ( for [[ ... ]]= ).
+	// ( ctx1 ctx2 ... ctxN ) ---
+	Install(new Word("join",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::DirectWord
-		   && tos.dataType!=DataType::NewWord) {
-			return inContext.Error(InvalidTypeErrorID::TosWpOrNw,tos);
-		}
-		execParallel(inContext,tos,1);
+		if(joinMain(inContext,tos)==false) { return false; }
+		NEXT;
+	}));
+
+	Install(new Word("@join",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue& tos=ReadTOS(inContext.DS);
+		if(joinMain(inContext,tos)==false) { return false; }
+		NEXT;
+	}));
+
+	// tvCB(=lambdaInfo) tvExec ---
+	Install(new Word("_exec/single",WORD_FUNC {
+		if(execBody(inContext,1)==false) { return false; }
 		NEXT;
 	}));	
 
 	Install(new Word("_exec/parallel",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::DirectWord
-		   && tos.dataType!=DataType::NewWord) {
-			return inContext.Error(InvalidTypeErrorID::TosWpOrNw,tos);
-		}
-		execParallel(inContext,tos);
+		if(execBody(inContext,-1)==false) { return false; }
 		NEXT;
 	}));	
 
-	Install(new Word(">child",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		TypedValue tv=Pop(inContext.DS);
-		if(inContext.toChild==NULL) {
-			inContext.toChild.reset(new ChanMan(1,">child"));
-		}
-		if(inContext.toChild->IsOpen==false) {
-			return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
-		}
-		if(tv.dataType==DataType::EoC) {
-			inContext.toChild->CloseOnWrite();
-		} else {
-			if(inContext.toChild->Send(tv)==false) {
-				return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
-			}
-		}
-		NEXT;
-	}));
-
-	Install(new Word("parent>",WORD_FUNC {
-		if(inContext.fromParent==NULL) {
-			return inContext.Error(NoParamErrorID::NoChanFromParent);
-		}
-		inContext.DS.emplace_back(inContext.fromParent->Recv());
-		NEXT;
-	}));
-
-	Install(new Word(">parent",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		TypedValue tv=Pop(inContext.DS);
-		if(inContext.toParent==NULL) {
-			return inContext.Error(NoParamErrorID::NoChanToParent);
-		}
-		if(tv.dataType==DataType::EoC) {
-			inContext.toParent->CloseOnWrite();
-		} else {
-			if(inContext.toParent->Send(tv)==false) {
-				return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
-			}
-		}
-		NEXT;
-	}));
-
-	Install(new Word("child>",WORD_FUNC {
-		if(inContext.fromChild==NULL) {
-			return inContext.Error(NoParamErrorID::NoChanFromChild);
-		}
-		if(inContext.fromChild->IsOpen==false) {
-			return inContext.Error(NoParamErrorID::ChanIsAlreadyClosed);
-		}
-		inContext.DS.emplace_back(inContext.fromChild->Recv());
-		NEXT;
-	}));
-
 	Install(new Word(">pipe",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		if(inContext.toPipe==NULL
-		  || (&inContext==GlobalContext
-			  && inContext.fromPipe==inContext.lastOutputPipe)) {
+		if(inContext.toPipe.get()==nullptr) {
 			inContext.toPipe.reset(new ChanMan(1,">pipe"));
-			inContext.lastOutputPipe=inContext.toPipe;
 		}
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType==DataType::EoC) {
@@ -133,9 +323,7 @@ void InitDict_Parallel() {
 	}));
 
 	Install(new Word("pipe>",WORD_FUNC {
-		if(&inContext==GlobalContext && inContext.fromPipe==NULL) {
-			inContext.fromPipe=inContext.lastOutputPipe;
-		} else if(inContext.fromPipe==NULL) {
+		if(inContext.fromPipe==NULL) {
 			return inContext.Error(NoParamErrorID::NoChanFromPipe);
 		}
 		inContext.DS.emplace_back(inContext.fromPipe->Recv());
@@ -156,14 +344,6 @@ void InitDict_Parallel() {
 	}));
 
 	Install(new Word("reset-pipes",WORD_FUNC {
-		if(inContext.toChild!=NULL) {
-			inContext.toChild->CloseOnWrite();
-			inContext.toChild.reset();
-		}
-		if(inContext.fromChild!=NULL) {
-			inContext.fromChild->RemoveReader();
-			inContext.fromChild.reset();
-		}
 		if(inContext.toPipe!=NULL) {
 			inContext.toPipe->CloseOnWrite();
 			inContext.toPipe.reset();
@@ -172,27 +352,16 @@ void InitDict_Parallel() {
 			inContext.fromPipe->RemoveReader();
 			inContext.fromPipe.reset();
 		}
-
-		if(inContext.toChild==NULL) {
-			inContext.toChild.reset(new ChanMan(1,">child"));
-		}
 		if(inContext.toPipe==NULL) {
 			inContext.toPipe.reset(new ChanMan(1,">pipe"));
-			inContext.lastOutputPipe=inContext.toPipe;
 		}
-
 		NEXT;
 	}));
 
 	Install(new Word("_pipe>!eoc?",WORD_FUNC {
 		// pipe>
-		if(inContext.fromPipe==NULL) {
-			if(&inContext==GlobalContext) {
-				inContext.toPipe->CloseOnWrite();
-				inContext.fromPipe=inContext.lastOutputPipe;
-			} else {
-				return inContext.Error(NoParamErrorID::NoChanFromPipe);
-			}	
+		if(inContext.fromPipe.get()==nullptr) {
+			return inContext.Error(NoParamErrorID::NoChanFromPipe);
 		}
 		TypedValue tv=inContext.fromPipe->Recv();
 		if(tv.dataType==DataType::EoC) {
@@ -229,9 +398,9 @@ void InitDict_Parallel() {
 			return inContext.Error(NoParamErrorID::SystemError);
 		}
 		TypedValue tvAlpha1=inContext.MarkHere();
-		inContext.Compile(std::string("_pipe>!eoc?"));
+		inContext.newWord->CompileWord("_pipe>!eoc?");
 		TypedValue tvAlpha2=inContext.MarkHere();
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvAlpha3=inContext.MarkAndCreateEmptySlot();	// for exit address slot
 		TypedValue tvAlpha4=inContext.MarkHere();
 
@@ -243,66 +412,6 @@ void InitDict_Parallel() {
 		inContext.SS.emplace_back(tvAlpha1);
 		inContext.SS.emplace_back(chunkSize);
 		inContext.SS.emplace_back(ControlBlockType::SyntaxWhile);
-		NEXT;
-	}));
-
-	Install(new Word("_broadcastToChild",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		inContext.initParamForPBlock=Pop(inContext.DS);
-		inContext.isInitParamBroadcast=true;
-		NEXT;
-	}));
-
-	Install(new Word("_initChildDSByList",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::List) {
-			return inContext.Error(InvalidTypeErrorID::TosList,tos);
-		}
-		if(tos.listPtr->size()<1) {
-			return inContext.Error(NoParamErrorID::TosListNoElement);
-		}
-		if(tos.listPtr->size()<(size_t)G_NumOfCores) {
-			return inContext.Error(NoParamErrorID::TosListAtLeastCores);
-		}
-		inContext.initParamForPBlock=tos;
-		inContext.isInitParamBroadcast=false;
-		NEXT;
-	}));
-
-	Install(new Word("[->",WordLevel::Immediate,WORD_FUNC {
-		const std::string _broadcastToChild("_broadcastToChild");
-		if(inContext.ExecutionThreshold==Level::Interpret) {
-			inContext.Exec(_broadcastToChild);
-		} else {
-			inContext.Compile(_broadcastToChild);
-		}
-		// same as '['
-		inContext.BeginNoNameWordBlock();
-		NEXT;
-	}));
-
-	Install(new Word("[[->",WordLevel::Immediate,WORD_FUNC {
-		const std::string _broadcastToChild("_broadcastToChild");
-		if(inContext.ExecutionThreshold==Level::Interpret) {
-			inContext.Exec(_broadcastToChild);
-		} else {
-			inContext.Compile(_broadcastToChild);
-		}
-		// same as '[['
-		inContext.BeginNoNameWordBlock();
-		NEXT;
-	}));
-
-	Install(new Word("[[=>",WordLevel::Immediate,WORD_FUNC {
-		std::string _initChildDSByList("_initChildDSByList");
-		if(inContext.ExecutionThreshold==Level::Interpret) {
-			inContext.Exec(_initChildDSByList);
-		} else {
-			inContext.Compile(_initChildDSByList);
-		}
-		// same as '[['
-		inContext.BeginNoNameWordBlock();
 		NEXT;
 	}));
 
@@ -324,117 +433,218 @@ void InitDict_Parallel() {
 		inContext.DS.emplace_back((int)G_NumOfCores);
 		NEXT;	
 	}));
+
+	Install(new Word("thread-idx",WORD_FUNC {
+		inContext.DS.emplace_back(inContext.threadIdx);
+		NEXT;
+	}));
 }
 
-static bool closeParallelBlock(Context& inContext,int inNumOfParallels) {
-	inContext.newWord->numOfLocalVar=(int)inContext.newWord->localVarDict.size();
-	inContext.Compile(std::string("_semis"));
-	Word *newWordBackup=inContext.newWord;
-	inContext.FinishNewWord();
-	TypedValue tvExec(DataType::NewWord,newWordBackup);
-	if(inContext.EndNoNameWordBlock()==false) { return false; }
-	if(inContext.ExecutionThreshold!=Level::Interpret) {
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(tvExec);
-		if(inNumOfParallels==1) {
-			inContext.Compile(std::string("_exec/single"));
-		} else {
-			inContext.Compile(std::string("_exec/parallel"));
-		}
-	} else {
-		execParallel(inContext,tvExec,inNumOfParallels);
+static bool execBody(Context& inContext,int inNumOfParallels) {
+	if(inContext.DS.size()<2) {
+		return inContext.Error(NoParamErrorID::DsAtLeast2);
+	}
+
+	TypedValue tvExec=Pop(inContext.DS);
+	if(tvExec.dataType!=DataType::DirectWord && tvExec.dataType!=DataType::NewWord) {
+		return inContext.Error(InvalidTypeErrorID::TosWpOrNw,tvExec);
+	}
+
+	TypedValue tvLambdaInfo=Pop(inContext.DS);
+	if(tvLambdaInfo.dataType!=DataType::CB) {
+		return inContext.Error(InvalidTypeErrorID::SecondCB,tvLambdaInfo);
+	}
+		
+	if(execParallel(inContext,tvExec,tvLambdaInfo,inNumOfParallels)==false) {
+		return false;
 	}
 	return true;
 }
 
-static void execParallel(Context& inContext,TypedValue& inTVExec,
+static bool closeParallelBlock(Context& inContext,int inNumOfParallels) {
+	inContext.newWord->numOfLocalVar=(int)inContext.newWord->localVarDict.size();
+	inContext.newWord->CompileWord("_semis");
+	Word *newWordBackup=inContext.newWord;
+	inContext.newWord->BuildParam();
+	inContext.FinishWordDef();
+	TypedValue tvExec(DataType::NewWord,newWordBackup);
+
+	TypedValue& tvThreadInfo=ReadTOS(inContext.SS);
+	if(tvThreadInfo.dataType!=DataType::CB) {
+		return inContext.Error(NoParamErrorID::SsBroken);
+	}
+
+	if(inContext.EndNoNameWordBlock()==false) { return false; }
+	if(inContext.ExecutionThreshold==Level::Interpret) {
+		return execParallel(inContext,tvExec,tvThreadInfo,inNumOfParallels);
+	}
+	inContext.newWord->CompileWord("_lit");
+	inContext.newWord->CompileValue(tvThreadInfo);
+	inContext.newWord->CompileWord("_lit");
+	inContext.newWord->CompileValue(tvExec);
+	if(inNumOfParallels==1) {
+		inContext.newWord->CompileWord("_exec/single");
+	} else {
+		inContext.newWord->CompileWord("_exec/parallel");
+	}
+
+	return true;
+}
+
+static bool execParallel(Context& inContext,
+						 TypedValue& inTvExec,TypedValue& inTvThreadInfo,
 						 int inNumOfParallels) {
-	assert(inTVExec.dataType==DataType::Word
-		   || inTVExec.dataType==DataType::NewWord);
 	assert(inNumOfParallels!=0);
+	assert( IsThreadInfo(inTvThreadInfo) );
 
-	const int numOfParallels = inNumOfParallels<0 ? G_NumOfCores
-												  : inNumOfParallels;
-	if( inContext.fromChild ) {
-		inContext.fromChild->RemoveReader();
-		inContext.fromChild.reset();
-	}	
-	inContext.fromChild.reset(new ChanMan(numOfParallels,"child>"));
-	inContext.fromChild->SetNumOfReader(1);	// only parent
-
-	if( inContext.toChild ) {
-		inContext.toChild->CloseOnWrite();
-		inContext.toChild.reset(new ChanMan(1,">child"));
-		inContext.toChild->SetNumOfReader(numOfParallels);
-	}
-	if( inContext.lastOutputPipe ) {
-		inContext.lastOutputPipe->SetNumOfReader(numOfParallels);
-	}
-
-	std::shared_ptr<ChanMan> toPipe(new ChanMan(numOfParallels,">pipe"));
-		for(int i=0; i<numOfParallels; i++) {
-			Context *childContext=new Context(&inContext,Level::Interpret,
-											  inContext.toChild,
-											  inContext.fromChild);	
-			childContext->fromPipe=inContext.lastOutputPipe;
-			childContext->toPipe=toPipe;
-			if(inContext.initParamForPBlock.dataType!=DataType::Invalid) {
-				if(inContext.isInitParamBroadcast) {
-					childContext->DS.emplace_back(
-											inContext.initParamForPBlock);
-				} else {
-					childContext->DS.emplace_back(
-							inContext.initParamForPBlock.listPtr->at(i));
-				}
-			}
-			childContext->DS.emplace_back(inTVExec);
-			NewThread(childContext->thread,kicker,childContext);
+	std::shared_ptr<ChanMan> toChild;
+	if((inTvThreadInfo.intValue
+		& (int)ControlBlockType::kThreadMask_Open_ThreadOutputAsInput)!=0) {
+		// the case of >[ , >[[
+		if(inContext.toPipe.get()==nullptr) {
+			inContext.New_ToPipe();
 		}
-		inContext.lastOutputPipe=toPipe;
-	toPipe.reset();
+		toChild=inContext.toPipe;
+	} else if((inTvThreadInfo.intValue
+			   & (int)ControlBlockType::kThreadMask_Open_TosChanAsInput)!=0) {
+		// the case of >>[ , >>[[
+   		TypedValue tvChan=Pop(inContext.DS);
+   		if(tvChan.dataType!=DataType::Channel) {
+			return inContext.Error(InvalidTypeErrorID::TosChannel,tvChan);
+		}
+		toChild=tvChan.channelPtr;
+	}
 
-	inContext.initParamForPBlock=TypedValue();
-	inContext.isInitParamBroadcast=true;
-	
-	if(&inContext==GlobalContext) {
-		inContext.fromPipe=inContext.lastOutputPipe;
+	if((inTvThreadInfo.intValue & (int)ControlBlockType::kThreadMask_Open_TosBroadcast)!=0) {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		inContext.initParamForPBlock=Pop(inContext.DS);
+		inContext.isInitParamBroadcast=true;
+	}
+
+	int numOfParallels = inNumOfParallels<0 ? G_NumOfCores : inNumOfParallels;
+
+	if((inTvThreadInfo.intValue & (int)ControlBlockType::kThreadMask_Open_PushTosListElem)!=0) {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::List) {
+			return inContext.Error(InvalidTypeErrorID::TosList,tos);
+		}
+		if(tos.listPtr->size()<1) {
+			return inContext.Error(NoParamErrorID::TosListNoElement);
+		}
+		numOfParallels=(int)tos.listPtr->size();
+		inContext.initParamForPBlock=tos;
+		inContext.isInitParamBroadcast=false;
+	}
+
+	std::vector<TypedValue> tvThreads;
+	newChildThreads(&tvThreads,&inContext,inTvExec,numOfParallels);
+
+	if(toChild.get()!=nullptr) {
+		for(int i=0; i<numOfParallels; i++) {
+			assert(tvThreads[i].dataType==DataType::Context);
+			toChild->IncNumOfReader();
+			tvThreads[i].contextPtr->fromPipe=toChild;
+		}
+	}
+
+	std::shared_ptr<ChanMan> fromChild;
+	if( ((inTvThreadInfo.intValue
+		  & (int)ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)!=0)
+	   || ((inTvThreadInfo.intValue
+	   	    & (int)ControlBlockType::kThreadMask_Close_PushOutputChan)!=0) ) {
+		// the case of ]> , ]]> , ]>> , ]]>>
+		std::shared_ptr<ChanMan> fromChild(new ChanMan(numOfParallels,">pipe"));
+		for(int i=0; i<numOfParallels; i++) {
+			assert(tvThreads[i].dataType==DataType::Context);
+			tvThreads[i].contextPtr->toPipe=fromChild;
+		}
+		if((inTvThreadInfo.intValue
+		  & (int)ControlBlockType::kThreadMask_Close_ThreadOutputAsInput)!=0) {
+			// the case of ]> , ]]> , ]=> , ]]=>
+			if(inContext.fromPipe.get()!=NULL) {
+				inContext.fromPipe->RemoveReader();
+			}
+			inContext.fromPipe=fromChild;
+			fromChild->IncNumOfReader();
+		} else if((inTvThreadInfo.intValue
+	   	    & (int)ControlBlockType::kThreadMask_Close_PushOutputChan)!=0) {
+			// the case of ]>> , ]]>> , ]=>> , ]]=>>
+			inContext.DS.emplace_back(fromChild);
+		}
+	}
+
+	TypedValue tvChildContext=runThreads(tvThreads);
+	bool ret=tvChildContext.IsValid();
+	if(ret && (inTvThreadInfo.intValue
+			   & (int)ControlBlockType::kThreadMask_Close_PushContext)!=0) {
+		inContext.DS.emplace_back(tvChildContext); 
+	}
+
+	return ret;
+}
+
+static void newChildThreads(std::vector<TypedValue> *outThreads,
+							Context *inParent,
+							TypedValue inTvExec,int inNumOfParallels) {
+	for(int i=0; i<inNumOfParallels; i++) {
+		Context *childContext=new Context(inParent,Level::Interpret);
+		childContext->threadIdx=i;
+		if(inParent->isInitParamBroadcast) {
+			childContext->DS.emplace_back(inParent->initParamForPBlock);
+		} else {
+			childContext->DS.emplace_back(inParent->initParamForPBlock.listPtr->at(i));
+		}
+		childContext->DS.emplace_back(inTvExec);
+		outThreads->emplace_back(childContext);
 	}
 }
-static void *kicker(void *inContext) {
-	Context *childContext=(Context *)inContext;
+
+static TypedValue runThreads(std::vector<TypedValue> &inThreads) {
+	int numOfParallels=(int)inThreads.size();
+	TypedValue ret;
+	if(numOfParallels>1) { ret=TypedValue(new List()); }
+	ChanMan chan(numOfParallels,"runThreads");
+	chan.IncNumOfReader();
+	for(int i=0; i<numOfParallels; i++) {
+		assert(inThreads[i].dataType==DataType::Context);
+		std::pair<ChanMan*,TypedValue> kickerArg(&chan,inThreads[i]);
+		inThreads[i].contextPtr->thread=NewSharedThread(kicker,&kickerArg);
+
+		TypedValue tvChildContext=chan.Recv();
+// printf("runThreads Recv Done (i=%d)\n",i);
+		if(numOfParallels>1) {
+			ret.listPtr->emplace_back(tvChildContext);
+		} else if(numOfParallels==1 && i==0) {
+			ret=tvChildContext;
+		}
+	}
+// printf("runThreads RemoveReader\n");
+	chan.RemoveReader();
+	while(chan.CanDestruct()==false) {
+		ppYield();
+	}
+	return ret;
+}
+
+static void *kicker(void *inKickerArg) {
+	auto kickerArg=(std::pair<ChanMan*,TypedValue> *)inKickerArg;
+	ChanMan *chanPtr=kickerArg->first;
+	TypedValue tvChildContext=kickerArg->second;
+	assert(tvChildContext.dataType==DataType::Context);
+	Context *childContext=tvChildContext.contextPtr.get();
 	
 	if(childContext->DS.size()<1) {
 		childContext->Error(NoParamErrorID::DsIsEmpty);
 		return NULL;
 	}
+	chanPtr->Send(tvChildContext);
+	chanPtr->CloseOnWrite();
 	TypedValue tvExec=Pop(childContext->DS);
+	AddToThreadPool(tvChildContext);
 	childContext->Exec(tvExec);
 
 	// epilogue
-	if(childContext->fromParent!=NULL) {
-		childContext->fromParent->RemoveReader();
-		childContext->fromParent.reset();
-	}
-	if(childContext->toParent!=NULL) {
-		childContext->toParent->CloseOnWrite();
-		childContext->toParent.reset();
-	}
-
-	if(childContext->fromChild!=NULL) {
-		// Wait for all child thread to finish.
-		while(childContext->fromChild->NumOfWriter>0) {
-			Yield();
-		}
-		if(childContext->fromChild->RemoveReader()==false) {
-			fprintf(stderr,"WARNING 'child>': Data still exists in the channel.\n");
-		}
-		childContext->fromChild.reset();
-	}
-	if(childContext->toChild!=NULL) {
-		childContext->toChild->CloseOnWrite();
-		childContext->toChild.reset();
-	}
-
 	if(childContext->fromPipe!=NULL) {
 		childContext->fromPipe->RemoveReader();
 		childContext->fromPipe.reset();
@@ -443,7 +653,79 @@ static void *kicker(void *inContext) {
 		childContext->toPipe->CloseOnWrite();
 		childContext->toPipe.reset();
 	}
+	tvChildContext.contextPtr->running=false;
 
 	return NULL;
+}
+
+static bool threadInfoUpdate(Context& inContext,
+							 ControlBlockType inAdditionalThreadInfo) {
+	TypedValue tvThreadInfo=Pop(inContext.SS);
+	if(IsThreadInfo(tvThreadInfo)==false) {
+		return inContext.Error(NoParamErrorID::SsBroken);
+	}
+	tvThreadInfo.intValue|=(int)inAdditionalThreadInfo;
+	inContext.SS.emplace_back(tvThreadInfo);
+	return true;
+}
+
+static bool joinMain(Context& inContext,const TypedValue& inTV) {
+	switch(inTV.dataType) {
+		case DataType::Context:
+			if( inTV.contextPtr->running ) {
+				Lock(inTV.contextPtr->mutexForJoined);
+					if(inTV.contextPtr->joined==false) {
+						Join(inTV.contextPtr->thread.get());
+						inTV.contextPtr->joined=true;
+					}
+				Unlock(inTV.contextPtr->mutexForJoined);
+			}
+			break;
+		case DataType::Array: {
+				if(inTV.arrayPtr.get()==nullptr) {
+					ExitOnSystemError("joinMain:arrayPtr");
+				}
+				int n=inTV.arrayPtr->length;
+				TypedValue *array=inTV.arrayPtr->data;
+				if(array==NULL) { ExitOnSystemError("joinMain:array"); }
+				for(int i=0; i<n; i++) {
+					if(array[i].dataType!=DataType::Context) {
+						return inContext.Error(InvalidTypeErrorID::ArrayElemContext,
+											   array[i]);
+					}
+					joinMain(inContext,array[i]);
+				}
+			}
+			break;
+		case DataType::List: {
+				if(inTV.listPtr.get()==nullptr) {
+					ExitOnSystemError("joinMain:listPtr");
+				}
+				int n=(int)inTV.listPtr->size();
+				for(int i=0; i<n; i++) {
+					TypedValue& tvElem=inTV.listPtr->at(i);
+					if(tvElem.dataType!=DataType::Context) {
+						return inContext.Error(InvalidTypeErrorID::ListElemContext,
+											   tvElem);
+					}
+					joinMain(inContext,tvElem);
+				}
+			}
+			break;
+		case DataType::KV: {
+				if(inTV.kvPtr.get()==nullptr) { ExitOnSystemError("joinMain:kvPtr"); }
+				for(auto const &pair : *inTV.kvPtr) {
+					const TypedValue& tvElem=pair.second;
+					if(tvElem.dataType!=DataType::Context) {
+						return inContext.Error(InvalidTypeErrorID::KvElemContext,
+											   tvElem);
+					}
+					joinMain(inContext,tvElem);
+				}
+			}
+			break;
+		default: return inContext.Error(InvalidTypeErrorID::TosContextOrContainer,inTV);
+	}
+	return true;
 }
 

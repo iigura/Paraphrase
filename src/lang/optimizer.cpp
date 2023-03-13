@@ -26,12 +26,12 @@ struct OptPattern {
 
 struct MathOpOptDB {
 	TypedValue originalOp;
-	std::vector<TypedValue> replaceOp;	// int,long,float,dobule,BigInt,BigFloat
+	std::vector<TypedValue> replaceOp;	// int,long,float,dobule,BigInt
 
 	MathOpOptDB(const TypedValue& inOriginalOp,
 				const std::initializer_list<TypedValue>& inReplaceOp)
      :originalOp(inOriginalOp),replaceOp(inReplaceOp) {
-		assert(inReplaceOp.size()==6);
+		assert(inReplaceOp.size()==5);	// 5 numeric types
 	}
 
 	MathOpOptDB() {
@@ -254,7 +254,7 @@ PP_API void InitOptPattern() {
 		MathOpOptDB(getWord("std:*"),
 					{getWord("std:_int*"),   getWord("std:_long*"),
 					 getWord("std:_float*"), getWord("std:_double*"),
-					 getWord("std:_bigInt*"),getWord("std:_bigFloat*")}),
+					 getWord("std:_bigInt*") }),
 		MathOpOptDB(),
 	};
 	gMathOp=mathOpDB;
@@ -377,7 +377,6 @@ static bool mathOpOptimize(CodeThread *ioThread) {
 			case DataType::Float:		replaceIndex=2;	break;
 			case DataType::Double:		replaceIndex=3; break;
 			case DataType::BigInt:		replaceIndex=4;	break;
-			case DataType::BigFloat:	replaceIndex=5; break;
 			default:
 				fprintf(stderr,"SYSTEM ERROR in mathOpOptimise.\n");
 				exit(-1);

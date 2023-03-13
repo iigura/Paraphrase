@@ -1,0 +1,58 @@
+// see Dmitry Stogov's Mabdelbrot
+// https://gist.github.com/dstogov/12323ad13d3240aee8f1
+//
+// usage: para mabdelbrotMT.p8e run
+
+"BAILOUT" 16 const!
+"MAX-ITERATIONS" 1000 const!
+
+// x y --- 0 or 1
+`iterate :
+	0.5 - ( ci cr ) local
+	0.0 0.0 ( zi zr ) local
+	0 `count local
+	( temp zr2 zi2 ) local-decl
+	while true do
+		`count ++
+		( zr zi ) , * `temp let
+		`zr , dup * `zr2 let
+		`zi , dup * `zi2 let
+		`zr2 , `zi2 , - `cr , + `zr let	// zr=zr2-zi2+cr
+		`temp , dup + `ci , + `zi let
+		`zi2 , `zr2 , + {{ BAILOUT >lit }} > if `count , leave then
+		`count , {{ MAX-ITERATIONS >lit }} > if 0 leave then
+	repeat
+;
+
+`run :
+	// scatter
+	[ -39 38 for+
+		-39 38 for+
+			i j tuple >pipe 
+		next
+	  next
+	]>>
+
+	// worker
+	>>[[ while-pipe
+		expand ( x y ) local
+		(< `x , 40.0 /  `y , 40.0 /  iterate  `y , `x , >) >pipe
+	  repeat
+	]]>
+
+	39 2 * square new-array
+	while-pipe
+		expand	// array result j i
+		swap 39 + 78 * 39 + + // array result index
+		swap 0? if "*" else " " then @set
+	repeat
+
+	-39 38 for+
+		-39 38 for+
+			j 39 + 78 * i 39 + +
+			@get write
+		next
+		cr
+	next
+;
+

@@ -1,0 +1,15 @@
+// Implementation of "Zun Doko Kiyoshi" by cross-reference.
+// usage: ../para zdk2.p8e
+
+`not-implemented-yet : "NOT IMPLEMENTED, YET." .cr -1 exit ;
+
+`zun  : not-implemented-yet ;
+`doko : not-implemented-yet ;
+
+`zunDoko : random 0.5 > if zun else doko then ;
+
+`zun { "zun" . 1 + zunDoko } update
+`doko { "doko" . 4 == if "KIYOSHI!" .cr else 0 zunDoko then } update
+
+0 zunDoko
+

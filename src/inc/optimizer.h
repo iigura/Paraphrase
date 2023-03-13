@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "typedValue.h"
+#include "word.h"
 
 typedef std::vector<TypedValue> CodeThread;
 

@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="words.css">
 
-<style type="text/css"><!-- .VERSION:before{content:"0.95";} --> </style>
-<style type="text/css"><!-- .NUM_OF_WORDS:before{content:"386";} --> </style>
+<style type="text/css"><!-- .VERSION:before{content:"0.96";} --> </style>
+<style type="text/css"><!-- .NUM_OF_WORDS:before{content:"396";} --> </style>
 <!-- ref_mod が追加されていないので、本当は　352 words -->
-<style type="text/css"><!-- .DATE:before{content:"2022.5.02";} --> </style>
-<title>Paraphrase ワードリファレンス ver. 0.95</title>
+<style type="text/css"><!-- .DATE:before{content:"2023.3.14";} --> </style>
+<title>Paraphrase ワードリファレンス ver. 0.96</title>
 
 </head>
 <body>
@@ -409,38 +409,38 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<th></th>
 		<td><a href="#to_double">&gt;double</a></td>
 		<td><a href="#can_to_double">&gt;double?</a></td>
-		<td><a href="#to_big-float">&gt;big-float</a></td>
 		<td><a href="#to_bool">&gt;bool</a></td>
 		<td><a href="#to_string">&gt;string</a></td>
+		<td><a href="#to_symbol">&gt;symbol</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#to_symbol">&gt;symbol</a></td>
 		<td><a href="#to_hex">&gt;hex</a></td>
 		<td><a href="#to_array">&gt;array</a></td>
 		<td><a href="#to_assoc">&gt;assoc</a></td>
 		<td><a href="#to_list">&gt;list</a></td>
+		<td><a href="#to_word">&gt;word</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#to_word">&gt;word</a></td>
 		<td><a href="#to_address">&gt;address</a></td>
 		<td><a href="#can_to_int">&gt;int?</a></td>
 		<td><a href="#can_to_float">&gt;float?</a></td>
 		<td><a href="#is_bool">bool?</a></td>
+		<td><a href="#is_int">int?</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#is_int">int?</a></td>
 		<td><a href="#is_long">long?</a></td>
 		<td><a href="#is_big-int">big-int?</a></td>
 		<td><a href="#is_float">float?</a></td>
 		<td><a href="#is_double">double?</a></td>
+		<td><a href="#is_string">string?</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#is_big-float">big-float?</a></td>
-		<td><a href="#is_string">string?</a></td>
+		<td><a href="#is_word">word?</a></td>
+		<td><a href="#ref_is_word">@word?</a></td>
 		<td><a href="#is_array">array?</a></td>
 		<td><a href="#ref_is_array">@array?</a></td>
 		<td><a href="#is_list">list?</a></td>
@@ -600,13 +600,9 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<th class=categGrop>チャネル</th>
 		<td><a href="#to_pipe">&gt;pipe</a></td>
 		<td><a href="#from_pipe">pipe&gt;</a></td>
-		<td><a href="#to_child">&gt;child</a></td>
-		<td><a href="#from_child">child&gt;</a></td>
-		<td><a href="#to_parent">&gt;parent</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#from_parent">parent&gt;</a></td>
 		<td><a href="#eoc">eoc</a></td>
 		<td><a href="#is_eoc">eoc?</a></td>
 		<td colspan=2><a href="#reset_pipes">reset-pipes</a></td>
@@ -617,17 +613,50 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<td><a href="#right_bracket">]</a></td>
 		<td><a href="#double_left_brackets">[[</a></td>
 		<td><a href="#double_right_brackets">]]</a></td>
+		<td><a href="#l_bracket_arrow">[-&gt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#l_bracket_arrow">[-&gt;</a></td>
 		<td><a href="#ll_brackets_arrow">[[-&gt;</a></td>
 		<td><a href="#ll_brackets_multi_arrows">[[=&gt;</a></td>
-		<td colspan=2><a href="#num_of_threads">num-of-threads</a></td>
+		<td><a href="#connect_bracket">&gt;[</a></td>
+		<td><a href="#connect_double_bracket">&gt;[[</a></td>
+		<td><a href="#channel_bracket">&gt;&gt;[</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#channel_double_bracket">&gt;&gt;[[</a></td>
+		<td><a href="#connect_l_bracket_arrow">&gt;[-&gt;</a></td>
+		<td><a href="#connect_double_bracket_arrow">&gt;[[-&gt;</a></td>
+		<td><a href="#channel_bracket_arrow">&gt;&gt;[-&gt;</a></td>
+		<td><a href="#channel_double_bracket_arrow">&gt;&gt;[[-&gt;</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#connect_ll_brackets_multi_arrows">&gt;[[=&gt;</a>
+		<td><a href="#right_bracket_context">]=</a>
+		<td><a href="#double_right_brackets_context">]]=</a>
+		<td><a href="#right_bracket_connect">]&gt;</a>
+		<td><a href="#double_right_brackets_connect">]]&gt;</a>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#right_bracket_context_connect">]=&gt;</a>
+		<td><a href="#double_right_brackets_context_connect">]]=&gt;</a>
+		<td><a href="#right_bracket_channel">]&gt;&gt;</a>
+		<td><a href="#double_right_brackets_channel">]]&gt;&gt;</a>
+		<td><a href="#right_bracket_context_channel">]=&gt;&gt;</a>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#double_right_brackets_context_channel">]]=&gt;&gt;</a>
+		<td colspan=2><a href="#num_of_threads">num-of-threads</a></td>
 		<td colspan=2><a href="#set_num_of_threads">set-num-of-threads</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#join">join</a></td>
+		<td><a href="#ref_join">@join</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>スタック</th>
@@ -677,6 +706,7 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#putc">putc</a></td>
 		<td><a href="#putf">putf</a></td>
 		<td><a href="#printf">printf</a></td>
 		<td><a href="#cr">cr</a></td>
@@ -779,50 +809,51 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<th class=categGroup>その他</th>
 		<td><a href="#return">return</a></td>
 		<td><a href="#panic">panic</a></td>
+		<td><a href="#sleep">sleep</a></td>
 		<td colspan=2><a href="#this-word-is-removed">this-word-is-removed</a></td>
-		<td><a href="#show-trace">show-trace</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#show-trace">show-trace</a></td>
 		<td><a href="#tron">tron</a></td>
 		<td><a href="#troff">troff</a></td>
 		<td><a href="#is_tron">tron?</a></td>
 		<td><a href="#args">args</a></td>
-		<td><a href="#invalid">invalid</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#invalid">invalid</a></td>
 		<td><a href="#is_valid">valid?</a></td>
 		<td><a href="#ref_is_valid">@valid?</a></td>
 		<td><a href="#is_invalid">invalid?</a></td>
 		<td><a href="#ref_is_invalid">@invalid?</a></td>
-		<td><a href="#size">size</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#size">size</a></td>
 		<td><a href="#ref_size">@size</a></td>
 		<td><a href="#begin_comment">&frasl;&lowast;</a></td>
 		<td><a href="#end_comment">*&frasl;</a></td>
 		<td><a href="#cpp-style-comment">&#47;&#47;</a></td>
-		<td><a href="#show">show</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#show">show</a></td>
 		<td><a href="#show-rs">show-rs</a></td>
 		<td><a href="#begin_comment">&frasl;&lowast;</a></td>
 		<td><a href="#inspect">inspect</a></td>
 		<td><a href="#ref_word-name">@word-name</a></td>
-		<td><a href="#word-name">word-name</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#word-name">word-name</a></td>
 		<td colspan=2><a href="#show-local-vars">show-local-vars</a></td>
 		<td><a href="#quit">quit</a></td>
 		<td><a href="#exit">exit</a></td>
-		<td><a href="#self">self</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#self">self</a></td>
 		<td><a href="#is_windows">windows?</a></td>
 		<td><a href="#is_linux">linux?</a></td>
 		<td><a href="#is_mac">mac?</a></td>
@@ -920,163 +951,193 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th></th>
 		<td><a href="#3gts_raw">&gt;&gt;&gt;raw</a></td>
+		<td><a href="#channel_bracket">&gt;&gt;[</a></td>
+		<td><a href="#channel_bracket_arrow">&gt;&gt;[-&gt;</a></td>
+		<td><a href="#channel_double_bracket">&gt;&gt;[[</a></td>
+		<td><a href="#channel_double_bracket_arrow">&gt;&gt;[[-&gt;</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#to_address">&gt;address</a></td>
 		<td><a href="#to_array">&gt;array</a></td>
 		<td><a href="#to_assoc">&gt;assoc</a></td>
-		<td><a href="#to_big-float">&gt;big-float</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td><a href="#to_big-int">&gt;big-int</a></td>
 		<td><a href="#to_bool">&gt;bool</a></td>
-		<td><a href="#to_child">&gt;child</a></td>
-		<td><a href="#to_double">&gt;double</a></td>
-		<td><a href="#can_to_double">&gt;double?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#to_double">&gt;double</a></td>
+		<td><a href="#can_to_double">&gt;double?</a></td>
 		<td><a href="#to_file">&gt;file</a></td>
 		<td><a href="#to_float">&gt;float</a></td>
 		<td><a href="#can_to_float">&gt;float?</a></td>
-		<td><a href="#to_here">&gt;here</a></td>
-		<td><a href="#to_hex">&gt;hex</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#to_here">&gt;here</a></td>
+		<td><a href="#to_hex">&gt;hex</a></td>
 		<td><a href="#to_int">&gt;int</a></td>
 		<td><a href="#can_to_int">&gt;int?</a></td>
 		<td><a href="#to_list">&gt;list</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#to_literal">&gt;lit</a></td>
 		<td><a href="#to_long">&gt;long</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td><a href="#can_to_long">&gt;long?</a></td>
 		<td><a href="#to_lower">&gt;lower</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td colspan=2><a href="#to_mock-stdin">&gt;mock-stdin</a></td>
 		<td><a href="#to_param">&gt;param</a></td>
-	</tr>
-	<tr>
-		<th></th>
-		<td><a href="#to_parent">&gt;parent</a></td>
 		<td><a href="#to_pipe">&gt;pipe</a></td>
 		<td><a href="#to_r">&gt;r</a></td>
-		<td><a href="#to_string">&gt;string</a></td>
-		<td><a href="#to_symbol">&gt;symbol</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#to_string">&gt;string</a></td>
+		<td><a href="#to_symbol">&gt;symbol</a></td>
 		<td><a href="#to_type">&gt;type</a></td>
 		<td><a href="#to_upper">&gt;upper</a></td>
 		<td><a href="#to_word">&gt;word</a></td>
-		<td><a href="#left_bracket">[</a></td>
-		<td><a href="#l_bracket_arrow">[-&gt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#connect_bracket">&gt;[</a></td>
+		<td><a href="#connect_l_bracket_arrow">&gt;[-&gt;</a></td>
+		<td><a href="#connect_double_bracket">&gt;[[</a></td>
+		<td><a href="#connect_double_bracket_arrow">&gt;[[-&gt;</a></td>
+		<td><a href="#connect_ll_brackets_multi_arrows">&gt;[[=&gt;</a>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#left_bracket">[</a></td>
+		<td><a href="#l_bracket_arrow">[-&gt;</a></td>
 		<td><a href="#double_left_brackets">[[</a></td>
 		<td><a href="#ll_brackets_arrow">[[-&gt;</a></td>
 		<td><a href="#ll_brackets_multi_arrows">[[=&gt;</a></td>
-		<td><a href="#right_bracket">]</a></td>
-		<td><a href="#double_right_brackets">]]</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#right_bracket">]</a></td>
+		<td><a href="#right_bracket_context">]=</a>
+		<td><a href="#right_bracket_context_connect">]=&gt;</a>
+		<td><a href="#right_bracket_context_channel">]=&gt;&gt;</a>
+		<td><a href="#right_bracket_connect">]&gt;</a>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#right_bracket_channel">]&gt;&gt;</a>
+		<td><a href="#double_right_brackets">]]</a></td>
+		<td><a href="#double_right_brackets_context">]]=</a>
+		<td><a href="#double_right_brackets_context_connect">]]=&gt;</a>
+		<td><a href="#double_right_brackets_context_channel">]]=&gt;&gt;</a>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#double_right_brackets_connect">]]&gt;</a>
+		<td><a href="#double_right_brackets_channel">]]&gt;&gt;</a>
 		<td><a href="#bit_xor">^</a></td>
 		<td><a href="#left_curly">{</a></td>
 		<td><a href="#double_left_curly">{{</a></td>
-		<td><a href="#bit_or">|</a></td>
-		<td><a href="#logical_or">||</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#bit_or">|</a></td>
+		<td><a href="#logical_or">||</a></td>
 		<td><a href="#right_curly">}</a></td>
 		<td><a href="#double_right_curly">}}</a></td>
 		<td><a href="#double_right_curly_comma">}},</a></td>
-		<td><a href="#ref_ne">@!=</a></td>
-		<td><a href="#ref_bit_and">@&amp;</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_ne">@!=</a></td>
+		<td><a href="#ref_bit_and">@&amp;</a></td>
 		<td><a href="#ref_mult">@*</a></td>
 		<td><a href="#ref_plus">@+</a></td>
 		<td><a href="#ref_minus">@-</a></td>
-		<td><a href="#ref_dot">@.</a></td>
-		<td><a href="#ref_div">@&frasl;</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_dot">@.</a></td>
+		<td><a href="#ref_div">@&frasl;</a></td>
 		<td><a href="#ref_lt">@&lt;</a></td>
 		<td><a href="#ref_bit_lshift">@&lt;&lt;</td>
 		<td><a href="#ref_gt">@&gt;</a></td>
-		<td><a href="#ref_le">@&lt;=</a></td>
-		<td><a href="#ref_eq">@==</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_le">@&lt;=</a></td>
+		<td><a href="#ref_eq">@==</a></td>
 		<td><a href="#ref_bit_rshift">@&gt;&gt;</td>
 		<td><a href="#ref_ge">@&gt;=</a></td>
 		<td><a href="#ref_to_r">@&gt;r</a></td>
-		<td><a href="#ref_bit_xor">@^</a></td>
-		<td><a href="#ref_bit_or">@|</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_bit_xor">@^</a></td>
+		<td><a href="#ref_bit_or">@|</a></td>
 		<td><a href="#ref_append">@append</a></td>
 		<td><a href="#ref_is_array">@array?</a></td>
 		<td><a href="#ref_is_assoc">@assoc?</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#ref_car">@car</a></td>
 		<td><a href="#ref_cdr">@cdr</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td colspan=2><a href="#@is_empty-list">@empty-list?</a></td>
 		<td><a href="#ref_is_empty-str">@empty-str?</a></td>
-		<td colspan=2><a href="#ref_is_end-with">@end-with?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#ref_is_end-with">@end-with?</a></td>
 		<td><a href="#ref_is_eof">@eof?</a></td>
 		<td><a href="#ref_even_p">@even?</td>
 		<td><a href="#ref_expand">@expand</a></td>
-		<td><a href="#ref_get">@get</a></td>
-		<td><a href="#ref_has-key_p">@has-key?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_get">@get</a></td>
+		<td><a href="#ref_has-key_p">@has-key?</a></td>
 		<td><a href="#ref_has_p">@has?</a></td>
 		<td><a href="#ref_in_p">@in?</a></td>
 		<td><a href="#ref_is_invalid">@invalid?</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#ref_join">@join</a></td>
 		<td><a href="#ref_last">@last</a></td>
 		<td><a href="#ref_is_list_p">@list?</a></td>
+		<td colspan=2><a href="#@is_not-empty-list">@not-epmty-list?</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td colspan=2><a href="#@is_not-empty-list">@not-epmty-list?</a></td>
 		<td colspan=2><a href="#ref_is_not-empty-str">@not-empty-str?</a></td>
 		<td><a href="#ref_pop-front">@pop-front</a></td>
+		<td><a href="#ref_push-back">@push-back</a></td>
+		<td><a href="#@from_r">@r&gt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#ref_push-back">@push-back</a></td>
-		<td><a href="#@from_r">@r&gt;</a></td>
 		<td><a href="#ref_search">@search</a></td>
 		<td><a href="#ref_set">@set</a></td>
 		<td><a href="#ref_set-attr">@set-attr</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td><a href="#ref_size">@size</a></td>
 		<td><a href="#ref_sqrt">@sqrt</a></td>
-		<td colspan=2><a href="#ref_is_start-with">@start-with?</a></td>
-		<td><a href="#ref_type-name">@type-name</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#ref_is_start-with">@start-with?</a></td>
+		<td><a href="#ref_type-name">@type-name</a></td>
 		<td><a href="#ref_from_type">@type&gt;</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td colspan=2><a href="#ref_is_valid-index">@valid-index?</a></td>
 		<td><a href="#ref_is_valid">@valid?</a></td>
 		<td><a href="#ref_word-name">@word-name</a></td>
+		<td><a href="#ref_is_word">@word?</a></td>
 	</tr>
 	<tr>
 		<th></th>
@@ -1123,7 +1184,6 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th class=indexGroup>B</th>
-		<td><a href="#is_big-float">big-float?</a></td>
 		<td><a href="#is_big-int">big-int?</a></td>
 		<td><a href="#bool-type">bool-type</a></td>
 		<td><a href="#is_bool">bool?</a></td>
@@ -1140,7 +1200,6 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th></th>
 		<td colspan=2><a href="#check-delete-by-forget">check-delete-by-forget</a>
-		<td><a href="#from_child">child&gt;</a></td>
 		<td><a href="#clear">clear</a></td>
 	</tr>
 	<tr>
@@ -1295,6 +1354,7 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th class=indexGroup>J</th>
 		<td><a href="#j">j</a></td>
+		<td><a href="#join">join</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>L</th>
@@ -1374,7 +1434,6 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th class=indexGroup>P</th>
 		<td><a href="#panic">panic</a></td>
-		<td><a href="#from_parent">parent&gt;</a></td>
 		<td><a href="#pi">pi</a></td>
 		<td><a href="#pick">pick</a></td>
 		<td><a href="#from_pipe">pipe&gt;</a></td>
@@ -1389,6 +1448,7 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#putc">putc</a></td>
 		<td><a href="#putf">putf</a></td>
 	</tr>
 	<tr>
@@ -1463,34 +1523,38 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<td><a href="#sin">sin</a></td>
 		<td><a href="#size">size</a></td>
 		<td><a href="#sjis_to_utf8">sjis&gt;utf8</a></td>
+		<td><a href="#sleep">sleep</a></td>
 		<td><a href="#slice">slice</a></td>
-		<td><a href="#sort">sort</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#sort">sort</a></td>
 		<td><a href="#sort_plus">sort+</a></td>
 		<td><a href="#sort_minus">sort-</a></td>
 		<td><a href="#split">split</a></td>
-		<td colspan=2><a href="#split-str-by">split-str-by</a></td>
+		<td><a href="#split-str-by">split-str-by</a></td>
 	</tr>
 	<tr>
 		<th></th>
 		<td><a href="#sputf">sputf</a></td>
 		<td><a href="#sqrt">sqrt</a></td>
-		<td colspan=2><a href="#is_start-with">start-with?</a></td>
+		<td><a href="#is_start-with">start-with?</a></td>
 		<td><a href="#step">step</a></td>
+		<td><a href="#step-in">step-in</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#step-in">step-in</a></td>
 		<td><a href="#step-over">step-over</a></td>
 		<td><a href="#store">store</a></td>
 		<td colspan=2><a href="#str-to-list-byte">str-to-list-byte</a></td>
+		<td><a href="#is_string">string?</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#is_string">string?</a></td>
 		<td><a href="#square">square</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#swap">swap</a></td>
 		<td><a href="#swap_rs">swap-rs</a></td>
 		<td><a href="#switch">switch</a></td>
@@ -1546,6 +1610,7 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th></th>
 		<td><a href="#word-type">word-type</a></td>
+		<td><a href="#is_word">word?</a></td>
 		<td colspan=2><a href="#worded-docol-caller">worded-docol-caller</a></td>
 		<td><a href="#write">write</a></td>
 	</tr>
@@ -1656,6 +1721,12 @@ N1 N2 --- N　などと表記することとします。
 		このような場合、例えば '&gt;pipe' や 'pipe&gt;' などといった時は、
 		to-pipe や from-pipe といった読み方をします。
 		このような考え方は Forth の文化から拝借しています。
+		<p>
+		なお、並列処理関連のワードの接頭詞または接尾詞でで用いられる場合は、
+		上記の意味とは異なる意味となります。詳しくは後述の
+		「<a href="#symbol_for_parallel_word_prepost">
+			3.5. 並列処理関連ワードの接頭詞・接尾詞について</a>」 を見て下さい。
+		</p>
 	</td>
 </tr>
 <tr>
@@ -1740,9 +1811,9 @@ N1 N2 --- N　などと表記することとします。
 	</td>
 </tr>
 <tr>
-	<th class=termLabel-symbol id=_DoubleOrBigFloat>E</th>
+	<th class=termLabel-symbol id=_FloatOrDoubleOrBigInt>E</th>
 	<td class=note>
-		double もしくは big-float 型の値を表します。
+		float, double もしくは big-int 型の値を表します。
 	</td>
 </tr>
 <tr>
@@ -1767,12 +1838,6 @@ N1 N2 --- N　などと表記することとします。
 	<th class=termLabel-symbol id=_EoF>&fpartint;</th>
 	<td class=note>
 		End of File(EoF) を表します。
-	</td>
-</tr>
-<tr>
-	<th class=termLabel-symbol id=_BigFloat>G</th>
-	<td class=note>
-		big-float を表します。
 	</td>
 </tr>
 <tr>
@@ -1809,13 +1874,19 @@ N1 N2 --- N　などと表記することとします。
 	<th class=termLabel-symbol id=_Number_but_BigInt>M</th>
 	<td class=note>
 		big-int 以外の数値
-		（int, long, float, double, big-float）を表します。
+		（int, long, float, double）を表します。
 	</td>
 </tr>
 <tr>
 	<th class=termLabel-symbol id=_Number>N</th>
 	<td class=note>
-		任意の数値（int, long, big-int, float, double, big-float）を表します。
+		任意の数値（int, long, big-int, float, double）を表します。
+	</td>
+</tr>
+<tr>
+	<th class=termLabel-symbol id=_Context>Q</th>
+	<td class=note>
+		コンテキストを表します。
 	</td>
 </tr>
 <tr>
@@ -1840,6 +1911,12 @@ N1 N2 --- N　などと表記することとします。
 	<th class=termLabel-symbol id=_Any>X</th>
 	<td class=note>
 		任意の値を表します。
+	</td>
+</tr>
+<tr>
+	<th class=termLabel-symbol id=_Channel>Y</th>
+	<td class=note>
+		チャネルを表します。
 	</td>
 </tr>
 <tr>
@@ -1986,6 +2063,65 @@ N1 N2 --- N　などと表記することとします。
 		スタックの上から 2 番目の値を指します。
 		単にセカンドと書かれている場合は、
 		データスタックの上から 2 番目にある値を指します。
+	</td>
+</tr>
+<tr>
+	<th class=termLabel>親スレッド</th>
+	<td class=note>
+		特に断りが無い場合は、説明の対象となっているワードを実行する
+		スレッドを指します。
+	</td>
+</tr>
+<tr>
+	<th class=termLabel>子スレッド</th>
+	<td class=note>
+		特に断りが無い場合は、説明の対象となっているワードの実行により生成された
+		スレッドを指します。
+		子スレッドは複数生成される場合があります。
+	</td>
+</tr>
+</table>
+<h3 id=symbol_for_parallel_word_prepost>
+	3.4. 並列処理関連ワードの接頭詞・接尾詞について</h3>
+<h4>当該の接頭詞・接尾詞全般に共通すること</h4>
+<p>
+他の接頭詞・接尾詞と同様に、これらは言語システムとして
+機能しているものではありません。
+単にワードの命名における単なる命名規則であり、
+他のワードにこれらの接頭詞・接尾詞を付せば 同様の機能が付加されることはありません。
+ワード名から機能が類推できるよう、ワード名を工夫しているだけです。
+</p>
+<table>
+<tr>
+	<th class=termLabel width="40px">&gt;<th>
+	<td class=note>
+		子スレッドのデフォルトチャネルを、
+		親スレッドのデフォルトのチャネルに接続することを意味します。
+		例えば、子スレッドを生成するワード [ に対するワード &gt;[ では、
+		以下のような状況となります：
+		&gt;[ ... ] で生成される子スレッド中においては、
+		pipe&gt; にて親スレッド側で &gt;pipe を用いて送信された値を受信できます。
+		<p>
+		[[ ... ]]&gt; では、子スレッド側で &gt;pipe にて送信した値を
+		親スレッド側では pipe&gt; を用いて受信できるようになります。
+		</p>
+		<p>
+		送信・受信用チャネルの指定でもこれらのワードは利用でき、
+		&gt;[ ... ]&gt; で生成した子スレッドと親スレッドは、
+		それぞれが &gt;pipe ならびに pipe&gt; を用いて
+		相互に値を送受信できます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=termLabel width="40px">&gt;&gt;<th>
+	<td class=note>
+		接頭詞として使われる場合は、
+		子スレッドのデフォルト入力チャネルを
+		親スレッドの TOS に格納されているチャネルに接続します。
+		接尾詞として使われている場合は、
+		子スレッドのデフォルトの出力チャネルを
+		親スレッドのスタックに積みます。
 	</td>
 </tr>
 </table>
@@ -4430,7 +4566,6 @@ DS:----------------
 </table>
 </div>
 
-
 <div class=chunk> 
 <!-- ========================= &gt;&gt;&gt;raw ========================= -->
 <h3 class=wordHeader id=3gts_raw>&gt;&gt;&gt;raw</h3>
@@ -4470,6 +4605,246 @@ DS:----------------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== &gt;&gt;[ ============================== -->
+<h3 class=wordHeader id=channel_bracket>&gt;&gt;[</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td stype="text-indent:0rem">
+		RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+		SS: --- <a href="#_CB">&kappa;</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#left_bracket">[</a> と同様に並列処理ブロックを
+		開始します。
+		ワード <a href="#right_bracket">]</a> と対を成し、
+		並列処理ブロックを構成する点もワード <a href="#left_bracket">[</a> と同様です。
+		<p>
+		ワード <a href="#left_bracket">[</a> と異なる点は、
+		子スレッドにおけるデフォルトの読み込み用チャネルは、
+		親スレッドの TOS に積まれているチャネルと接続されるところです。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、ワード [ および ]&gt;&gt; により構成される
+		並列処理ブロック（＝スレッド 1）にて生成されるチャネルをスタックに積み、
+		そのチャネルをデフォルトの読み取り用のチャネルとする、
+		並列処理ブロック（＝スレッド 2）を本ワードを用いて生成・実行しています。
+		<div class=example>
+			<code>
+				&gt; <u> [ "one " >pipe /* thread 1 */ ]&gt;&gt; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> &gt;&gt;[ pipe> "two" + "s='%s'\n" putf /* thread 2 */ ] </u><br>
+				&nbsp; ok.<br>
+				s='one two'
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= &gt;&gt;[-&gt; ========================= -->
+<h3 class=wordHeader id=channel_bracket_arrow>&gt;&gt;[-&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		コンパイル時<br>
+		<blockquote>
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		コンパイルにより生成されたコードの実行時<br>
+		<blockquote>
+			親スレッド： <a href="#_Any">X</a> --- <br>
+			子スレッド： --- <a href="#_Any">X</a> 
+		</blockquote>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#l_bracket_arrow">[-&gt;</a> と同様に
+		ワード <a href="#right_bracket">]</a> と対を成し、
+		並列処理ブロックを構成します。
+		ワード <a href="#l_bracket_arrow">[-&gt;</a> と動作は殆ど同じですが、
+		本ワードで定義される並列処理ブロックの
+		デフォルトの入力用パイプが親スレッドのスタックの TOS にある
+		出力用チャネルと接続される点が異なります。
+		<p>
+		子スレッドのスタックに積まれる値は、
+		親スレッドのセカンドの値が用いられます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		サンプルプログラムはありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		コンパイル時にはエラーは発生しませんが、
+		生成されたコードの実行時には、
+		親スレッドのスタック上に 2 つの値が存在しなかったり、
+		TOS がチャネルでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
+<div class=chunk> 
+<!-- ============================== &gt;&gt;[[ ============================== -->
+<h3 class=wordHeader id=channel_double_bracket>&gt;&gt;[[</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>即時実行レベル 1</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+		SS: --- <a href="#_CB">&kappa;</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_left_bracket">[[</a> と同様に、
+		ワード <a href="#double_right_bracket">]]</a> と対をなし、
+		複数の子スレッドを生成する並列処理ブロックを構成します。
+		生成するスレッドの数もワード <a href="#double_left_bracket">[[</a> と
+		同様です。
+		<p>
+		ワード <a href="#double_left_bracket">[[</a> と異なる点は、
+		TOS に積まれたチャネルを生成する各スレッドのデフォルトの
+		入力チャネルとする点です。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例ではスレッド 1 から送られてくる値を、
+		生成した複数の子スレッドで受け取り 100 倍して、
+		スレッドの ID と共に表示しています：
+		<div class=example>
+			<code>
+				&gt; <u> reset-pipes </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> [ 1 10 for+ i >pipe next /* thread 1 */ ]>> </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> >>[[ ( "id=%d data=%d\n" ) thread-idx @append </u><br>
+				&gt;&gt;&nbsp;<u>&nbsp;&nbsp;&nbsp;&nbsp;pipe> 100 * @append printf /* thread 2 */ ]]</u><br>
+				&nbsp; ok.<br>
+				&gt; id=2 data=300<br>
+				id=3 data=400<br>
+				id=4 data=500<br>
+				id=1 data=100<br>
+				id=0 data=200<br>
+				id=5 data=600<br>
+				id=6 data=700<br>
+				id=7 data=800<br>
+				<br>
+				&nbsp; ok.<br>
+				&gt;
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= &gt;&gt;[[-&gt; ========================= -->
+<h3 class=wordHeader id=channel_double_bracket_arrow>&gt;&gt;[[-&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		コンパイル時<br>
+		<blockquote>
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		コンパイルにより生成されたコードの実行時<br>
+		<blockquote>
+			親スレッド： <a href="#_Any">X</a> --- <br>
+			子スレッド： --- <a href="#_Any">X</a> 
+		</blockquote>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#ll_brackets_arrow">[[-&gt;</a> と同様に
+		ワード <a href="#double_right_brackets">]]</a> と対を成し、
+		並列処理ブロックを構成します。
+		ワード <a href="#ll_brackets_arrow">[[-&gt;</a> と動作は殆ど同じですが、
+		本ワードで定義される並列処理ブロックの
+		デフォルトの入力用パイプが親スレッドのスタックの TOS にある
+		出力用チャネルと接続される点が異なります。
+		<p>
+		各子スレッドのスタックに積まれる値は、
+		親スレッドのセカンドのものが用いられます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		サンプルプログラムはありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		コンパイル時にはエラーは発生しませんが、
+		生成されたコードの実行時には、
+		親スレッドのスタック上に 2 つの値が存在しなかったり、
+		TOS がチャネルでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=chunk>
 <!-- ============================== &gt;address ============================== -->
 <h3 class=wordHeader id=to_address>&gt;address</h3>
@@ -4631,49 +5006,6 @@ assoc(
 </div>
  
 <div class=chunk>
-<!-- ============================== &gt;big-float ============================== -->
-<h3 class=wordHeader id=to_big-float>&gt;big-float</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		{ <a href="#_Number">N</a>
-		| <a href="#_String">S</a> } --- <a href="#_BigFloat">G</a>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		TOS にある数値を big-float 型の値に変換します。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		次の例では、整数 123 を big-float 型に変換する様子を示しています。
-		<div class=example>
-			<code>
-				&gt; <u> 123 >big-float type-name . </u><br>
-				&nbsp; bigFloat ok.<br>
-			</code>
-		</div>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		スタックが空であったり、
-		TOS が数値もしくは数値を表す文字列でなかった場合はエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
-<div class=chunk>
 <!-- ============================== &gt;big-int ============================== -->
 <h3 class=wordHeader id=to_big-int>&gt;big-int</h3>
 <table>
@@ -4783,79 +5115,6 @@ assoc(
 </table>
 </div>
  
-<div class=chunk>
-<!-- ============================== &gt;child ============================== -->
-<h3 class=wordHeader id=to_child>&gt;child</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note><a href="#_Any">X</a> --- </td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		TOS を現在デフォルトとなっている子スレッドへの通信用チャネル
-		（to-child チャネル）に送ります。
-		送られたデータは、子スレッド側では親スレッドからの通信用チャネル
-		(from-parent チャネル）より受信されます。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		次の例では、最初に通信用チャネルであるパイプを初期化し、
-		次にパイプ経由にて渡された値を、
-		何倍かにして表示する並列処理ブロックを 1 つ生成してしています。
-		並列処理ブロックで使用される倍率は、
-		親子用通信チャネル（child&gt;parent チャネル）を通じて送られています。
-		<div class=example>
-			<code>
-				&gt; <u> reset-pipes </u>
-				<span class=rem>
-					← デフォルトチャネルを生成
-				</span><br>
-				&nbsp; ok.<br>
-				<span class=rem>
-					↓ 子スレッド（ワーカースレッド）を作成
-				</span><br>
-				&gt; <u> [ "START" . cr parent&gt;
-					while-pipe swap dup rot * . cr repeat
-				"TERMINATE" . cr ] </u><br>
-				&nbsp; ok.<br>
-				&gt; START <span class=rem>← 子スレッドの出力</span><br>
-				<span class=rem>← プロンプトを出すために return キー押下</span><br>
-				&gt; 5 &gt;child
-				<span class=rem>
-					← 倍率を 5 として子スレッドに伝える
-				</span><br>
-				&nbsp; ok.<br>
-				&gt; <u> 3 &gt;pipe </u><br>
-				&nbsp; 15 <span class=rem>← 子スレッドの出力</span><br>
-				&nbsp; ok.<br>
-				&gt; <u> 10 &gt;pipe </u><br>
-				&nbsp; 50 <span class=rem>← 子スレッドの出力</span><br>
-				&nbsp; ok.<br>
-				&gt; <u> eoc &gt;pipe </u><br>
-				&nbsp; ok.<br>
-				&nbsp; TERMINATE <span class=rem>← 子スレッドの出力</span><br>
-			</code>
-		</div>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		スタックが空であったり、
-		to-child チャネルが既に閉じられていた場合にエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
 <div class=chunk>
 <!-- ============================== &gt;double ============================== -->
 <h3 class=wordHeader id=to_double>&gt;double</h3>
@@ -5708,43 +5967,6 @@ assoc(
 </table>
 </div>
  
-<div class=chunk>
-<!-- ============================== &gt;parent ============================== -->
-<h3 class=wordHeader id=to_parent>&gt;parent</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note><a href="#_Any">X</a> --- </td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		TOS を現在デフォルトとなっている親スレッドへの通信用チャネル
-		（to-parent チャネル）に送ります。
-		送信された値は、親スレッド側で子スレッドからの通信用チャネル
-		(from-child チャネル）を通じて受信されます。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		ありません。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		スタックが空であったり、
-		to-parent チャネルが既に閉じられていた場合にエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
 <div class=chunk>
 <!-- ============================== &gt;pipe ============================== -->
 <h3 class=wordHeader id=to_pipe>&gt;pipe</h3>
@@ -7468,6 +7690,50 @@ DS:---------------------------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== @join ============================== -->
+<h3 class=wordHeader id=ref_join>@join</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		--- <br>
+		ただし、TOS には以下の型の値が格納されていることを期待しています。<br>
+		{ <a href="#_Context">Q</a>
+		| <a href="#_Array">A</a>
+		| <a href="#_List">&Lscr;</a>
+		| <a href="#_KV">Z</a> } 
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるコンテキストまたはコンテナを参照し、
+		それらの、または、それらに格納されているコンテキストで実行されている
+		（全ての）スレッドの終了を待ちます。
+		ワード <a href="#join">join</a> の参照版です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が想定されている型の値でなかったり、
+		コンテナにコンテキスト以外の値が格納されている場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=sphinxed-chunk>
 <!-- ============================== @last ============================== -->
 <h3 class=wordHeader id=ref_last>@last</h3>
@@ -7814,7 +8080,7 @@ DS:---------------------------
 		<a href="#_Number">N</a>
 		---
 		<a href="#_Number">N</a>
-		<a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -8140,6 +8406,46 @@ DS:---------------------------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== @word? ============================== -->
+<h3 class=wordHeader id=ref_is_word>@word?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> --- <a href="#_Any">X</a> <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS に格納されている値を参照し、
+		その値がワードであるか否かを調べます。
+		ワードであった場合は true を、
+		そうでない場合は false をスタックに積みます。
+		本ワードは
+		<a href="#dup">dup</a> <a href="#is_word">word?</a> と同値です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空の場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=chunk>
 <!-- ============================== @~ ============================== -->
 <h3 class=wordHeader id=ref_bit_not>@~</h3>
@@ -8705,8 +9011,63 @@ DS:-----------------------
 </div>
 
 <div class=chunk>
-<!-- ============================== [ ============================== -->
-<h3 class=wordHeader id=left_bracket>[</h3>
+<!-- ============================== &gt;[ ============================== -->
+<h3 class=wordHeader id=connect_bracket>&gt;[</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td valign="top">即時実行レベル 1</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td stype="text-indent:0rem">
+		RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+		SS: --- <a href="#_CB">&kappa;</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	ワード <a href="#left_bracket">[</a> と同様にスレッドを生成します。
+	子スレッドにおけるデフォルトの読み込み用チャネルは、
+	親スレッドのデフォルトの書き込み用チャネルと接続されます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、グローバルコンテキストのデフォルトチャネルから
+		値を受け取り、その値を表示するスレッドを作成しています。
+		<div class=example>
+			<code>
+				&gt; <u> reset-pipes </u><br>
+				&gt; <u> &gt[ while-pipe "RECV=" . .cr repeat "QUIT" .cr ] </u><br>
+				&nbsp; ok.<br>
+				&gt; 1 5 for+ i &gt;pipe next<br>
+				&nbsp; ok.<br>
+				RECV= 1<br>
+				RECV= 2<br>
+				RECV= 3<br>
+				RECV= 4<br>
+				&gt; eoc &gt;pipe<br>
+				QUIT<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== &gt;[-&gt; ============================== -->
+<h3 class=wordHeader id=connect_l_bracket_arrow>&gt;[-&gt;</h3>
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
@@ -8714,8 +9075,250 @@ DS:-----------------------
 </tr>
 <tr>
 	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		コンパイル時<br>
+		<blockquote>
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		コンパイルにより生成されたコードの実行時<br>
+		<blockquote>
+			親スレッド： <a href="#_Any">X</a> --- <br>
+			子スレッド： --- <a href="#_Any">X</a> 
+		</blockquote>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
 	<td class=note>
-			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a>
+		ワード <a href="#l_bracket_arrow">[-&gt;</a> と同様に
+		ワード <a href="#right_bracket">]</a> と対を成し、
+		並列処理ブロックを構成します。
+		ワード <a href="#l_bracket_arrow">[-&gt;</a> と動作は殆ど同じですが、
+		本ワードで定義される並列処理ブロックの
+		デフォルトの入力用パイプが親スレッドのデフォルトの
+		出力用チャネルと接続される点が異なります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、親スレッドの TOS より HELLO という文字列を、
+		パイプから world という文字列を受け取って表示します。<br>
+		<br>
+		<div class=example>
+			<code>
+				&gt; <u> reset-pipes </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> "HELLO" </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> &gt;[-&gt; ( "tos=%1% from-pipe=%2%\n" ) </u><br>
+				&gt;&gt; <u> &nbsp;&nbsp;&nbsp; @push-back pipe&gt; @append printf ] </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> 'world' &gt;pipe </u><br>
+				&nbsp; ok.<br>
+				&gt; tos=HELLO from-pipe=world<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		コンパイル時にはエラーは発生しませんが、
+		生成されたコードの実行時には、
+		スタックが空であるとエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== &gt;[[-&gt; ============================== -->
+<h3 class=wordHeader id=connect_double_bracket_arrow>&gt;[[-&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		コンパイル時<br>
+		<blockquote>
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		コンパイルにより生成されたコードの実行時<br>
+		<blockquote>
+			親スレッド： <a href="#_Any">X</a> --- <br>
+			子スレッド： --- <a href="#_Any">X</a> 
+		</blockquote>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#ll_brackets_arrow">[[-&gt;</a> と同様に
+		ワード <a href="#double_right_brackets">]]</a> と対を成し、
+		並列処理ブロックを構成します。
+		ワード <a href="#ll_brackets_arrow">[[-&gt;</a> と動作は殆ど同じですが、
+		本ワードで定義される並列処理ブロックの
+		デフォルトの入力用パイプが親スレッドのデフォルトの
+		出力用チャネルと接続される点が異なります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		コンパイル時にはエラーは発生しませんが、
+		生成されたコードの実行時には、
+		スタックが空であるとエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= &gt;[[=&gt; ========================= -->
+<h3 class=wordHeader id=connect_ll_brackets_multi_arrows>&gt;[[=&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note><br>
+		<b>コンパイル時</b><br>
+		<blockquote style="text-indent:0rem">
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		<b>コンパイルにより生成されたコードの実行時</b>
+		<blockquote style="text-indent:0rem">
+			親スレッド： <a href="#_List">&Lscr;</a> --- <br>
+			子スレッド： --- <a href="#_Any">Xi</a><br>
+			<font size=-1><b>
+			注： i 番目のスレッドには &Lscr; の i 番目の要素が渡されます。
+			</b></font>
+		</blockquote>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a id="#ll_brackets_multi_arrows">[[=&gt;</a> と同様に
+		ワード <a href="#double_right_brackets">]]</a> と対を成し、
+		並列処理ブロックを構成します。
+
+		ワード <a id="#ll_brackets_multi_arrows">[[=&gt;</a> と異なるところは、
+		ワード <a href="#double_right_brackets">]]</a> までに囲まれた並列処理
+		ブロックのデフォルトの入力チャネルが、
+		親スレッドのデフォルトの出力チャネルと繋がるところです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		コンパイル時にはエラーは発生しませんが、
+		生成されたコードの実行時には、
+		TOS がリストでなかった場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== &gt;[[ ============================== -->
+<h3 class=wordHeader id=connect_double_bracket>&gt;[[</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td valign="top">即時実行レベル 1</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td stype="text-indent:0rem">
+		RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+		SS: --- <a href="#_CB">&kappa;</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	ワード <a href="#double_left_bracket">[[</a> と同様に
+	複数のスレッドを生成します。
+	それぞれの子スレッドにおけるデフォルトの読み込み用チャネルは、
+	親スレッドのデフォルトの書き込み用チャネルと接続されます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、グローバルコンテキストのデフォルトチャネルから
+		値を受け取り、その値を表示するスレッドを作成しています。
+		<br><br>
+		<div class=example>
+			<code>
+				&gt; <u> reset-pipes </u><br>
+				&gt; <u> &gt[[ ( "id=%d data=%d\n" thread-idx @append </u><br>
+				&gt;&gt;&nbsp;&nbsp;&nbsp; <u>pipe> 100 * @append printf ]] </u><br>
+				&nbsp; ok.<br>
+				&gt; 1 9 for+ i &gt;pipe next<br>
+				&nbsp; ok.<br>
+				&gt; id=0 data=100<br>
+				id=2 data=300<br>
+				id=1 data=200<br>
+				id=3 data=400<br>
+				id=5 data=500<br>
+				id=4 data=600<br>
+				id=6 data=700<br>
+				id=7 data=800<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+		<p>
+		なお、上の出力例は CPU が 8 コアの環境で実行したものです。
+		各スレッドからの出力の順序は上記の例とは異なる場合があります。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+  
+<div class=chunk>
+<!-- ============================== [ ============================== -->
+<h3 class=wordHeader id=left_bracket>[</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td valign="top">即時実行レベル 1</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td stype="text-indent:0rem">
+		RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+		SS: --- <a href="#_CB">&kappa;</a>
 	</td>
 </tr>
 <tr>
@@ -8723,7 +9326,8 @@ DS:-----------------------
 	<td class=note>
 		並列処理ブロックを開始します。
 		<p>
-		このワードは、ワード ] と対を成し、並列処理ブロックを構成します。
+		このワードは、ワード <a href="#right_bracket">]</a> と対を成し、
+		並列処理ブロックを構成します。
 		ワード [ と ] にて定められた並列処理ブロックは、
 		新たにスレッドを 1 つだけ作成し、そのスレッドにて並列に実行されます。
 		</p>
@@ -8790,22 +9394,17 @@ DS:-----------------------
 </tr>
 <tr>
 	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		<dl>
-			<dt>コンパイル時</dt>
-				<dd>
-				RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a>
-				</dd>
-			<dt>コンパイルにより生成されたコードの実行時</dt>
-				<dd>
-					<dl>
-						<dt>親スレッド</dt>
-					 		<dd> <a href="#_Any">X</a> --- </dd>
-						<dt>子スレッド</dt>
-							<dd> --- <a href="#_Any">X</a> </dd>
-					</dl>
-				</dd>
-		</dl>
+	<td class=stack>
+		コンパイル時<br>
+		<blockquote>
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		コンパイルにより生成されたコードの実行時<br>
+		<blockquote>
+			親スレッド： <a href="#_Any">X</a> --- <br>
+			子スレッド： --- <a href="#_Any">X</a> 
+		</blockquote>
 	</td>
 </tr>
 <tr>
@@ -8856,10 +9455,11 @@ DS:-----------------------
 <tr>
 	<th class=boldLabel>機能</th>
 	<td class=note>
-		ワード '<a href="#left_bracket">[</a>' の複数スレッド版です。
-		ワード '[[' を対を成し、並列処理ブロックを構成します。
-		搭載コア数と同じ数のスレッドを起動し、
-		そのスレッド上で並列処理ブロックを実行します。
+		ワード <a href="#left_bracket">[</a> の複数スレッド版です。
+		ワード <a href="#double_right_bracket">]]</a> を対を成し、
+		複数のスレッドで実行される並列処理ブロックを構成します。
+		生成するスレッドの数は、実行している計算機に搭載されている
+		CPU のコア数と同数となります。
 	</td>
 </tr>
 <tr>
@@ -9014,26 +9614,20 @@ DS:-----------------------
 </tr>
 <tr>
 	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		<dl>
-			<dt>コンパイル時</dt>
-				<dd>
-				RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a>
-				</dd>
-			<dt>コンパイルにより生成されたコードの実行時</dt>
-				<dd>
-					<dl>
-						<dt>親スレッド</dt>
-					 		<dd> <a href="#_List">&Lscr;</a> --- </dd>
-						<dt>子スレッド</dt>
-							<dd>
-								--- <a href="#_Any">Xi</a><br>
-								注： i 番目のスレッドには、
-								&Lscr; の i 番目の要素が渡されます。
-							</dd>
-					</dl>
-				</dd>
-		</dl>
+	<td class=note><br>
+		<b>コンパイル時</b><br>
+		<blockquote style="text-indent:0rem">
+			RS: --- <a href="#_NewWord">&nu;</a> <a href="#_Theta">&theta;</a><br>
+			SS: --- <a href="#_CB">&kappa;</a>
+		</blockquote>
+		<b>コンパイルにより生成されたコードの実行時</b>
+		<blockquote style="text-indent:0rem">
+			親スレッド： <a href="#_List">&Lscr;</a> --- <br>
+			子スレッド： --- <a href="#_Any">Xi</a><br>
+			<font size=-1><b>
+			注： i 番目のスレッドには &Lscr; の i 番目の要素が渡されます。
+			</b></font>
+		</blockquote>
 	</td>
 </tr>
 <tr>
@@ -9042,19 +9636,21 @@ DS:-----------------------
 		ワード <a href="#double_right_brackets">]]</a> と対を成し、
 		並列処理ブロックを構成します。
 		ワード <a href="#double_left_brackets">[[</a> と動作は殆ど同じですが、
-		本ワード実行時に TOS にあるデータを、
-		すべての子スレッドの実行 VM のスタックにプッシュする部分が異なります。
-
+		本ワード実行時に TOS にあるリストの各要素を、
+		生成する子スレッドのスタックにプッシュする部分が異なります。
+		<p>
 		同様のワード <a href="#ll_brackets_arrow">[[-&gt;</a> では、
-		スタックの初期値として用いられる値は、
-		親スレッドの TOS の値でした。
+		スタックの初期値として用いられる値は、親スレッドの TOS の値でした。
 		そのため、全ての子スレッドのスタックの初期値は全て同一でした。
 		しかし、本ワードでは、親スレッドの TOS にあるリストの要素が
-		初期値として用いられますので、
-		各子スレッドのスタックの初期値はそれぞれ異なることとなります。
-		つまり、本ワードを用いることにより、
+		生成されるスレッドのスタックに順次積まれますので、
+		各子スレッドのスタックの初期値はそれぞれ異なる状態となります。
+		</p>
+		<p>
+		本ワードを用いることにより、
 		子スレッドのスタックをそれぞれ異なる値で初期化し、
-		そた状態で子スレッドを開始できます。	
+		その状態で各子スレッドを開始できます。	
+		</p>
 	</td>
 </tr>
 <tr>
@@ -9065,23 +9661,15 @@ DS:-----------------------
 		1 〜 4 までの値を用いています。
 		<div class=example>
 			<code>
-				&gt; <u> 4 set-num-of-threads </u><br>
-				&nbsp; ok.<br>
 				&gt; <u> ( 1 2 3 4 ) </u><br>
 				&nbsp; ok.<br>
-				&gt; <u> [[=> () "INITIAL-TOS is " @append swap @append >parent ]] </u>
+				&gt; <u> [[=> "INITIAL-TOS is " . .cr ]] </u>
 				<br>
-				&nbsp; ok.<br>
-				&gt; child&gt; . <br>
-				( INITIAL-TOS is  1 ) ok. <br>
-				&gt; child&gt; . <br>
-				( INITIAL-TOS is  2 ) ok. <br>
-				&gt; child&gt; . <br>
-				( INITIAL-TOS is  3 ) ok. <br>
-				&gt; child&gt; . <br>
-				( INITIAL-TOS is  4 ) ok. <br>
-				&gt; child&gt; . <br>
-				(EOC) ok. <br>
+				&nbsp; INITIAL-TOS is  1 <br>
+				&nbsp; INITIAL-TOS is  2 <br>
+				&nbsp; INITIAL-TOS is  3 <br>
+				&nbsp; INITIAL-TOS is  4 <br>
+				&nbsp; ok. <br>
 			</code>
 		</div>
 	</td>
@@ -9091,9 +9679,7 @@ DS:-----------------------
 	<td class=note>
 		コンパイル時にはエラーは発生しませんが、
 		生成されたコードの実行時には、
-		TOS がリストでなかったり、
-		リストであってもその要素が子スレッドの実行数よりも少ない場合は
-		エラーとなります。
+		TOS がリストでなかった場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -9137,6 +9723,227 @@ DS:-----------------------
 </div>
 
 <div class=chunk>
+<!-- ============================== ]= ============================== -->
+<h3 class=wordHeader id=right_bracket_context>]=</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Context">Q</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#right_bracket">]</a> と同様に、
+		ワード <a href="#left_bracket">[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#right_bracket">]</a> と異なる点は、
+		子スレッドのコンテキストを親スレッドのスタックに積むところです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== ]=&gt; ============================== -->
+<h3 class=wordHeader id=right_bracket_context_connect>]=&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Context">Q</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#right_bracket">]</a> と同様に、
+		ワード <a href="#left_bracket">[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#right_bracket">]</a> と異なる点は、
+		子スレッドのコンテキストを親スレッドのスタックに積む点です。
+		さらに本ワードでは、子スレッドの標準出力パイプを、
+		親スレッドの標準入力パイプに接続します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= ]=&gt;&gt; ========================= -->
+<h3 class=wordHeader id=right_bracket_context_channel>]=&gt;&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Context">Q</a> <a href="#_Channel">Y</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#right_bracket">]</a> と同様に、
+		ワード <a href="#left_bracket">[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#right_bracket">]</a> と異なる点は、
+		子スレッドのコンテキストならびに
+		子スレッドのデフォルト出力要パイプのチャネルを
+		親スレッドのスタックに積む点です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== ]&gt; ============================== -->
+<h3 class=wordHeader id=right_bracket_connect>]&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- 
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#right_bracket">]</a> と同様に、
+		ワード <a href="#left_bracket">[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#right_bracket">]</a> と異なる点は、
+		生成した子スレッドのデフォルトの出力パイプは、
+		親スレッドのデフォルトの入力パイプに接続されるところです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= ]&gt;&gt; ========================= -->
+<h3 class=wordHeader id=right_bracket_channel>]&gt;&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Channel">Y</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#right_bracket">]</a> と同様に、
+		ワード <a href="#left_bracket">[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#right_bracket">]</a> と異なる点は、
+		生成した子スレッドのデフォルトの出力パイプのチャネルを
+		親スレッドのスタックに積む点です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== ]] ============================== -->
 <h3 class=wordHeader id=double_right_brackets>]]</h3>
 <table>
@@ -9162,6 +9969,230 @@ DS:-----------------------
 	<th class=boldLabel>使用例</th>
 	<td class=note>
 		使用例はワード <a href="#double_left_brackets">[[</a> の例を参照して下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== ]]= ============================== -->
+<h3 class=wordHeader id=double_right_brackets_context>]]=</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> ---  <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Context">Q</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_right_brackets">]]</a> と同様に、
+		ワード '[[' と対を成し、並列処理ブロックを形成します。
+		ワード <a href="#double_right_brackets">]]</a> と異なる点は、
+		子スレッドのコンテキストを親スレッドのスタックに積むところです。
+		<p>
+		この並列処理ブロックは、デフォルトでは搭載しているコア数と
+		同数のスレッド数で実行されます。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== ]]=&gt; ============================== -->
+<h3 class=wordHeader id=double_right_brackets_context_connect>]]=&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Context">Q</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_right_brackets">]]</a> と同様に、
+		ワード <a href="#double_left_brackets">[[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#double_right_brackets">]]</a> と異なる点は、
+		子スレッドのコンテキストを親スレッドのスタックに積む点です。
+		さらに本ワードでは、子スレッドの標準出力パイプを、
+		親スレッドの標準入力パイプに接続します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= ]]=&gt;&gt; ========================= -->
+<h3 class=wordHeader id=double_right_brackets_context_channel>]]=&gt;&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Context">Q</a> <a href="#_Channel">Y</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_right_brackets">]]</a> と同様に、
+		ワード <a href="#double_left_brackets">[[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#double_right_brackets">]]</a> と異なる点は、
+		子スレッドのコンテキストならびに
+		子スレッドのデフォルト出力要パイプのチャネルを
+		親スレッドのスタックに積む点です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ============================== ]]&gt; ============================== -->
+<h3 class=wordHeader id=double_right_brackets_connect>]]&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- 
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_right_brackets">]]</a> と同様に、
+		ワード <a href="#double_left_brackets">[[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#double_right_brackets">]]</a> と異なる点は、
+		生成した子スレッドのデフォルトの出力パイプは、
+		親スレッドのデフォルトの入力パイプに接続されるところです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+	リターンスタック上に想定されたデータがプッシュされていない場合は
+	エラーとなります。	
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
+<!-- ========================= ]]&gt;&gt; ========================= -->
+<h3 class=wordHeader id=double_right_brackets_channel>]]&gt;&gt;</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>即時実行レベル 1 </td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		RS: <a href="#_Theta">&theta;</a> <a href="#_NewWord">&nu;</a> --- <br>
+		<br>
+		実行時：<br>
+		--- <a href="#_Channel">Y</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#double_right_brackets">]]</a> と同様に、
+		ワード <a href="#double_left_brackets">[[</a> 等と
+		対を成し、並列処理ブロックを形成します。
+		ワード <a href="#double_right_brackets">]]</a> と異なる点は、
+		生成した子スレッドのデフォルトの出力パイプのチャネルを
+		親スレッドのスタックに積む点です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		ありません。
 	</td>
 </tr>
 <tr>
@@ -10383,7 +11414,7 @@ DS:-----------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -10739,7 +11770,7 @@ DS:-----------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -10886,7 +11917,7 @@ DS:------------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -10919,53 +11950,6 @@ DS:------------------------
 </table>
 </div>
 <div class=chunk> 
-
-<div class=chunk> 
-<!-- ============================== big-float? ============================== -->
-<h3 class=wordHeader id=is_big-float>big-float?</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		<a href="#_Any">X</a> --- <a href="#_Bool">B</a>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		TOS より値を取り出し、その値が big-float である場合には true を
-		さもなければ false をスタックに積みます。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		次の例では、局所変数 x に格納されている値が
-		big-float であるか否かを調べています。<br>
-		<br>
-		<div class=example>
-			<code>
-				&gt; <u> `test : `x local `x , big-float? . ; </u><br>
-				&nbsp; ok.<br>
-				&gt; <u> 123 test </u><br>
-				&nbsp; false ok.
-			</code>
-		</div>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		スタックが空の場合はエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
 
 <div class=chunk> 
 <!-- ============================== big-int? ============================== -->
@@ -11456,40 +12440,6 @@ DS:--------------------
 </table>
 </div>
  
-<div class=chunk>
-<!-- ============================== child&gt; ============================== -->
-<h3 class=wordHeader id=from_child>child&gt;</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note> --- <a href="#_Any">X</a></td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		子スレッドからの通信チャネル（from-child チャネル）から
-		値をひとつ受け取り、それをスタックに積みます。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		ありません。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		子スレッドからの通信チャネルが存在しない場合はエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
 <div class=chunk>
 <!-- ============================== clear ============================== -->
 <h3 class=wordHeader id=clear>clear</h3>
@@ -12229,7 +13179,7 @@ inv(5)= 0.200000
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -12530,7 +13480,7 @@ inv(5)= 0.200000
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -13437,7 +14387,7 @@ the word 'std:sq' is:
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		ワード <a href="#to_child">&gt;child</a> の例を参照して下さい。
+		使用例はありません。
 	</td>
 </tr>
 <tr>
@@ -13759,9 +14709,7 @@ the word 'std:sq' is:
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a>
-		---
-		<a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -15941,6 +16889,47 @@ DS:-----------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== join ============================== -->
+<h3 class=wordHeader id=join>join</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		{ <a href="#_Context">Q</a>
+		| <a href="#_Array">A</a>
+		| <a href="#_List">&Lscr;</a>
+		| <a href="#_KV">Z</a> } ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるコンテキストまたは
+		コンテナに格納されているコンテキストで実行されている
+		（全ての）スレッドの終了を待ちます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が想定されている型の値でなかったり、
+		コンテナにコンテキスト以外の値が格納されている場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=sphinxed-chunk> 
 <!-- ============================== last ============================== -->
 <h3 class=wordHeader id=last>last</h3>
@@ -16408,7 +17397,7 @@ DS:-----------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -16450,7 +17439,7 @@ DS:-----------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -17943,40 +18932,6 @@ TOS| alpha |
 </table>
 </div>
 
-<div class=chunk>
-<!-- ============================== parent&gt; ============================== -->
-<h3 class=wordHeader id=from_parent>parent&gt;</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note> --- <a href="#_Any">X</a></td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		親スレッドからの通信チャネル（from-parent チャネル）から
-		値をひとつ受け取り、それをスタックに積みます。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		ワード <a href="#to_child">&gt;child</a> の例を参照して下さい。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		親スレッドからの通信チャネルが存在しない場合はエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
 <!-- ============================== pi ============================== -->
 <div class=chunk>
 <h3 class=wordHeader id=pi>pi</h3>
@@ -18247,7 +19202,7 @@ DS:------------------------
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		ワード <a href="#to_big-int">&gt;INT</a> の使用例を見て下さい。
+		ワード <a href="#to_big-int">&gt;big-int</a> の使用例を見て下さい。
 	</td>
 </tr>
 <tr>
@@ -18295,6 +19250,19 @@ DS:------------------------
 		このワードの評価対象となります。
 		例えば、ローカル変数 x に 10 が代入されている場合、
 		( "score is %d\n" x ) は ( "score is %d\n" 10 ) として評価されます。
+		</p>
+		<p>
+		本ワードは boost::format を用いて実装されているため、
+		2 番目以降の要素の型が分からない場合は、
+		書式指定部分に %1% などを用いる事ができます。
+		パーセント記号の間の数値は書式指定される値の順序を表します。
+		( "a=%1% b=%2% c=%3%" "one" 222 ( third-is-a-list ) ) printf は、
+		a=one b=22 c=( third-is-a-list ) と出力します。
+		引数の順序を指定する本形式では、任意の位置で利用できるため、
+		( "%1% %2%,%1% %3%" 'NO' 'PAIN' 'GAIN' ) printf は
+		NO PAIN, NO GAIN と出力します。
+		なお、この方法は上で示した C 言語の printf の書式指定と
+		同時に使用することはできません。
 		</p>
 	</td>
 </tr>
@@ -18417,6 +19385,50 @@ DS:------------------------
 </table>
 </div>
 
+<div class=chunk>
+<!-- ============================== putc ============================== -->
+<h3 class=wordHeader id=putc>putc</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Integer">K</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS に格納されている値を文字コードとみなし、
+		該当する文字を標準出力へ出力します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、TOS にある 65 という値を文字に変換し
+		（ASCII コードで 65 は A という文字）、標準出力へ出力します。<br>
+		<br>
+		<div class=example>
+			<code>
+				&gt; <u> 65 putc </u><br>
+				&nbsp; A ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS に格納されている値が int の範囲に収まらない場合は、
+		エラーとなります。
+	</td>
+</tr>
+</table>
+</div>
 
 <div class=chunk>
 <!-- ============================== putf ============================== -->
@@ -20398,9 +21410,7 @@ user:WordA
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a>
-		---
-		<a href="#_DoubleOrBigFloat">E</a></td>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a></td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>
@@ -20555,6 +21565,43 @@ user:WordA
 	<th class=boldLabel>エラー</th>
 	<td class=note>
 		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ============================== sleep ============================== -->
+<h3 class=wordHeader id=sleep>sleep</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Int">I</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS より整数を取り出し、その値の秒数だけスリープします。
+		負の値が与えられた場合は、0 秒のスリープとなります。
+		なおスリープするのは本ワードを実行しているスレッドのみです。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、TOS の値が整数でない場合はエラーとなります。
 	</td>
 </tr>
 </table>
@@ -20948,7 +21995,7 @@ DS:---------------------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -21587,7 +22634,7 @@ DS:---------------------------------
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_Number">N</a> --- <a href="#_DoubleOrBigFloat">E</a>
+		<a href="#_Number">N</a> --- <a href="#_FloatOrDoubleOrBigInt">E</a>
 	</td>
 </tr>
 <tr>
@@ -22973,6 +24020,50 @@ the word '' is:
 </div>
  
 <div class=chunk> 
+<!-- ============================== word? ============================== -->
+<h3 class=wordHeader id=is_word>word?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Any">X</a> --- <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS より値を取り出し、その値がワードであるか否かを調べます。
+		ワードであった場合は true を、
+		そうでない場合は false をスタックに積みます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、"Solvalou" という文字列がワードであるか否かを調べています。
+		文字列はワードではないので、false という値が出力されます：
+		<div class=example>
+			<code>
+				&gt; <u> "Solvalou" word? . </u><br>
+				&nbsp; false ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空の場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
 <!-- ========================= worded-docol-caller ========================= -->
 <h3 class=wordHeader id=worded-docol-caller>worded-docol-caller</h3>
 <table>
@@ -23206,12 +24297,12 @@ hello
 <table>
 <tr>
 	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-	<td class=note>即時実行レベル 1 </td>
+	<td class=level>標準実行レベル</td>
+	<td class=level>即時実行レベル 1 </td>
 </tr>
 <tr>
 	<th class=boldLabel>スタックの変化</th>
-	<td class=note>  </td>
+	<td class=stack>  </td>
 </tr>
 <tr>
 	<th class=boldLabel>機能</th>

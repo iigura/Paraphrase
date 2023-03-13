@@ -4,6 +4,9 @@
 
 #ifdef USE_NOEXCEPT
 	#define NOEXCEPT noexcept
+	#ifdef _WIN32
+		#pragma warning(disable : 26495)
+	#endif
 #else
 	#define NOEXCEPT
 #endif

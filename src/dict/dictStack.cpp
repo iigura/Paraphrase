@@ -93,6 +93,15 @@ void InitDict_Stack() {
 		NEXT;
 	}));
 
+	// equivalent to 'full-clone swap drop'.
+	Install(new Word("create-working-value",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue tos=Pop(inContext.DS);
+		TypedValue tvFullClone=FullClone(tos);
+		inContext.DS.emplace_back(tvFullClone);
+		NEXT;
+	}));
+
 	Install(new Word("swap",WORD_FUNC {
 		if(inContext.DS.size()<2) {
 			return inContext.Error(NoParamErrorID::DsAtLeast2);

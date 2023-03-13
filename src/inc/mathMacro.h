@@ -25,6 +25,16 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 #define IS_EQ(OP)	(#OP[0]=='=' && #OP[1]=='=' && #OP[2]=='\0')
 #define IS_NE(OP)	(#OP[0]=='!' && #OP[1]=='=' && #OP[2]=='\0')
 
+#define SetResultFromBF100(outDest,inX) do { \
+	if(-FLT_MAX<=inX && inX<=FLT_MAX) { \
+		outDest=TypedValue((float)inX); \
+	} else if(-DBL_MAX<=inX && inX<=DBL_MAX) { \
+		outDest=TypedValue((double)inX); \
+	} else { \
+		outDest=TypedValue((BigInt)inX); \
+	} \
+} while(0)
+
 // c=a OP b
 // MathOp(c,a,OP,b);
 #define MathOp(outDest,inSrc1,OP,inSrc2) do { \
@@ -49,9 +59,6 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 		case TypeCombinationForMathOP::IntDouble: \
 			outDest.Set((double)inSrc1.intValue OP inSrc2.doubleValue); \
 			break; \
-		case TypeCombinationForMathOP::IntBigFloat: \
-			outDest=TypedValue(inSrc1.intValue OP *(inSrc2.bigFloatPtr)); \
-			break; \
 		case TypeCombinationForMathOP::LongInt: \
 			outDest=TypedValue(inSrc1.longValue OP (long)inSrc2.intValue); \
 			break; \
@@ -67,9 +74,6 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 		case TypeCombinationForMathOP::LongDouble: \
 			outDest.Set((double)inSrc1.longValue OP inSrc2.doubleValue); \
 			break; \
-		case TypeCombinationForMathOP::LongBigFloat: \
-			outDest=TypedValue(inSrc1.longValue OP *(inSrc2.bigFloatPtr)); \
-			break; \
 		case TypeCombinationForMathOP::BigIntInt: \
 			outDest=TypedValue(*(inSrc1.bigIntPtr) OP inSrc2.intValue); \
 			break; \
@@ -80,16 +84,11 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 			outDest=TypedValue(*(inSrc1.bigIntPtr) OP *(inSrc2.bigIntPtr)); \
 			break; \
 		case TypeCombinationForMathOP::BigIntFloat: \
-			outDest=TypedValue(BigFloat(*(inSrc1.bigIntPtr)) \
-								OP BigFloat(inSrc2.floatValue)); \
-			break; \
-		case TypeCombinationForMathOP::BigIntDouble: \
-			outDest=TypedValue(BigFloat(*(inSrc1.bigIntPtr)) \
-								OP BigFloat(inSrc2.doubleValue)); \
-			break; \
-		case TypeCombinationForMathOP::BigIntBigFloat: \
-			outDest=TypedValue(BigFloat(*(inSrc1.bigIntPtr)) \
-								OP *(inSrc2.bigFloatPtr)); \
+			{ \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=BF100(*(inSrc1.bigIntPtr)) OP inSrc2.floatValue; \
+				SetResultFromBF100(outDest,tmp); \
+			} \
 			break; \
 		case TypeCombinationForMathOP::FloatInt: \
 			outDest.Set(inSrc1.floatValue OP (float)inSrc2.intValue); \
@@ -98,18 +97,17 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 			outDest.Set(inSrc1.floatValue OP (float)inSrc2.longValue); \
 			break; \
 		case TypeCombinationForMathOP::FloatBigInt: \
-			outDest=TypedValue(BigFloat(inSrc1.floatValue) \
-								OP BigFloat(*(inSrc2.bigIntPtr))); \
+			{ \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=inSrc1.floatValue OP BF100(*(inSrc2.bigIntPtr)); \
+				SetResultFromBF100(outDest,tmp); \
+			}\
 			break; \
 		case TypeCombinationForMathOP::FloatFloat: \
 			outDest.Set(inSrc1.floatValue OP inSrc2.floatValue); \
 			break; \
 		case TypeCombinationForMathOP::FloatDouble: \
 			outDest.Set((double)inSrc1.floatValue OP inSrc2.doubleValue); \
-			break; \
-		case TypeCombinationForMathOP::FloatBigFloat: \
-			outDest=TypedValue(BigFloat(inSrc1.floatValue) \
-								OP *(inSrc2.bigFloatPtr)); \
 			break; \
 		case TypeCombinationForMathOP::DoubleInt: \
 			outDest.Set(inSrc1.doubleValue OP (double)inSrc2.intValue); \
@@ -118,37 +116,17 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 			outDest.Set(inSrc1.doubleValue OP (double)inSrc2.longValue); \
 			break; \
 		case TypeCombinationForMathOP::DoubleBigInt: \
-			outDest=TypedValue(inSrc1.doubleValue \
-								OP BigFloat(*(inSrc2.bigFloatPtr))); \
+			{ \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=inSrc1.doubleValue OP BF100(*(inSrc2.bigIntPtr)); \
+				SetResultFromBF100(outDest,tmp); \
+			} \
 			break; \
 		case TypeCombinationForMathOP::DoubleFloat: \
 			outDest.Set(inSrc1.doubleValue OP (double)inSrc2.floatValue); \
 			break; \
 		case TypeCombinationForMathOP::DoubleDouble: \
 			outDest.Set(inSrc1.doubleValue OP inSrc2.doubleValue); \
-			break; \
-		case TypeCombinationForMathOP::DoubleBigFloat: \
-			outDest=TypedValue(inSrc1.doubleValue \
-								OP *(inSrc2.bigFloatPtr)); \
-			break; \
-		case TypeCombinationForMathOP::BigFloatInt: \
-			outDest=TypedValue(*(inSrc1.bigFloatPtr) OP inSrc2.intValue); \
-			break; \
-		case TypeCombinationForMathOP::BigFloatLong: \
-			outDest=TypedValue(*(inSrc1.bigFloatPtr) OP inSrc2.longValue); \
-			break; \
-		case TypeCombinationForMathOP::BigFloatBigInt: \
-			outDest=TypedValue(*(inSrc1.bigFloatPtr) \
-								OP BigFloat(*(inSrc2.bigIntPtr))); \
-			break; \
-		case TypeCombinationForMathOP::BigFloatFloat: \
-			outDest=TypedValue(*(inSrc1.bigFloatPtr) OP inSrc2.floatValue); \
-			break; \
-		case TypeCombinationForMathOP::BigFloatDouble: \
-			outDest=TypedValue(*(inSrc1.bigFloatPtr) OP inSrc2.doubleValue); \
-			break; \
-		case TypeCombinationForMathOP::BigFloatBigFloat: \
-			outDest=TypedValue(*(inSrc1.bigFloatPtr) OP *(inSrc2.bigFloatPtr)); \
 			break; \
 		default: \
 			fprintf(stderr,"SYSTEM ERROR\n"); \
@@ -189,11 +167,6 @@ extern BigInt G_BI_DBL_MAX, G_BI_MINUS_DBL_MAX;
 						goto DIVIDE_BY_ZERO_AssignOpToSecond; \
 					} \
 					break; \
-				case DataType::BigFloat: \
-					if(*(inTV.bigFloatPtr)==0.0) { \
-						goto DIVIDE_BY_ZERO_AssignOpToSecond; \
-					} \
-					break; \
 				default: \
 				 	return inContext.Error(InvalidTypeErrorID::TosNumber,inTV); \
 DIVIDE_BY_ZERO_AssignOpToSecond: \
@@ -224,11 +197,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.doubleValue=(double)inTarget.intValue OP inTV.doubleValue; \
 				inTarget.dataType=DataType::Double; \
 				break; \
-			case TypeCombinationForMathOP::IntBigFloat: \
-				inTarget.bigFloatPtr \
-					=new BigFloat(inTarget.intValue OP *inTV.bigFloatPtr); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
 			case TypeCombinationForMathOP::LongInt: \
 				inTarget.longValue=inTarget.longValue OP (long)inTV.intValue; \
 				break; \
@@ -247,11 +215,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.doubleValue=(double)inTarget.longValue OP inTV.doubleValue; \
 				inTarget.dataType=DataType::Double; \
 				break; \
-			case TypeCombinationForMathOP::LongBigFloat: \
-				inTarget.bigFloatPtr \
-					=new BigFloat(inTarget.longValue OP *inTV.bigFloatPtr); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
 			case TypeCombinationForMathOP::BigIntInt: \
 				*inTarget.bigIntPtr = *inTarget.bigIntPtr OP inTV.intValue; \
 				break; \
@@ -262,28 +225,16 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				*inTarget.bigIntPtr = *inTarget.bigIntPtr OP *inTV.bigIntPtr; \
 				break; \
 			case TypeCombinationForMathOP::BigIntFloat: { \
-					BigFloat *bigFloat=new BigFloat(*inTarget.bigIntPtr); \
-					*bigFloat=*bigFloat OP inTV.floatValue; \
-					delete(inTarget.bigIntPtr); \
-					inTarget.bigFloatPtr=bigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=BF100(*(inTarget.bigIntPtr)) OP inTV.floatValue; \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
-				inTarget.dataType=DataType::BigFloat; \
 				break; \
 			case TypeCombinationForMathOP::BigIntDouble: { \
-					BigFloat *bigFloat=new BigFloat(*inTarget.bigIntPtr); \
-					*bigFloat=*bigFloat OP inTV.doubleValue; \
-					delete(inTarget.bigIntPtr); \
-					inTarget.bigFloatPtr=bigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=BF100(*(inTarget.bigIntPtr)) OP inTV.doubleValue; \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
-			case TypeCombinationForMathOP::BigIntBigFloat: { \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=BigFloat(*inTarget.bigIntPtr) OP *inTV.bigFloatPtr; \
-					delete(inTarget.bigIntPtr); \
-					inTarget.bigFloatPtr=bigFloat; \
-				} \
-				inTarget.dataType=DataType::BigFloat; \
 				break; \
 			case TypeCombinationForMathOP::FloatInt: \
 				inTarget.floatValue=inTarget.floatValue OP (float)inTV.intValue; \
@@ -292,11 +243,10 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.floatValue=inTarget.floatValue OP (float)inTV.longValue; \
 				break; \
 			case TypeCombinationForMathOP::FloatBigInt: { \
-					BigFloat *bigFloat=new BigFloat(*inTV.bigIntPtr); \
-					*bigFloat=inTarget.floatValue OP *bigFloat; \
-					inTarget.bigFloatPtr=bigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=inTarget.floatValue OP BF100(*(inTV.bigIntPtr)); \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
-				inTarget.dataType=DataType::BigFloat; \
 				break; \
 			case TypeCombinationForMathOP::FloatFloat: \
 				inTarget.floatValue=inTarget.floatValue OP inTV.floatValue; \
@@ -305,13 +255,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.doubleValue=(double)inTarget.floatValue OP inTV.doubleValue; \
 				inTarget.dataType=DataType::Double; \
 				break; \
-			case TypeCombinationForMathOP::FloatBigFloat: { \
-					BigFloat *bigFloat=new BigFloat(*inTV.bigIntPtr); \
-					*bigFloat=inTarget.floatValue OP *bigFloat; \
-					inTarget.bigFloatPtr=bigFloat; \
-				} \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
 			case TypeCombinationForMathOP::DoubleInt: \
 				inTarget.doubleValue=inTarget.doubleValue OP (double)inTV.intValue; \
 				break; \
@@ -319,45 +262,16 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.doubleValue=inTarget.doubleValue OP (double)inTV.longValue; \
 				break; \
 			case TypeCombinationForMathOP::DoubleBigInt: { \
-					BigFloat *bigFloat=new BigFloat(*inTV.bigIntPtr); \
-					*bigFloat=inTarget.doubleValue OP *bigFloat; \
-					inTarget.bigFloatPtr=bigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=inTarget.doubleValue OP BF100(*(inTV.bigIntPtr)); \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
-				inTarget.dataType=DataType::BigFloat; \
 				break; \
 			case TypeCombinationForMathOP::DoubleFloat: \
 				inTarget.doubleValue=inTarget.doubleValue OP (double)inTV.floatValue; \
 				break; \
 			case TypeCombinationForMathOP::DoubleDouble: \
 				inTarget.doubleValue=inTarget.doubleValue OP inTV.doubleValue; \
-				break; \
-			case TypeCombinationForMathOP::DoubleBigFloat: \
-				inTarget.bigFloatPtr \
-					=new BigFloat(inTarget.doubleValue OP *inTV.bigFloatPtr); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
-			case TypeCombinationForMathOP::BigFloatInt: \
-				*inTarget.bigFloatPtr \
-					= *inTarget.bigFloatPtr OP BigFloat(inTV.intValue); \
-				break; \
-			case TypeCombinationForMathOP::BigFloatLong: \
-				*inTarget.bigFloatPtr \
-					= *inTarget.bigFloatPtr OP BigFloat(inTV.longValue); \
-				break; \
-			case TypeCombinationForMathOP::BigFloatBigInt: \
-				*inTarget.bigFloatPtr \
-					= *inTarget.bigFloatPtr OP BigFloat(*inTV.bigIntPtr); \
-				break; \
-			case TypeCombinationForMathOP::BigFloatFloat: \
-				*inTarget.bigFloatPtr \
-					= *inTarget.bigFloatPtr OP BigFloat(inTV.floatValue); \
-				break; \
-			case TypeCombinationForMathOP::BigFloatDouble: \
-				*inTarget.bigFloatPtr \
-					=*inTarget.bigFloatPtr OP BigFloat(inTV.doubleValue); \
-				break; \
-			case TypeCombinationForMathOP::BigFloatBigFloat: \
-				*inTarget.bigFloatPtr = *inTarget.bigFloatPtr OP *inTV.bigFloatPtr; \
 				break; \
 			default: \
 				return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
@@ -395,9 +309,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 			case TypeCombinationForMathOP::IntDouble: \
 				inTarget.doubleValue=inTV.intValue OP inTarget.doubleValue; \
 				break; \
-			case TypeCombinationForMathOP::IntBigFloat: \
-				*inTarget.bigFloatPtr=inTV.intValue OP (*inTarget.bigFloatPtr); \
-				break; \
 			case TypeCombinationForMathOP::LongInt: \
 				inTarget.longValue=inTV.longValue OP inTarget.intValue; \
 				inTarget.dataType=DataType::Long; \
@@ -414,9 +325,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 			case TypeCombinationForMathOP::LongDouble: \
 				inTarget.doubleValue=(double)inTV.longValue OP inTarget.doubleValue; \
 				break; \
-			case TypeCombinationForMathOP::LongBigFloat: \
-				*inTarget.bigFloatPtr=inTV.longValue OP (*inTarget.bigFloatPtr); \
-				break; \
 			case TypeCombinationForMathOP::BigIntInt: \
 				inTarget.bigIntPtr=new BigInt(*inTV.bigIntPtr OP inTarget.intValue); \
 				inTarget.dataType=DataType::BigInt; \
@@ -429,23 +337,15 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				*inTarget.bigIntPtr=(*inTV.bigIntPtr) OP (*inTarget.bigIntPtr); \
 				break; \
 			case TypeCombinationForMathOP::BigIntFloat: { \
-					BigFloat *bigFloat=new BigFloat(*inTV.bigIntPtr); \
-					inTarget.bigFloatPtr=new BigFloat(*bigFloat OP inTarget.floatValue); \
-					delete(bigFloat); \
-					inTarget.dataType=DataType::BigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=BF100(*inTV.bigIntPtr) OP BF100(inTarget.floatValue); \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
 				break; \
 			case TypeCombinationForMathOP::BigIntDouble: { \
-					BigFloat *bigFloat=new BigFloat(*inTV.bigIntPtr); \
-					inTarget.bigFloatPtr=new BigFloat(*bigFloat OP inTarget.doubleValue); \
-					delete(bigFloat); \
-					inTarget.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			case TypeCombinationForMathOP::BigIntBigFloat: { \
-					BigFloat *bigFloat=new BigFloat(*inTV.bigIntPtr); \
-					*inTarget.bigFloatPtr=(*bigFloat) OP (*inTarget.bigFloatPtr); \
-					delete(bigFloat); \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=BF100(*inTV.bigIntPtr) OP BF100(inTarget.doubleValue); \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
 				break; \
 			case TypeCombinationForMathOP::FloatInt: \
@@ -457,11 +357,9 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.dataType=DataType::Float; \
 				break; \
 			case TypeCombinationForMathOP::FloatBigInt: { \
-					BigFloat *bigFloat=new BigFloat(*inTarget.bigIntPtr); \
-					delete(inTarget.bigIntPtr); \
-					inTarget.bigFloatPtr=new BigFloat(inTV.floatValue OP *bigFloat); \
-					delete(bigFloat); \
-					inTarget.dataType=DataType::BigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=inTV.floatValue OP BF100(*inTarget.bigIntPtr); \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
 				break; \
 			case TypeCombinationForMathOP::FloatFloat: \
@@ -469,9 +367,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				break; \
 			case TypeCombinationForMathOP::FloatDouble: \
 				inTarget.doubleValue=inTV.floatValue OP inTarget.doubleValue; \
-				break; \
-			case TypeCombinationForMathOP::FloatBigFloat: \
-				*inTarget.bigFloatPtr=inTV.floatValue OP (*inTarget.bigFloatPtr); \
 				break; \
 			case TypeCombinationForMathOP::DoubleInt: \
 				inTarget.doubleValue=inTV.doubleValue OP inTarget.intValue; \
@@ -482,11 +377,9 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inTarget.dataType=DataType::Double; \
 				break; \
 			case TypeCombinationForMathOP::DoubleBigInt: { \
-					BigFloat *bigFloat=new BigFloat(*inTarget.bigIntPtr); \
-					delete(inTarget.bigIntPtr); \
-					inTarget.bigFloatPtr=bigFloat; \
-					*inTarget.bigFloatPtr=inTV.doubleValue OP *bigFloat; \
-					inTarget.dataType=DataType::BigFloat; \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=inTV.doubleValue OP BF100(*inTarget.bigIntPtr); \
+					SetResultFromBF100(inTarget,tmp); \
 				} \
 				break; \
 			case TypeCombinationForMathOP::DoubleFloat: \
@@ -495,40 +388,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				break; \
 			case TypeCombinationForMathOP::DoubleDouble: \
 				inTarget.doubleValue=inTV.doubleValue OP inTarget.doubleValue; \
-				break; \
-			case TypeCombinationForMathOP::DoubleBigFloat: \
-				*inTarget.bigFloatPtr=inTV.doubleValue OP *inTarget.bigFloatPtr; \
-				break; \
-			case TypeCombinationForMathOP::BigFloatInt: \
-				inTarget.bigFloatPtr=new BigFloat(*inTV.bigFloatPtr \
-												  OP inTarget.intValue); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
-			case TypeCombinationForMathOP::BigFloatLong: \
-				inTarget.bigFloatPtr=new BigFloat(*inTV.bigFloatPtr \
-												  OP inTarget.longValue); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
-			case TypeCombinationForMathOP::BigFloatBigInt: { \
-					BigFloat *bigFloat=new BigFloat(*inTarget.bigIntPtr); \
-					delete(inTarget.bigIntPtr); \
-					inTarget.bigFloatPtr=bigFloat; \
-					*inTarget.bigFloatPtr=*inTV.bigFloatPtr OP *inTarget.bigFloatPtr; \
-					inTarget.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			case TypeCombinationForMathOP::BigFloatFloat: \
-				inTarget.bigFloatPtr=new BigFloat(*inTV.bigFloatPtr \
-												  OP inTarget.floatValue); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
-			case TypeCombinationForMathOP::BigFloatDouble: \
-				inTarget.bigFloatPtr=new BigFloat(*inTV.bigFloatPtr \
-												  OP inTarget.doubleValue); \
-				inTarget.dataType=DataType::BigFloat; \
-				break; \
-			case TypeCombinationForMathOP::BigFloatBigFloat: \
-				*inTarget.bigFloatPtr=*inTV.bigFloatPtr OP *inTarget.bigFloatPtr; \
 				break; \
 			default: \
 				return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
@@ -568,10 +427,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 			  && inTos.dataType==DataType::BigInt) { \
 		/* bigInt x bigInt -> bigInt */ \
 		inStack.emplace_back(*(inSecond.bigIntPtr) OP *(inTos.bigIntPtr)); \
-	} else if(inSecond.dataType==DataType::BigFloat \
-			  && inTos.dataType==DataType::BigFloat) { \
-		/* bigFloat x bigFloat -> bigFloat */ \
-		inStack.emplace_back(*(inSecond.bigFloatPtr) OP *(inTos.bigFloatPtr)); \
 	} else if(inSecond.dataType==DataType::Int) { \
 		switch(inTos.dataType) { \
 			case DataType::Long:		/* int x long -> long */ \
@@ -585,10 +440,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				break; \
 			case DataType::BigInt: 	/* int x BigInt -> BigInt */ \
 				inStack.emplace_back(BigInt(inSecond.intValue OP *inTos.bigIntPtr)); \
-				break; \
-			case DataType::BigFloat: /* int x BigFloat -> BigFloat */ \
-				inStack.emplace_back( \
-							BigFloat(inSecond.intValue OP *inTos.bigFloatPtr)); \
 				break; \
 			default: goto onError;	\
 		} \
@@ -606,10 +457,6 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 			case DataType::BigInt: 	/* long x bigInt -> bigInt */ \
 				inStack.emplace_back(BigInt(inSecond.longValue OP *inTos.bigIntPtr)); \
 				break; \
-			case DataType::BigFloat:	/* long x bigFloat -> bigFloat */ \
-				inStack.emplace_back( \
-					BigFloat(inSecond.longValue) OP *inTos.bigFloatPtr); \
-				break; \
 			default: goto onError;	\
 		} \
 	} else if(inSecond.dataType==DataType::Float) { \
@@ -625,12 +472,13 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 					(double)inSecond.floatValue OP inTos.doubleValue); \
 				break; \
 			case DataType::BigInt: 	/* float x bigInt -> bigFloat */ \
-				inStack.emplace_back( \
-					inSecond.floatValue OP BigFloat(*inTos.bigIntPtr)); \
-				break; \
-			case DataType::BigFloat:	/* float x bigFloat -> bigFloat */ \
-				inStack.emplace_back( \
-					BigFloat(inSecond.floatValue OP *(inTos.bigFloatPtr))); \
+				{ \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=inSecond.floatValue OP BF100(*inTos.bigIntPtr); \
+					TypedValue tv; \
+					SetResultFromBF100(tv,tmp); \
+					inStack.emplace_back(tv); \
+				} \
 				break; \
 			default: goto onError;	\
 		} \
@@ -647,12 +495,13 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 					inSecond.doubleValue OP (double)inTos.floatValue); \
 				break; \
 			case DataType::BigInt: 	/* double x bigInt -> bigFloat */ \
-				inStack.emplace_back( \
-					BigFloat(inSecond.doubleValue) OP BigFloat(*(inTos.bigIntPtr))); \
-				break; \
-			case DataType::BigFloat:	/* double x bigFloat -> bigFloat */ \
-				inStack.emplace_back( \
-					BigFloat(inSecond.doubleValue OP *(inTos.bigFloatPtr))); \
+				{ \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=inSecond.doubleValue OP BF100(*inTos.bigIntPtr); \
+					TypedValue tv; \
+					SetResultFromBF100(tv,tmp); \
+					inStack.emplace_back(tv); \
+				} \
 				break; \
 			default: goto onError;	\
 		} \
@@ -665,40 +514,22 @@ DIVIDE_BY_ZERO_AssignOpToSecond: \
 				inStack.emplace_back(*(inSecond.bigIntPtr) OP inTos.longValue); \
 				break; \
 			case DataType::Float:	/* bigInt x float -> bigFloat */ \
-				inStack.emplace_back( \
-					BigFloat(*(inSecond.bigIntPtr)) OP BigFloat(inTos.floatValue)); \
+				{ \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=BF100(*inSecond.bigIntPtr) OP BF100(inTos.floatValue); \
+					TypedValue tv; \
+					SetResultFromBF100(tv,tmp); \
+					inStack.emplace_back(tv); \
+				} \
 				break; \
 			case DataType::Double:	/* bigInt x double -> bigFloat */ \
-				inStack.emplace_back( \
-					BigFloat(*(inSecond.bigIntPtr)) OP inTos.doubleValue); \
-				break; \
-			case DataType::BigFloat:	/* bigInt x bigFloat -> bigFlaot */ \
-				inStack.emplace_back( \
-					BigFloat(*(inSecond.bigIntPtr)) OP *(inTos.bigFloatPtr)); \
-				break; \
-			default: goto onError;	\
-		} \
-	} else if(inSecond.dataType==DataType::BigFloat) { \
-		switch(inTos.dataType) { \
-			case DataType::Int: 		/* bigFloat x int -> bigFloat */ \
-				inStack.emplace_back( \
-					*(inSecond.bigFloatPtr) OP inTos.intValue); \
-				break; \
-			case DataType::Long: 	/* bigFloat x long -> bigFloat */ \
-				inStack.emplace_back( \
-					*(inSecond.bigFloatPtr) OP inTos.longValue); \
-				break; \
-			case DataType::Float:	/* bigFloat x float -> bigFloat */ \
-				inStack.emplace_back( \
-					*(inSecond.bigFloatPtr) OP inTos.floatValue); \
-				break; \
-			case DataType::Double:	/* bigFloat x double -> bigFloat */ \
-				inStack.emplace_back( \
-					*(inSecond.bigFloatPtr) OP inTos.doubleValue); \
-				break; \
-			case DataType::BigInt:	/* bigFloat x bigInt -> bigFloat */ \
-				inStack.emplace_back( \
-					*(inSecond.bigFloatPtr) OP BigFloat(*(inTos.bigIntPtr))); \
+				{ \
+					typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+					BF100 tmp=BF100(*inSecond.bigIntPtr) OP BF100(inTos.doubleValue); \
+					TypedValue tv; \
+					SetResultFromBF100(tv,tmp); \
+					inStack.emplace_back(tv); \
+				} \
 				break; \
 			default: goto onError;	\
 		} \
@@ -713,12 +544,6 @@ onError: \
 	} \
 } while(0)
 
-// PushFuncResult(inStack, OP, a,b) == push(func(a,b))
-// usage:
-// 	TypedValue tos=Pop(inContext.DS);
-// 	TypedValue second=Pop(inContext.DS);
-// 	PushOutOfOrderFunc(inContext.DS,maxOp,second,tos)
-//
 #define PushFuncResult(inStack,OP,inSecond,inTos) do { \
 	if(inSecond.dataType==inTos.dataType) { \
 		/* same data type */ \
@@ -737,10 +562,6 @@ onError: \
 				break; \
 			case DataType::BigInt: \
 				inStack.emplace_back(OP(*(inSecond.bigIntPtr),*(inTos.bigIntPtr))); \
-				break; \
-			case DataType::BigFloat: \
-				inStack.emplace_back(OP(*(inSecond.bigFloatPtr), \
-										*(inTos.bigFloatPtr))); \
 				break; \
 			default: \
 				inContext.Error(NoParamErrorID::SystemError); \
@@ -765,10 +586,6 @@ onError: \
 					inStack.emplace_back(OP(BigInt(inSecond.intValue), \
 											*(inTos.bigIntPtr))); \
 					break; \
-				case DataType::BigFloat: /* (int,big-float) */ \
-					inStack.emplace_back(OP(BigFloat(inSecond.intValue), \
-											*(inTos.bigFloatPtr))); \
-					break; \
 				default: \
 					inContext.Error(NoParamErrorID::SystemError); \
 			} \
@@ -790,10 +607,6 @@ onError: \
 					inStack.emplace_back(OP(BigInt(inSecond.longValue), \
 											*(inTos.bigIntPtr))); \
 					break; \
-				case DataType::BigFloat: /* (long,big-float) */ \
-					inStack.emplace_back(OP(BigFloat(inSecond.longValue), \
-											*(inTos.bigFloatPtr))); \
-					break; \
 				default: \
 					inContext.Error(NoParamErrorID::SystemError); \
 			} \
@@ -811,13 +624,14 @@ onError: \
 					inStack.emplace_back(OP((double)inSecond.floatValue, \
 											inTos.doubleValue)); \
 					break; \
-				case DataType::BigInt: /* (float,big-int) */ \
-					inStack.emplace_back(OP(BigFloat(inSecond.floatValue), \
-											BigFloat(*(inTos.bigIntPtr)))); \
-					break; \
-				case DataType::BigFloat: /* (float,big-float) */ \
-					inStack.emplace_back(OP(BigFloat(inSecond.floatValue), \
-											*(inTos.bigFloatPtr))); \
+				case DataType::BigInt: /* (float,big-int) */ {\
+						typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+						BF100 tmp=OP(BF100(inSecond.floatValue), \
+									 BF100(*inTos.bigIntPtr)); \
+						TypedValue tv; \
+						SetResultFromBF100(tv,tmp); \
+						inStack.emplace_back(tv); \
+					} \
 					break; \
 				default: \
 					inContext.Error(NoParamErrorID::SystemError); \
@@ -836,13 +650,14 @@ onError: \
 					inStack.emplace_back(OP(inSecond.doubleValue, \
 											(double)inTos.floatValue)); \
 					break; \
-				case DataType::BigInt: /* (double,big-int) */ \
-					inStack.emplace_back(OP(BigFloat(inSecond.doubleValue), \
-											BigFloat(*(inTos.bigIntPtr)))); \
-					break; \
-				case DataType::BigFloat: /* (double,big-float) */ \
-					inStack.emplace_back(OP(BigFloat(inSecond.doubleValue), \
-											*(inTos.bigFloatPtr))); \
+				case DataType::BigInt: /* (double,big-int) */ { \
+						typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+						BF100 tmp=OP(BF100(inSecond.doubleValue), \
+									 BF100(*inTos.bigIntPtr)); \
+						TypedValue tv; \
+						SetResultFromBF100(tv,tmp); \
+						inStack.emplace_back(tv); \
+					} \
 					break; \
 				default: \
 					inContext.Error(NoParamErrorID::SystemError); \
@@ -857,42 +672,23 @@ onError: \
 					inStack.emplace_back(OP(*(inSecond.bigIntPtr), \
 											BigInt(inTos.longValue))); \
 					break; \
-				case DataType::Float: /* (big-int,float) */ \
-					inStack.emplace_back(OP(BigFloat(*(inSecond.bigIntPtr)), \
-											BigFloat(inTos.floatValue))); \
+				case DataType::Float: { /* (big-int,float) */ \
+						typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+						BF100 tmp=OP(BF100(*inSecond.bigIntPtr), \
+									 BF100(inTos.floatValue)); \
+						TypedValue tv; \
+						SetResultFromBF100(tv,tmp); \
+						inStack.emplace_back(tv); \
+					} \
 					break; \
-				case DataType::Double: /* (big-int,double) */ \
-					inStack.emplace_back(OP(BigFloat(*(inSecond.bigIntPtr)), \
-											BigFloat(inTos.doubleValue))); \
-					break; \
-				case DataType::BigFloat: /* (big-int,big-float) */ \
-					inStack.emplace_back(OP(BigFloat(*(inSecond.bigIntPtr)), \
-											*(inTos.bigFloatPtr))); \
-					break; \
-				default: \
-					inContext.Error(NoParamErrorID::SystemError); \
-			} \
-		} else if(inSecond.dataType==DataType::BigFloat) { \
-			switch(inTos.dataType) { \
-				case DataType::Int: /* (big-float,int) */ \
-					inStack.emplace_back(OP(*(inSecond.bigFloatPtr), \
-											BigFloat(inTos.intValue))); \
-					break; \
-				case DataType::Long: /* (big-float,long) */ \
-					inStack.emplace_back(OP(*(inSecond.bigFloatPtr), \
-											BigFloat(inTos.longValue))); \
-					break; \
-				case DataType::Float: /* (big-float,float) */ \
-					inStack.emplace_back(OP(*(inSecond.bigFloatPtr), \
-											BigFloat(inTos.floatValue))); \
-					break; \
-				case DataType::Double: /* (big-float,double) */ \
-					inStack.emplace_back(OP(*(inSecond.bigFloatPtr), \
-											BigFloat(inTos.doubleValue))); \
-					break; \
-				case DataType::BigInt: /* (big-float,big-int) */ \
-					inStack.emplace_back(OP(*(inSecond.bigFloatPtr), \
-											BigFloat(*(inTos.bigIntPtr)))); \
+				case DataType::Double: { /* (big-int,double) */ \
+						typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+						BF100 tmp=OP(BF100(*inSecond.bigIntPtr), \
+									 BF100(inTos.doubleValue)); \
+						TypedValue tv; \
+						SetResultFromBF100(tv,tmp); \
+						inStack.emplace_back(tv); \
+					} \
 					break; \
 				default: \
 					inContext.Error(NoParamErrorID::SystemError); \
@@ -1017,12 +813,6 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 						second.boolValue=((double)second.intValue) \
 											OP (tos.doubleValue); \
 						break; \
-					case DataType::BigFloat: { \
-							BigFloat bf(second.intValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=bf OP *tos.bigFloatPtr; \
-						} \
-						break; \
 					default: goto onError; \
 				} \
 				break; \
@@ -1046,12 +836,6 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 						second.dataType=DataType::Bool; \
 						second.boolValue=(double)second.longValue OP tos.doubleValue; \
 						break; \
-					case DataType::BigFloat: { \
-							BigFloat bf(second.longValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=bf OP *tos.bigFloatPtr; \
-						} \
-						break; \
 					default: goto onError; \
 				} \
 				break; \
@@ -1070,23 +854,19 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 						} \
 						break; \
 					case DataType::Float: { \
-							BigFloat s(*second.bigIntPtr); \
-							BigFloat t(tos.floatValue); \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							BF100 s(*second.bigIntPtr); \
+							BF100 t(tos.floatValue); \
 							second.dataType=DataType::Bool; \
 							second.boolValue=s OP t; \
 						} \
 						break; \
 					case DataType::Double: { \
-							BigFloat s(*second.bigIntPtr); \
-							BigFloat t(tos.doubleValue); \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							BF100 s(*second.bigIntPtr); \
+							BF100 t(tos.doubleValue); \
 							second.dataType=DataType::Bool; \
 							second.boolValue=s OP t; \
-						} \
-						break; \
-					case DataType::BigFloat: { \
-							BigFloat bf(*second.bigIntPtr); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=bf OP *tos.bigFloatPtr; \
 						} \
 						break; \
 					default: goto onError; \
@@ -1104,8 +884,9 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 											OP (double)tos.longValue; \
 						break; \
 					case DataType::BigInt: { \
-							BigFloat s(second.floatValue); \
-							BigFloat t(*tos.bigIntPtr); \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							BF100 s(second.floatValue); \
+							BF100 t(*tos.bigIntPtr); \
 							second.dataType=DataType::Bool; \
 							second.boolValue=s OP t; \
 						} \
@@ -1114,12 +895,6 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 						second.dataType=DataType::Bool; \
 						second.boolValue=(double)second.floatValue \
 											OP tos.doubleValue; \
-						break; \
-					case DataType::BigFloat: { \
-							BigFloat bf(second.floatValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=bf OP *tos.bigFloatPtr; \
-						} \
 						break; \
 					default: goto onError; \
 				} \
@@ -1135,8 +910,9 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 						second.boolValue=second.doubleValue OP (double)tos.longValue; \
 						break; \
 					case DataType::BigInt: { \
-							BigFloat s(second.doubleValue); \
-							BigFloat t(*tos.bigIntPtr); \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							BF100 s(second.doubleValue); \
+							BF100 t(*tos.bigIntPtr); \
 							second.dataType=DataType::Bool; \
 							second.boolValue=s OP t; \
 						} \
@@ -1146,49 +922,7 @@ ENABLE_WARNING_ARRAY_BOUNDS \
 						second.boolValue=second.doubleValue \
 											OP (double)tos.floatValue; \
 						break; \
-					case DataType::BigFloat: { \
-							BigFloat bf(second.doubleValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=bf OP *tos.bigFloatPtr; \
-						} \
-						break; \
 					default: goto onError; \
-				} \
-				break; \
-			case DataType::BigFloat: \
-				switch(tos.dataType) { \
-					case DataType::Int: { \
-							BigFloat bf(tos.intValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=*second.bigFloatPtr OP bf; \
-						} \
-						break; \
-					case DataType::Long: { \
-							BigFloat bf(tos.longValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=*second.bigFloatPtr OP bf; \
-						} \
-						break; \
-					case DataType::BigInt: { \
-							BigFloat bf(*tos.bigIntPtr); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=*second.bigFloatPtr OP bf; \
-						} \
-						break; \
-					case DataType::Float: { \
-							BigFloat bf(tos.floatValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=*second.bigFloatPtr OP bf; \
-						} \
-						break; \
-					case DataType::Double: { \
-							BigFloat bf(tos.doubleValue); \
-							second.dataType=DataType::Bool; \
-							second.boolValue=*second.bigFloatPtr OP bf; \
-						} \
-						break; \
-					default: \
-						return inContext.Error(NoParamErrorID::SystemError); \
 				} \
 				break; \
 			default: goto onError; \
@@ -1238,10 +972,6 @@ onError: \
 						inStack.emplace_back( \
 							(double)inSecond.intValue OP inTos.doubleValue); \
 						break; \
-					case DataType::BigFloat: /* int x bigInt -> bool */ \
-						inStack.emplace_back( \
-							inSecond.intValue OP *(inTos.bigIntPtr)); \
-						break; \
 					default: goto onError; \
 				} \
 				break; \
@@ -1262,10 +992,6 @@ onError: \
 					case DataType::Double: /* long x double -> bool */ \
 						inStack.emplace_back( \
 							(double)inSecond.longValue OP inTos.doubleValue); \
-						break; \
-					case DataType::BigFloat: /* long x bigFloat -> bool */ \
-						inStack.emplace_back( \
-							inSecond.longValue OP *(inTos.bigFloatPtr)); \
 						break; \
 					default: goto onError; \
 				} \
@@ -1401,13 +1127,6 @@ onError: \
 							inContext.Error(NoParamErrorID::SystemError); \
 						} \
 						break; \
-					case DataType::BigFloat: /* bigInt x bigFloat -> bool */ \
-						/* The behavior when bigInt exceeds the range of */ \
-						/* bigFloat is yet to be determined. */ \
-						inStack.emplace_back( \
-							static_cast<BigFloat>(*(inSecond.bigIntPtr)) \
-							OP *(inTos.bigFloatPtr)); \
-						break; \
 					default: goto onError; \
 				} \
 				break; \
@@ -1486,10 +1205,6 @@ onError: \
 						inStack.emplace_back( \
 							inSecond.floatValue OP inTos.doubleValue); \
 						break; \
-					case DataType::BigFloat: /* float x bigFloat -> bool */ \
-						inStack.emplace_back( \
-							inSecond.floatValue OP *(inTos.bigFloatPtr)); \
-						break; \
 					default: goto onError; \
 				} \
 				break; \
@@ -1565,36 +1280,6 @@ onError: \
 					case DataType::Float: /* double x float -> bool */ \
 						inStack.emplace_back( \
 							inSecond.doubleValue OP inTos.floatValue); \
-						break; \
-					case DataType::BigFloat: /* double x bigFloat -> bool */ \
-						inStack.emplace_back( \
-							inSecond.doubleValue OP *(inTos.bigFloatPtr)); \
-						break; \
-					default: goto onError; \
-				} \
-				break; \
-			case DataType::BigFloat: \
-				switch(inTos.dataType) { \
-					case DataType::Int: /* bigFloat x int -> bool */ \
-						inStack.emplace_back( \
-							*(inSecond.bigFloatPtr) OP inTos.intValue); \
-						break; \
-					case DataType::Long: /* bigFloat x long -> bool */ \
-						inStack.emplace_back( \
-							*(inSecond.bigFloatPtr) OP inTos.longValue); \
-						break; \
-					case DataType::BigInt: /* bigFloat x bigInt -> bool */ \
-						inStack.emplace_back( \
-							*(inSecond.bigFloatPtr) OP \
-							static_cast<BigFloat>(*(inTos.bigIntPtr))); \
-						break; \
-					case DataType::Float: /* bigFloat x float -> bool */ \
-						inStack.emplace_back( \
-							*(inSecond.bigFloatPtr) OP inTos.floatValue); \
-						break; \
-					case DataType::Double: /* bigFloat x double -> bool */ \
-						inStack.emplace_back( \
-							*(inSecond.bigFloatPtr) OP inTos.doubleValue); \
 						break; \
 					default: goto onError; \
 				} \
@@ -1694,9 +1379,6 @@ onSuccess: ; \
 			case DataType::Double:	\
 				result=tv1.doubleValue OP tv2.doubleValue; \
 				break; \
-			case DataType::BigFloat: \
-				result=*(tv1.bigFloatPtr) OP *(tv2.bigFloatPtr); \
-				break; \
 			default: \
 				result=false; \
 		} \
@@ -1716,9 +1398,6 @@ onSuccess: ; \
 					case DataType::Double: \
 						result=((double)tv1.intValue) OP tv2.doubleValue; \
 						break; \
-					case DataType::BigFloat: \
-						result=tv1.intValue OP *(tv2.bigFloatPtr); \
-						break; \
 					default: \
 						result=false; \
 				} \
@@ -1729,16 +1408,13 @@ onSuccess: ; \
 						result=tv1.longValue OP ((long)tv2.intValue); \
 						break; \
 					case DataType::BigInt: \
-						result=tv1.longValue OP *(tv2.bigFloatPtr); \
+						result=tv1.longValue OP *(tv2.bigIntPtr); \
 						break; \
 					case DataType::Float: \
 						result=((float)(tv1.longValue)) OP tv2.floatValue; \
 						break; \
 					case DataType::Double: \
 						result=((double)tv1.longValue) OP tv2.doubleValue; \
-						break; \
-					case DataType::BigFloat: \
-						result=tv1.longValue OP *(tv2.bigFloatPtr); \
 						break; \
 					default: \
 						result=false; \
@@ -1750,12 +1426,16 @@ onSuccess: ; \
 						result=*(tv1.bigIntPtr) OP tv2.intValue; break; \
 					case DataType::Long: \
 						result=*(tv1.bigIntPtr) OP tv2.longValue; break; \
-					case DataType::Float: \
-						result=BigFloat(*tv1.bigIntPtr) OP tv2.floatValue; break; \
-					case DataType::Double: \
-						result=BigFloat(*tv1.bigIntPtr) OP tv2.doubleValue; break; \
-					case DataType::BigFloat: \
-						result=BigFloat(*tv1.bigIntPtr) OP *(tv2.bigFloatPtr); break; \
+					case DataType::Float: { \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							result=BF100(*tv1.bigIntPtr) OP tv2.floatValue; \
+						} \
+						break; \
+					case DataType::Double: { \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							result=BF100(*tv1.bigIntPtr) OP tv2.doubleValue; \
+						} \
+						break; \
 					default: result=false; \
 				} \
 				break; \
@@ -1765,12 +1445,13 @@ onSuccess: ; \
 						result=tv1.floatValue OP (float)tv2.intValue; break; \
 					case DataType::Long: \
 						result=tv1.floatValue OP (float)tv2.longValue; break; \
-					case DataType::BigInt: \
-						result=tv1.floatValue OP BigFloat(*(tv2.bigIntPtr)); break; \
+					case DataType::BigInt: { \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							result=tv1.floatValue OP BF100(*tv2.bigIntPtr); \
+						} \
+						break; \
 					case DataType::Double: \
 						result=(double)tv1.floatValue OP tv2.doubleValue; break; \
-					case DataType::BigFloat: \
-						result=tv1.floatValue OP *(tv2.bigFloatPtr); break; \
 					default: result=false; \
 				} \
 				break; \
@@ -1780,25 +1461,13 @@ onSuccess: ; \
 						result=tv1.doubleValue OP (double)tv2.intValue; break; \
 					case DataType::Long: \
 						result=tv1.doubleValue OP (double)tv2.longValue; break; \
-					case DataType::BigInt: \
-						result=tv1.doubleValue OP BigFloat(*(tv2.bigIntPtr)); break; \
+					case DataType::BigInt: { \
+							typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+							result=tv1.doubleValue OP BF100(*tv2.bigIntPtr); \
+						} \
+						break; \
 					case DataType::Float: \
 						result=tv1.doubleValue OP (double)tv2.floatValue; break; \
-					case DataType::BigFloat: \
-						result=tv1.doubleValue OP *(tv2.bigFloatPtr); break; \
-					default: result=false; \
-				} \
-				break; \
-			case DataType::BigFloat: \
-				switch(tv2.dataType) { \
-					case DataType::Int: \
-						result=*(tv1.bigFloatPtr) OP tv2.intValue; break; \
-					case DataType::Long: \
-						result=*(tv1.bigFloatPtr) OP tv2.longValue; break; \
-					case DataType::Float: \
-						result=*(tv1.bigFloatPtr) OP tv2.floatValue; break; \
-					case DataType::Double: \
-						result=*(tv1.bigFloatPtr) OP tv2.doubleValue; break; \
 					default: result=false; \
 				} \
 				break; \
@@ -2126,14 +1795,9 @@ onSuccess: ; \
 	if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); } \
 	TypedValue& tos=ReadTOS(inContext.DS); \
 	if(tos.dataType==DataType::BigInt) { \
-		BigFloat *bigFloat=new BigFloat(); \
-		*bigFloat=FUNC(BigFloat(*tos.bigIntPtr)); \
-		delete(tos.bigIntPtr); \
-		tos.bigFloatPtr=bigFloat; \
-		tos.dataType=DataType::BigFloat; \
-		goto next; \
-	} else if(tos.dataType==DataType::BigFloat) { \
-		*tos.bigFloatPtr=FUNC(*tos.bigFloatPtr); \
+		typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+		BF100 tmp=FUNC(BF100(*tos.bigIntPtr)); \
+		SetResultFromBF100(tos,tmp); \
 		goto next; \
 	} \
 	double result; \
@@ -2155,10 +1819,11 @@ next: \
 	if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); } \
 	TypedValue& tos=ReadTOS(inContext.DS); \
 	if(tos.dataType==DataType::BigInt) { \
-		inContext.DS.emplace_back(FUNC(BigFloat(*tos.bigIntPtr))); \
-		goto next; \
-	} else if(tos.dataType==DataType::BigFloat) { \
-		inContext.DS.emplace_back(FUNC(*tos.bigFloatPtr)); \
+		typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+		BF100 tmp=FUNC(BF100(*tos.bigIntPtr)); \
+		TypedValue tv; \
+		SetResultFromBF100(tv,tmp); \
+		inContext.DS.emplace_back(tv); \
 		goto next; \
 	} \
 	double result; \
@@ -2173,146 +1838,6 @@ next: \
 	inContext.DS.emplace_back(result); \
 next: \
 	NEXT; \
-} while(0)
-
-#define TwoArgFloatingFunc(FUNC) do { \
-	if(inContext.DS.size()<2) { return inContext.Error(NoParamErrorID::DsAtLeast2); } \
-	TypedValue tos=Pop(inContext.DS); \
-	TypedValue& second=ReadTOS(inContext.DS); \
-	if(second.dataType==DataType::Double) { \
-		switch(tos.dataType) { \
-			case DataType::Int: /* double x int -> double */ \
-				second.doubleValue=FUNC(second.doubleValue,(double)tos.intValue); \
-				break; \
-			case DataType::Long: /* double x long -> double */ \
-				second.doubleValue=FUNC(second.doubleValue,(double)tos.longValue); \
-				break; \
-			case DataType::Float: /* double x float -> double */ \
-				second.doubleValue=FUNC(second.doubleValue,(double)tos.floatValue); \
-				break; \
-			case DataType::Double: /* double x double -> dobule */ \
-				second.doubleValue=FUNC(second.doubleValue,tos.doubleValue); \
-				break; \
-			case DataType::BigInt: { /* double x bigInt -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(second.doubleValue), \
-								   BigFloat(*tos.bigIntPtr)); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=BigFloat; \
-				} \
-				break; \
-			case DataType::BigFloat: { /* double x bigFloat -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(second.doubleValue),*tos.bigFloatPtr); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			default: goto onError; \
-		} \
-	} else if(second.dataType==Float) { \
-		switch(tos.dataType) { \
-			case DataType::Int: /* float x int -> float */ \
-				second.floatValue=(float)FUNC((double)second.floatValue, \
-											  (double)tos.intValue); \
-				break; \
-			case DataType::Long: /* float x long -> float*/ \
-				second.floatValue=(float)FUNC((double)second.floatValue, \
-											  (double)tos.longValue); \
-				break; \
-			case DataType::Float: /* float x float -> float */ \
-				second.floatValue=(float)FUNC((double)second.floatValue, \
-											  (double)tos.floatValue); \
-				break; \
-			case DataType::Double: /* float x double -> dobule */ \
-				second.doubleValue=FUNC((double)second.floatValue,tos.doubleValue); \
-				second.dataType=DataType::Double; \
-				break; \
-			case DataType::BigInt: { /* float x bigInt -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(second.floatValue), \
-								   BigFloat(*tos.bigIntPtr)); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			case DataType::BigFloat: { /* float x bigFloat -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(second.floatValue),*tos.bigFloatPtr); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			default: goto onError; \
-		} \
-	} else if(second.dataType==DataType::BigFloat) { \
-		switch(tos.dataType) { \
-			case DataType::Int: /* bigFloat x int -> bigFloat */ \
-				*second.bigFloatPtr=FUNC(*second.bigFloatPtr,BigFloat(tos.intValue)); \
-				break; \
-			case DataType::Long: /* bigFloat x long -> bigFloat */ \
-				*second.bigFloatPtr=FUNC(*second.bigFloatPtr,BigFloat(tos.longValue)); \
-				break; \
-			case DataType::Float: /* bigFloat x float -> bigFloat */ \
-				*second.bigFloatPtr=FUNC(*second.bigFloatPtr, \
-										 BigFloat(tos.floatValue)); \
-				break; \
-			case DataType::Double: /* bigFloat x double -> bigFloat */ \
-				*second.bigFloatPtr=FUNC(*second.bigFloatPtr, \
-										 BigFloat(tos.doubleValue)); \
-				break; \
-			case DataType::BigInt: /* bigFloat x bigInt -> bigFloat */ \
-				*second.bigFloatPtr=FUNC(*second.bigFloatPtr, \
-										 BigFloat(*tos.bigIntPtr)); \
-				break; \
-			case DataType::BigFloat: /* bigFloat x bigFloat -> bigFloat */ \
-				*second.bigFloatPtr=FUNC(*second.bigFloatPtr, *tos.bigFloatPtr); \
-				break; \
-			default: goto onError; \
-		} \
-	} else if(second.dataType==DataType::BigInt) { \
-		switch(tos.dataType) { \
-			case DataType::Int:	/* bigInt x int -> bigInt */ \
-				*second.bigIntPtr=FUNC(*second.bigIntPtr,tos.intValue); \
-				break; \
-			case DataType::Long:	/* bigInt x long -> bigInt */ \
-				*second.bigIntPtr=FUNC(*second.bigIntPtr,tos.longValue); \
-				break; \
-			case DataType::Float: {	/* bigInt x float -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(*second.bigIntPtr), \
-								   BigFloat(tos.floatValue)); \
-					delete(second.bigIntPtr); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			case DataType::Double: {	/* bigInt x double -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(*second.bigIntPtr), \
-								   BigFloat(tos.doubleValue)); \
-					delete(second.bigIntPtr); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			case DataType::BigInt: /* bigInt x bigInt -> bigInt */ \
-				*second.bigIntPtr=FUNC(*second.bigIntPtr,*tos.bigIntPtr); \
-				break; \
-			case DataType::BigFloat: { /* bigInt x bigFloat -> bigFloat */ \
-					BigFloat *bigFloat=new BigFloat(); \
-					*bigFloat=FUNC(BigFloat(*second.bigIntPtr),*tos.bigFloatPtr); \
-					delete(second.bigIntPtr); \
-					second.bigFloatPtr=bigFloat; \
-					second.dataType=DataType::BigFloat; \
-				} \
-				break; \
-			default: goto onError; \
-		} \
-	} else { \
-onError: \
-		return inContext.Error(InvalidTypeTosSecondErrorID::BothDataInvalid,tos,second); \
-	} \
 } while(0)
 
 #define OneParamFunc(FUNC) do { \
@@ -2335,15 +1860,10 @@ onError: \
 			tos.doubleValue=FUNC(tos.doubleValue); \
 			break; \
 		case DataType::BigInt: { \
-				BigFloat *bigFloat=new BigFloat(*tos.bigIntPtr); \
-				*bigFloat=FUNC(*bigFloat); \
-				delete tos.bigIntPtr; \
-				tos.bigFloatPtr=bigFloat; \
-				tos.dataType=DataType::BigFloat; \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=FUNC(BF100(*tos.bigIntPtr)); \
+				SetResultFromBF100(tos,tmp); \
 			} \
-			break; \
-		case DataType::BigFloat: \
-			*tos.bigFloatPtr=FUNC(*tos.bigFloatPtr); \
 			break; \
 		default: \
 			return inContext.Error(InvalidTypeErrorID::TosNumber,tos); \
@@ -2555,10 +2075,6 @@ onError: \
 				} \
 			} \
 			break; \
-		case DataType::BigFloat: \
-			ioTV.bigIntPtr=new BigInt(FUNC(*ioTV.bigFloatPtr)); \
-			ioTV.dataType=DataType::BigInt; \
-			break; \
 		default: \
 			return inContext.Error(InvalidTypeErrorID::TosNumber,ioTV); \
 	} \
@@ -2585,9 +2101,6 @@ onError: \
 			break; \
 		case DataType::BigInt: \
 			*(second.bigIntPtr)=*(second.bigIntPtr) OP n; \
-			break; \
-		case DataType::BigFloat: \
-			*(second.bigFloatPtr)=*(second.bigFloatPtr) OP n; \
 			break; \
 		default: \
 			return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
@@ -2619,9 +2132,6 @@ onError: \
 		case DataType::BigInt:	\
 			*(second.bigIntPtr)=*(second.bigIntPtr) OP n; \
 			break; \
-		case DataType::BigFloat: \
-			*(second.bigFloatPtr)=*(second.bigFloatPtr) OP n; \
-			break; \
 		default: \
 			return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
 											   std::string(#OP),second,tos); \
@@ -2651,15 +2161,10 @@ onError: \
 			second.doubleValue=second.doubleValue OP t; \
 			break; \
 		case DataType::BigInt: { \
-				BigFloat *bigFloat=new BigFloat(*second.bigIntPtr); \
-				*bigFloat=*bigFloat OP t; \
-				delete(second.bigIntPtr); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=BF100(*second.bigIntPtr) OP t; \
+				SetResultFromBF100(second,tmp); \
 			} \
-			break; \
-		case DataType::BigFloat: \
-			*(second.bigFloatPtr)=*(second.bigFloatPtr) OP t; \
 			break; \
 		default: \
 			return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
@@ -2691,15 +2196,10 @@ onError: \
 			second.doubleValue=second.doubleValue OP t; \
 			break; \
 		case DataType::BigInt: { \
-				BigFloat *bigFloat=new BigFloat(*second.bigIntPtr); \
-				*bigFloat=*bigFloat OP t; \
-				delete(second.bigIntPtr); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=BF100(*second.bigIntPtr) OP t; \
+				SetResultFromBF100(second,tmp); \
 			} \
-			break; \
-		case DataType::BigFloat: \
-			*(second.bigFloatPtr)=*(second.bigFloatPtr) OP t; \
 			break; \
 		default: \
 			return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
@@ -2730,81 +2230,19 @@ onError: \
 			} \
 			break; \
 		case DataType::Float: { \
-				BigFloat tmpBigFloat=BigFloat(*tos.bigIntPtr); \
-				BigFloat *bigFloat=new BigFloat(second.floatValue); \
-				*bigFloat=*bigFloat OP tmpBigFloat; \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=second.floatValue OP BF100(*tos.bigIntPtr); \
+				SetResultFromBF100(second,tmp); \
 			} \
 			break; \
 		case DataType::Double: { \
-				BigFloat tmpBigFloat=BigFloat(*tos.bigIntPtr); \
-				BigFloat *bigFloat=new BigFloat(second.doubleValue); \
-				*bigFloat=*bigFloat OP tmpBigFloat; \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
+				typedef boost::multiprecision::cpp_dec_float_100 BF100; \
+				BF100 tmp=second.doubleValue OP BF100(*tos.bigIntPtr); \
+				SetResultFromBF100(second,tmp); \
 			} \
 			break; \
 		case DataType::BigInt: \
 			*(second.bigIntPtr)=*(second.bigIntPtr) OP (*t); \
-			break; \
-		case DataType::BigFloat: { \
-				BigFloat tmpBigFloat=BigFloat(*tos.bigIntPtr); \
-				*(second.bigFloatPtr)=*(second.bigFloatPtr) OP tmpBigFloat; \
-			} \
-			break; \
-		default: \
-			return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \
-											   std::string(#OP),second,tos); \
-	} \
-	NEXT; \
-} while(0)
-
-// X bigFloat OP
-#define BigFloatTwoOp(OP) do { \
-	if(inContext.DS.size()<2) { return inContext.Error(NoParamErrorID::DsAtLeast2); } \
-	TypedValue tos=Pop(inContext.DS); \
-	const BigFloat *t=tos.bigFloatPtr; \
-	TypedValue& second=ReadTOS(inContext.DS); \
-	switch(second.dataType) { \
-		case DataType::Int: { \
-				BigFloat *bigFloat=new BigFloat(second.intValue); \
-				*bigFloat=*bigFloat OP (*t); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
-			} \
-  			break; \
-		case DataType::Long: { \
-				BigFloat *bigFloat=new BigFloat(second.longValue); \
-				*bigFloat=*bigFloat OP (*t); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
-			} \
-			break; \
-		case DataType::Float: { \
-				BigFloat *bigFloat=new BigFloat(second.floatValue); \
-				*bigFloat=*bigFloat OP (*t); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
-			} \
-			break; \
-		case DataType::Double: { \
-				BigFloat *bigFloat=new BigFloat(second.doubleValue); \
-				*bigFloat=*bigFloat OP (*t); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
-			} \
-			break; \
-		case DataType::BigInt: { \
-				BigFloat *bigFloat=new BigFloat(*second.bigIntPtr); \
-				*bigFloat=*bigFloat OP (*t); \
-				second.bigFloatPtr=bigFloat; \
-				second.dataType=DataType::BigFloat; \
-			} \
-			break; \
-		case DataType::BigFloat: { \
-				*(second.bigFloatPtr)=*(second.bigFloatPtr) OP (*t); \
-			} \
 			break; \
 		default: \
 			return inContext.Error_InvalidType(InvalidTypeStrTvTvErrorID::ForOp, \

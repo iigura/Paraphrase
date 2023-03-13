@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <utility>
 
 #include "thread.h"
 #include "typedValue.h"
@@ -9,6 +10,7 @@
 #include "chan.h"
 #include "word.h"
 #include "inner.h"
+#include "stack.h"
 
 enum class Level {
 	Interpret	=0,
@@ -26,7 +28,7 @@ enum class DebugCommand {
 	Quit,
 };
 
-typedef std::vector<TypedValue> LocalVarSlot;
+typedef std::vector<std::pair<TypedValue,bool /* isUnprotected */>> LocalVarSlot;
 typedef std::vector<LocalVarSlot> EnvVector;
 typedef WordFunc InnerInterpretFunc;
 
@@ -48,18 +50,14 @@ struct Context {
 	TypedValue initParamForPBlock;
 	bool isInitParamBroadcast;
 
-	std::shared_ptr<ChanMan> fromParent;	// parent>
-	std::shared_ptr<ChanMan> toParent;		// >parent
-
-	std::shared_ptr<ChanMan> toChild;	// >child
-	std::shared_ptr<ChanMan> fromChild;	// child>
-
 	std::shared_ptr<ChanMan> toPipe;	// >pipe
 	std::shared_ptr<ChanMan> fromPipe;	// pipe>
 
-	std::shared_ptr<ChanMan> lastOutputPipe;
-
-	Thread thread;
+	std::shared_ptr<Thread> thread;
+	volatile bool running=true;
+	Mutex mutexForJoined;
+	volatile bool joined=false;
+	int threadIdx;
 
 	bool suppressError=false;
 
@@ -73,22 +71,19 @@ struct Context {
 	DebugCommand debugCommand=DebugCommand::None;
 
 	PP_API Context(Context *inParent,Level inExecutionThreshold,
-			std::shared_ptr<ChanMan> inFromParent,
-			std::shared_ptr<ChanMan> inToParent,
-			const std::vector<TypedValue> *inInitParamFromParent=NULL);
+				   const std::vector<TypedValue> *inInitParamFromParent=NULL);
+
+	PP_API ~Context();
+
+	PP_API void New_ToPipe();
+
+	PP_API Context *NewContextForCoroutine();
 
 	PP_API bool Exec(const TypedValue& inTypedValue);
 	PP_API bool Exec(const std::string inWordName);
 	PP_API bool Exec(const Word *inWord);
-	PP_API bool Compile(const std::string& inWordName);
-	PP_API void Compile(const TypedValue& inTypedValue);
-	PP_API bool Compile(int inAddress,
-						const TypedValue& inTypedValue,
-						bool inIsForceUpdate=false);
 
-	const Word *GetCurrentWord() {
-		return *ip;
-	}
+	const Word *GetCurrentWord() { return *ip; }
 
 	void SetInterpretMode() {
 		newWord=NULL;
@@ -104,17 +99,20 @@ struct Context {
 	void PushThreshold() { DS.emplace_back(ExecutionThreshold); }
 	void PushNewWord() { DS.emplace_back(DataType::NewWord,newWord); }
 
-	PP_API void FinishNewWord();
+	PP_API void FinishWordDef() {
+		lastDefinedWord=newWord;
+		newWord=NULL;
+	}
 
 	PP_API void RemoveDefiningWord();
 
 	PP_API bool BeginControlBlock();
 	PP_API bool EndControlBlock();
 
-	PP_API void BeginNoNameWordBlock();
+	PP_API void BeginNoNameWordBlock(ControlBlockType inCBT);
 	PP_API bool EndNoNameWordBlock();
 
-	int ReadThresholdBackup();
+	PP_API int ReadThresholdBackup();
 
 	PP_API void BeginListBlock();
 	PP_API bool EndListBlock();
@@ -130,6 +128,7 @@ struct Context {
 
 	PP_API int GetNextThreadAddressOnCompile() const;
 
+	PP_API bool IsListConstructing() const;
 	PP_API TypedValue GetList() const;
 
 	//PP_API void EnterLeavableLoop() const;
@@ -156,67 +155,63 @@ struct Context {
 												 bool inPrintErrorMessage=true);
 
 	inline bool SetCurrentLocalVar(int inSlotIndex,TypedValue& inValue) {
-		assert(Env.size()>0);
+		assert(Env.size()>0 && Env.back().size()>inSlotIndex);
 		LocalVarSlot& localVarSlot=Env.back();
-		if(localVarSlot.size()<=inSlotIndex) { return false; /* inalid index */ }
 		// needs full clone for list or array.
 		//localVarSlot[inSlotIndex]=FullClone(inValue);
-		localVarSlot[inSlotIndex]=inValue;
+		localVarSlot[inSlotIndex].first=inValue;
 		return true;
 	}
 
+// TODO:
+//	inline bool SetLocalVarValueByDynamic
+
 	inline bool GetLocalVarValue(int inSlotIndex,Stack& ioStack) {
-		assert(Env.back().size()>inSlotIndex);
-		if(Env.size()<1) { return false; }
+		assert(Env.size()>0 && Env.back().size()>inSlotIndex);
 		LocalVarSlot& localVarSlot=Env.back();
-		ioStack.emplace_back(localVarSlot[inSlotIndex]);
+		ioStack.emplace_back(localVarSlot[inSlotIndex].first);
 		return true;
 	}
 
 	inline TypedValue GetLocalVarValue(int inSlotIndex) {
+		assert(Env.size()>0 && Env.back().size()>inSlotIndex);
 		if(Env.size()<1) { return TypedValue(); }
 		LocalVarSlot& localVarSlot=Env.back();
-		//if(localVarSlot.size()<=inSlotIndex) { return TypedValue(); }
-		return localVarSlot[inSlotIndex];
+		return localVarSlot[inSlotIndex].first;
 	}
 
-	inline TypedValue GetLocalVarValue(std::string inVarName) {
-		if(Env.size()<1) {
-			printf("no local vars.\n");
-			return TypedValue();
-		}
-		Word *word=(Word*)*IS.back();
-		if(word==NULL) {
-			Error(NoParamErrorID::SystemError);
-			exit(-1);
-		}
-		if(word->localVarDict.find(inVarName)==word->localVarDict.end()) {
-			Error(ErrorIdWithString::NoSuchLocalVar,inVarName);
-			return TypedValue();	// invalid value.
-		}
-		LocalVarSlot& localVarSlot=Env.back();
-		return localVarSlot[word->localVarDict[inVarName]];
-	}
-
+	PP_API TypedValue GetLocalVarValueByDynamic(std::string& inVarName,bool *outFound);
 	inline bool GetLocalVarValueByDynamic(std::string& inVarName,Stack& ioStack) {
-		if(Env.size()<1) { return false; }
+		if(Env.size()<1) { goto searchParentContext; }
+
 		int start;
 		for(start=(int)IS.size()-1; (*IS[start])->numOfLocalVar==0; start--) {
 			// empty
 		}
-		if(start<0) { return false; }
-		int offset = (*ip)->numOfLocalVar==0 ? 0 : 1;
-		for(int w=start,t=(int)Env.size()-1-offset; w>=0; w--) {
-			Word *word=(Word *)(*IS[w]);
-			int slotPos=word->GetLocalVarSlotPos(inVarName);
-			if(slotPos>=0) {
-				ioStack.emplace_back(Env[t][slotPos]);
-				return true;
+		if(start<0) { goto searchParentContext; }
+
+		{
+			int offset = (*ip)->numOfLocalVar==0 ? 0 : 1;
+			for(int w=start,t=(int)Env.size()-1-offset; w>=0; w--) {
+				Word *word=(Word *)(*IS[w]);
+				int slotPos=word->GetLocalVarSlotPos(inVarName);
+				if(slotPos>=0) {
+					ioStack.emplace_back(Env[t][slotPos].first);
+					return true;
+				}
+				if(word->numOfLocalVar==0) { continue; }
+				t--;
 			}
-			if(word->numOfLocalVar==0) { continue; }
-			t--;
 		}
-		return false;
+
+searchParentContext:
+		if(parent!=NULL) {
+			return parent->GetLocalVarValueByDynamic(inVarName,ioStack);
+		} else {
+			printf("ERROR: no such local var (var name:%s).\n",inVarName.c_str());
+			ioStack.emplace_back(TypedValue());
+			return false;
+		}
 	}
 
 	PP_API bool Error(const NoParamErrorID inErrorID);
@@ -234,4 +229,6 @@ struct Context {
 								  const TypedValue inTV1,const TypedValue& inTV2);
 	PP_API void ShowIS() const;
 };
+
+PP_API Context *NewContextForCoroutine(Context& inContext);
 

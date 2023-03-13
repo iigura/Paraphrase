@@ -7,7 +7,8 @@ INCLUDE_PATHS=-I $(INC)
 LANG_OBJS=$(OBJ)/para.o
 
 LIB_OBJS=$(OBJ)/outer.o $(OBJ)/inner.o \
-		 $(OBJ)/word.o $(OBJ)/context.o $(OBJ)/typedValue.o \
+		 $(OBJ)/word.o $(OBJ)/context.o $(OBJ)/typedValue.o $(OBJ)/chan.o \
+		 $(OBJ)/threadMan.o \
 		 $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
 		 $(OBJ)/optimizer.o $(OBJ)/stack.o \
 		 $(OBJ)/langSys.o $(OBJ)/util.o
@@ -15,7 +16,8 @@ LIB_OBJS=$(OBJ)/outer.o $(OBJ)/inner.o \
 objs=$(LANG_OBJS) $(LIB_OBJS)
 
 COMMON_HEADER=$(INC)/paraphrase.h \
-			  $(INC)/word.h $(INC)/externals.h $(INC)/typedValue.h \
+			  $(INC)/word.h $(INC)/externals.h $(INC)/typedValue.h $(INC)/chan.h \
+			  $(INC)/threadMan.h \
 			  $(INC)/errorID.h $(INC)/array.h $(INC)/file.h $(INC)/outer.h
 
 .PHONY: all clean
@@ -53,6 +55,10 @@ $(OBJ)/context.o:		$(COMMON_HEADER) \
 						$(INC)/inner.h
 
 $(OBJ)/typedValue.o:	$(COMMON_HEADER)
+
+$(OBJ)/chan.o:			$(COMMON_HEADER)
+
+$(OBJ)/threadMan.o:		$(COMMON_HEADER)
 
 $(OBJ)/dictMan.o:		$(COMMON_HEADER)
 

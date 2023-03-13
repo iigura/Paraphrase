@@ -1,0 +1,11 @@
+// ../para join.p8e test
+
+`test :
+	( {{ 1 10 for+ i next }}, )	// generate ( 1 ... 9 )
+	[[=> dup * >pipe ]]=>
+	join
+	0 while-pipe + repeat
+	// 285 == 1^2+2^2+...+9^2
+	285 == if "GOOD" .cr else "NG" .cr -1 exit then
+;
+

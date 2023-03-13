@@ -1,4 +1,6 @@
 #include <vector>
+#include <thread>
+#include <chrono>
 
 #include "externals.h"
 #include "typedValue.h"
@@ -104,7 +106,7 @@ void InitDict_Control() {
 		if(inContext.BeginControlBlock()==false) {
 			return inContext.Error(NoParamErrorID::SystemError);
 		}
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvAlpha=inContext.MarkAndCreateEmptySlot();
 		
 		// build syntax-if chunk on SS.
@@ -118,10 +120,9 @@ void InitDict_Control() {
 		int alpha=getStandardIfAlpha(inContext);
 		if(alpha<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		// write an address of head of else-block
-		inContext.Compile(alpha,
-						  TypedValue(DataType::Address,
-									 inContext.GetNextThreadAddressOnCompile()+2));
-		inContext.Compile(std::string("_absolute-jump"));
+		inContext.newWord->CompileValue(alpha,
+			TypedValue(DataType::Address,inContext.GetNextThreadAddressOnCompile()+2));
+		inContext.newWord->CompileWord("_absolute-jump");
 		TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
 		int slotForTheWordOfThen=(int)inContext.SS.size()-3;
 		inContext.SS.at(slotForTheWordOfThen)=tvAlpha2;
@@ -150,9 +151,8 @@ void InitDict_Control() {
 		int alpha=tvAlpha.intValue;
 		if(alpha<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		// write an address of head of else-block
-		inContext.Compile(alpha,
-			   			  TypedValue(DataType::Address,
-									 inContext.GetNextThreadAddressOnCompile()));
+		inContext.newWord->CompileValue(alpha,
+			TypedValue(DataType::Address,inContext.GetNextThreadAddressOnCompile()));
 		if(inContext.RemoveTopChunk()==false) {
 			return inContext.Error(NoParamErrorID::SsBroken);
 		}
@@ -289,14 +289,14 @@ void InitDict_Control() {
 		if(inContext.BeginControlBlock()==false) {
 			return inContext.Error(NoParamErrorID::SystemError);
 		}
-		inContext.Compile(std::string(">r"));	// target value
-		inContext.Compile(std::string("_1-"));
-		inContext.Compile(std::string(">r"));	// current value
+		inContext.newWord->CompileWord(">r");	// target value
+		inContext.newWord->CompileWord("_1-");
+		inContext.newWord->CompileWord(">r");	// current value
 		TypedValue tvAlpha1=inContext.MarkHere();	// come back here.
-		inContext.Compile(std::string("_inc-loop-counter"));
-		inContext.Compile(std::string("_repeat?+"));
+		inContext.newWord->CompileWord("_inc-loop-counter");
+		inContext.newWord->CompileWord("_repeat?+");
 		TypedValue tvAlpha2=inContext.MarkHere();	// for the word 'leave'.
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvAlpha3=inContext.MarkAndCreateEmptySlot();
 		TypedValue tvAlpha4=inContext.MarkHere();	// for 'redo'.
 
@@ -317,14 +317,14 @@ void InitDict_Control() {
 		if(inContext.BeginControlBlock()==false) {
 			return inContext.Error(NoParamErrorID::SystemError);
 		}
-		inContext.Compile(std::string(">r"));	// target value
-		inContext.Compile(std::string("_1+"));
-		inContext.Compile(std::string(">r"));	// current value
+		inContext.newWord->CompileWord(">r");	// target value
+		inContext.newWord->CompileWord("_1+");
+		inContext.newWord->CompileWord(">r");	// current value
 		TypedValue tvAlpha1=inContext.MarkHere();	// come back here.
-		inContext.Compile(std::string("_dec-loop-counter"));
-		inContext.Compile(std::string("_repeat?-"));
+		inContext.newWord->CompileWord("_dec-loop-counter");
+		inContext.newWord->CompileWord("_repeat?-");
 		TypedValue tvAlpha2=inContext.MarkHere();
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvAlpha3=inContext.MarkAndCreateEmptySlot();
 		TypedValue tvAlpha4=inContext.MarkHere();
 
@@ -345,8 +345,8 @@ void InitDict_Control() {
 		if(chunkTop<0) { return false; }
 		int alpha5=GetAddress(inContext.SS,chunkTop-6);
 		if(alpha5<0) { return inContext.Error(NoParamErrorID::SsBroken); }
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::Address,alpha5));
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(TypedValue(DataType::Address,alpha5));
 		NEXT;
 	}));
 	
@@ -355,8 +355,8 @@ void InitDict_Control() {
 		if(chunkTop<0) { return false; }
 		int alpha4=GetAddress(inContext.SS,chunkTop-5);
 		if(alpha4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::Address,alpha4));
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(TypedValue(DataType::Address,alpha4));
 		NEXT;
 	}));
 
@@ -367,10 +367,10 @@ void InitDict_Control() {
 		int alpha2=GetAddress(inContext.SS,chunkTop-3);
 		if(alpha2<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(TypedValue(false));
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::Address,alpha2));
+		inContext.newWord->CompileWord("_lit");
+		inContext.newWord->CompileValue(false);
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(TypedValue(DataType::Address,alpha2));
 		NEXT;
 	}));
 
@@ -400,9 +400,9 @@ void InitDict_Control() {
 			return inContext.Error(NoParamErrorID::SyntaxMismatchFor);
 		}
 		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxForPlus) {
-			inContext.Compile(std::string("std:_step+"));
+			inContext.newWord->CompileWord("std:_step+");
 		} else {
-			inContext.Compile(std::string("std:_step-"));
+			inContext.newWord->CompileWord("std:_step-");
 		}
 		NEXT;
 	}));
@@ -423,7 +423,6 @@ void InitDict_Control() {
 			case DataType::BigInt:		(*tvCounter.bigIntPtr)--;	break;
 			case DataType::Float:		tvCounter.floatValue--;		break;
 			case DataType::Double:		tvCounter.doubleValue--;	break;
-			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)--;	break;
 			default:
 				inContext.Error(NoParamErrorID::SystemError);
 				exit(-1);
@@ -440,7 +439,6 @@ void InitDict_Control() {
 			case DataType::BigInt:		(*tvCounter.bigIntPtr)++;	break;
 			case DataType::Float:		tvCounter.floatValue++;		break;
 			case DataType::Double:		tvCounter.doubleValue++;	break;
-			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)++;	break;
 			default:
 				inContext.Error(NoParamErrorID::SystemError);
 				exit(-1);
@@ -464,7 +462,6 @@ void InitDict_Control() {
 			case DataType::BigInt:		(*tvCounter.bigIntPtr)++;	break;
 			case DataType::Float:		tvCounter.floatValue++;		break;
 			case DataType::Double:		tvCounter.doubleValue++;	break;
-			case DataType::BigFloat:	(*tvCounter.bigFloatPtr)++;	break;
 			default:
 				inContext.Error(NoParamErrorID::SystemError);
 				exit(-1);
@@ -505,9 +502,9 @@ void InitDict_Control() {
 			inContext.newWord->RegisterLocalVar(*tvLocalVarName.stringPtr);
 			slotPos=inContext.newWord->GetLocalVarSlotPos(*tvLocalVarName.stringPtr);
 		}
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(slotPos);
-		inContext.Compile(std::string("_setCounterValue"));
+		inContext.newWord->CompileWord("_lit");
+		inContext.newWord->CompileValue(slotPos);
+		inContext.newWord->CompileWord("_setCounterValue");
 		NEXT;
 	}));
 
@@ -564,7 +561,7 @@ void InitDict_Control() {
 		if(chunkTop<0) { return false; }
 
 		TypedValue tvAlpha2=inContext.MarkHere();
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvAlpha3=inContext.MarkAndCreateEmptySlot();	// exit address slot		
 		TypedValue tvAlpha4=inContext.MarkHere();
 
@@ -651,23 +648,23 @@ void InitDict_Control() {
 		// 		 jump,alpha4}
 		TypedValue tvAlpha4=inContext.MarkHere(9);
 
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(tvAlpha4);
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(tvAlpha4);
 		
 		TypedValue tvAlpha1=inContext.MarkHere();
-		inContext.Compile(std::string("true"));
+		inContext.newWord->CompileWord("true");
 
 		TypedValue tvAlpha2=inContext.MarkHere();
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvAlpha3=inContext.MarkAndCreateEmptySlot();	// exit address slot		
 
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(tvAlpha4);
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(tvAlpha4);
 
 		TypedValue tvAlpha5=inContext.MarkHere();
 
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(tvAlpha4);
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(tvAlpha4);
 
 		const int chunkSize=7;
 		inContext.SS.emplace_back(tvAlpha5);
@@ -693,12 +690,12 @@ void InitDict_Control() {
 		int alpha3=GetAddress(inContext.SS,chunkTop-4);
 		if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::Address,alpha1));
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(TypedValue(DataType::Address,alpha1));
 
 		TypedValue tvAddressToExit(DataType::Address,
 								   inContext.GetNextThreadAddressOnCompile());
-		inContext.Compile(alpha3,tvAddressToExit);
+		inContext.newWord->CompileValue(alpha3,tvAddressToExit);
 		if(inContext.RemoveTopChunk()==false) {
 			return inContext.Error(NoParamErrorID::SsBroken);
 		}
@@ -715,13 +712,13 @@ void InitDict_Control() {
 		int alpha3=GetAddress(inContext.SS,chunkTop-4);
 		if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
-		inContext.Compile(std::string("_absolute-jump"));
-		inContext.Compile(TypedValue(DataType::Address,alpha1));
+		inContext.newWord->CompileWord("_absolute-jump");
+		inContext.newWord->CompileValue(TypedValue(DataType::Address,alpha1));
 
 		TypedValue tvAddressToExit(DataType::Address,
 								   inContext.GetNextThreadAddressOnCompile());
-		inContext.Compile(alpha3,tvAddressToExit);
-		inContext.Compile(std::string("2drop-rs"));
+		inContext.newWord->CompileValue(alpha3,tvAddressToExit);
+		inContext.newWord->CompileWord("2drop-rs");
 		if(inContext.RemoveTopChunk()==false) {
 			return inContext.Error(NoParamErrorID::SsBroken);
 		}
@@ -767,7 +764,7 @@ void InitDict_Control() {
 		int alpha5=GetAddress(inContext.SS,chunkTop-6);
 		if(alpha5<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 		TypedValue whenAddress=inContext.MarkHere();
-		inContext.Compile(alpha5+1,whenAddress,true);
+		inContext.newWord->CompileValue(alpha5+1,whenAddress,true);
 		NEXT;
 	}));
 	
@@ -780,8 +777,7 @@ void InitDict_Control() {
 	      || (tos.dataType==DataType::Long && tos.longValue!=0) 
 		  || (tos.dataType==DataType::Float && tos.floatValue!=0)
 		  || (tos.dataType==DataType::Double && tos.doubleValue!=0)
-		  || (tos.dataType==DataType::BigInt && *tos.bigIntPtr!=0)
-		  || (tos.dataType==DataType::BigFloat && *tos.bigFloatPtr!=0)) {
+		  || (tos.dataType==DataType::BigInt && *tos.bigIntPtr!=0)) {
 			// BRANCH!
 			inContext.ip=(const Word**)(*(inContext.ip+1));
 		} else {
@@ -883,10 +879,10 @@ void InitDict_Control() {
 			TypedValue tvJumpHere=inContext.MarkHere();
 			int alpha3=tvAlpha3.intValue;
 			if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
-			inContext.Compile(alpha3,tvJumpHere);
+			inContext.newWord->CompileValue(alpha3,tvJumpHere);
 		}
 		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
-			inContext.Compile(std::string("dup"));
+			inContext.newWord->CompileWord("dup");
 		}
 		NEXT;
 	}));
@@ -895,46 +891,18 @@ void InitDict_Control() {
 		if(inContext.Exec(std::string("case"))==false) { return false; }
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
 		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
-			inContext.Compile(std::string("drop"));
+			inContext.newWord->CompileWord("drop");
 		}
-		inContext.Compile(std::string("_lit"));
-		inContext.Compile(TypedValue(true));
+		inContext.newWord->CompileWord("_lit");
+		inContext.newWord->CompileValue(true);
 		NEXT;
-#if 0
-		if(inContext.CheckCompileMode()==false) {
-			return inContext.Error(NoParamErrorID::ShouldBeCompileMode);;
-		}
-		TypedValue& tvSyntax=ReadTOS(inContext.SS);
-		if(tvSyntax.dataType!=DataType::CB
-		   || tvSyntax.intValue!=(int)ControlBlockType::SyntaxSwitch) {
-			return inContext.Error(NoParamErrorID::SyntaxMismatchSwitch);
-		}
-		TypedValue& tvChunkSize=ReadSecond(inContext.SS);
-		const int chunkSize=5;
-		if(tvChunkSize.dataType!=DataType::Int
-		   || tvChunkSize.intValue!=chunkSize) {
-			return inContext.Error(NoParamErrorID::SsBroken);
-		}
-		int chunkTop=(int)inContext.SS.size()-1;
-		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
-		TypedValue& tvAlpha3=inContext.SS.at(chunkTop-4);
-		if(tvAlpha3.dataType==DataType::Address) {
-			if(genExitSwitchBlock(inContext)==false) { return false; }
-			TypedValue tvJumpHere=inContext.MarkHere();
-			int alpha3=tvAlpha3.intValue;
-			if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
-			inContext.Compile(alpha3,tvJumpHere);
-		}
-		inContext.SS.at(chunkTop-4)=TypedValue();	// set alpha3=invalid value
-		NEXT;
-#endif
 	}));
 
 	Install(new Word("->",WordLevel::Immediate,WORD_FUNC {
 		if(inContext.Exec(std::string("->>"))==false) { return false; }
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
 		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
-			inContext.Compile(std::string("drop"));
+			inContext.newWord->CompileWord("drop");
 		}
 		NEXT;
 	}));
@@ -958,7 +926,7 @@ void InitDict_Control() {
 		int chunkTop=(int)inContext.SS.size()-1;
 		if(chunkTop-4<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 
-		inContext.Compile(std::string("_branch-if-false"));
+		inContext.newWord->CompileWord("_branch-if-false");
 		TypedValue tvNewAlpha3=inContext.MarkAndCreateEmptySlot();
 		inContext.SS.at(chunkTop-4)=tvNewAlpha3;
 		NEXT;
@@ -997,15 +965,33 @@ void InitDict_Control() {
 			int alpha3=tvAlpha3.intValue;
 			if(alpha3<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 			TypedValue tvAddressOfEndOfSwitchBlock=inContext.MarkHere();
-			inContext.Compile(alpha3,tvAddressOfEndOfSwitchBlock);
+			inContext.newWord->CompileValue(alpha3,tvAddressOfEndOfSwitchBlock);
 		}
 		TypedValue tvAddressOfEndOfSwitchBlock=inContext.MarkHere();
-		inContext.Compile(tvAlpha2.intValue,tvAddressOfEndOfSwitchBlock);
+		inContext.newWord->CompileValue(tvAlpha2.intValue,tvAddressOfEndOfSwitchBlock);
 
 		if(inContext.RemoveTopChunk()==false) {
 			return inContext.Error(NoParamErrorID::SsBroken);
 		}
 		if(inContext.EndControlBlock()==false) { return false; }
+		NEXT;
+	}));
+
+	// N ---
+	// ex: 3 sleep // sleep 3 seconds
+	Install(new Word("sleep",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::Int) {
+			return inContext.Error(InvalidTypeErrorID::TosInt,tos);
+		}
+		if(tos.intValue<0) {
+			std::this_thread::sleep_for(std::chrono::seconds(0));
+			// sleep(0);
+		} else {
+			// sleep(tos.intValue);
+			std::this_thread::sleep_for(std::chrono::seconds(tos.intValue));
+		}
 		NEXT;
 	}));
 }
@@ -1014,11 +1000,11 @@ static bool switchOrCondMain(Context& inContext,ControlBlockType inCBT) {
 	if(inContext.BeginControlBlock()==false) {
 		return inContext.Error(NoParamErrorID::SystemError);
 	}
-	inContext.Compile(std::string("_absolute-jump"));
+	inContext.newWord->CompileWord("_absolute-jump");
 	int currentAddress=inContext.GetNextThreadAddressOnCompile();
-	inContext.Compile(TypedValue(DataType::Address,currentAddress+3));
+	inContext.newWord->CompileValue(TypedValue(DataType::Address,currentAddress+3));
 	TypedValue tvAlpha1=inContext.MarkHere();
-	inContext.Compile(std::string("_absolute-jump"));
+	inContext.newWord->CompileWord("_absolute-jump");
 	TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
 
 	inContext.SS.emplace_back(TypedValue()); // initial value of alpha3 is invalid.
@@ -1034,18 +1020,18 @@ static bool otherwiseDropMain(Context& inContext,const char *inEpilogueWord) {
 	int alpha=getStandardIfAlpha(inContext);
 	if(alpha<0) { return inContext.Error(NoParamErrorID::SsBroken); }
 	// write an address of head of else-block
-	inContext.Compile(alpha,TypedValue(DataType::Address,
-							inContext.GetNextThreadAddressOnCompile()+2));
-	inContext.Compile(std::string("_absolute-jump"));
+	inContext.newWord->CompileValue(alpha,
+		TypedValue(DataType::Address,inContext.GetNextThreadAddressOnCompile()+2));
+	inContext.newWord->CompileWord("_absolute-jump");
 	TypedValue tvAlpha2=inContext.MarkAndCreateEmptySlot();
 
 	// 'else - then' part
-	inContext.Compile(std::string(inEpilogueWord));
+	inContext.newWord->CompileWord(inEpilogueWord);
 
 	// 'then' process
 	assert(tvAlpha2.dataType==DataType::Address);
-	inContext.Compile(tvAlpha2.intValue,TypedValue(DataType::Address,
-								 inContext.GetNextThreadAddressOnCompile()));
+	inContext.newWord->CompileValue(tvAlpha2.intValue,
+		TypedValue(DataType::Address,inContext.GetNextThreadAddressOnCompile()));
 
 	if(inContext.RemoveTopChunk()==false) {
 		return inContext.Error(NoParamErrorID::SsBroken);
@@ -1149,8 +1135,8 @@ static bool genExitSwitchBlock(Context& inContext) {
 	}
 	int chunkTop=inContext.GetChunkIndex((int)ControlBlockType::kOPEN_SWITCH_GROUP);
 	TypedValue& tvAlpha1=inContext.SS.at(chunkTop-2);
-	inContext.Compile(std::string("_absolute-jump"));
-	inContext.Compile(tvAlpha1);
+	inContext.newWord->CompileWord("_absolute-jump");
+	inContext.newWord->CompileValue(tvAlpha1);
 	return true;
 }
 

@@ -20,6 +20,11 @@ inline TypedValue& ReadSecond(Stack& inStack) {
 	return inStack[inStack.size()-2];
 }
 
+inline void BackInsert(Stack *ioDest,const Stack *inSrc) {
+	ioDest->reserve(inSrc->size());
+	std::copy(inSrc->begin(),inSrc->end(),std::back_inserter(*ioDest));
+}
+
 inline int GetAddress(Stack& inStack,int inPos) {
 	TypedValue& tv=inStack.at(inPos);
 	if(tv.dataType!=DataType::Address) { return -1; }

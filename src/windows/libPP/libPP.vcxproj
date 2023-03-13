@@ -56,8 +56,8 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
-    <Import Project="..\packages\boost.1.78.0\build\boost.targets" Condition="Exists('..\packages\boost.1.78.0\build\boost.targets')" />
     <Import Project="..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets" Condition="Exists('..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets')" />
+    <Import Project="..\packages\boost.1.81.0\build\boost.targets" Condition="Exists('..\packages\boost.1.81.0\build\boost.targets')" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -94,7 +94,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;LIBPP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;LIBPP_EXPORTS;USE_G_DOCOL_ADVICE;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -143,7 +143,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;LIBPP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;LIBPP_EXPORTS;USE_G_DOCOL_ADVICE;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\lang\chan.cpp" />
     <ClCompile Include="..\..\lang\context.cpp" />
     <ClCompile Include="..\..\lang\dictMan.cpp" />
     <ClCompile Include="..\..\lang\errorMessage.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="..\..\lang\optimizer.cpp" />
     <ClCompile Include="..\..\lang\outer.cpp" />
     <ClCompile Include="..\..\lang\stack.cpp" />
+    <ClCompile Include="..\..\lang\threadMan.cpp" />
     <ClCompile Include="..\..\lang\typedValue.cpp" />
     <ClCompile Include="..\..\lang\util.cpp" />
     <ClCompile Include="..\..\lang\word.cpp" />
@@ -194,7 +196,7 @@
     <PropertyGroup>
       <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\boost.1.78.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.78.0\build\boost.targets'))" />
     <Error Condition="!Exists('..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets'))" />
+    <Error Condition="!Exists('..\packages\boost.1.81.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.81.0\build\boost.targets'))" />
   </Target>
 </Project>

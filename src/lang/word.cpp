@@ -26,7 +26,9 @@ PP_API void Word::BuildParam() {
 		TypedValue tv=tmpParam->at(i);
 		switch(tv.dataType) {
 			case DataType::Address:
-			case DataType::DirectWord: newIndex++; break;
+			// case DataType::DirectWord:
+			case DataType::Word:
+				newIndex++; break;
 			default:
 				newIndex += sizeof(TypedValue)%sizeof(WordFunc*)==0
 						  ? sizeof(TypedValue)/sizeof(WordFunc*)
@@ -40,7 +42,7 @@ PP_API void Word::BuildParam() {
 	for(int i=0; i<n; i++) {
 		addressOffsetToIndexMapper->insert({dest,i});
 		TypedValue& tv=tmpParam->at(i);
-		if(tv.dataType==DataType::DirectWord) {
+		if(tv.dataType==DataType::Word /* DirectWord */) {
 			wordPtrArray[dest]=tv.wordPtr;
 			dest++;
 		} else if(tv.dataType==DataType::Address) {
@@ -81,7 +83,7 @@ PP_API bool Docol(Context& inContext) NOEXCEPT {
 }
 
 PP_API bool Semis(Context& inContext) {
-	if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IpsBroken); }
+	if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IsBroken); }
 	inContext.ip=inContext.IS.back();
 	inContext.IS.pop_back();
 	if((*inContext.ip)->numOfLocalVar>0) {

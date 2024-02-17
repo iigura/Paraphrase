@@ -1,0 +1,906 @@
+// ../../para paradocs.p8e document.pdconf
+//
+// note: need udline.sty
+
+`help : <<<
+		\t====================================================
+		\t  usage: ../../para paradocs.p8e document.pdconf
+		\t====================================================
+	>>> write
+;
+
+// S ---
+`error : .cr -1 exit ;
+
+interactive? not if
+	args size 1 != if help 0 exit then
+	args pop-front
+then
+
+'udline.sty' fexist? not if
+	"WARNING - udline.sty is not found." .cr
+else
+	'tmp/udline.sty' fexist? not if
+		'udline.sty' 'tmp/udline.sty' fcopy
+	then
+then
+
+// pdconf format := {
+//     comment | empty-line | paradocs-command | doc-src-files
+// }*
+//
+// # comment : This is a comment.
+// doc-src-files : Just simply write the file name.
+// ex:
+//     intro.md   # <- place at into 'contents' directory
+//     legend.md
+//        :
+//
+// paradocs-commands
+//  pdf-file-name : set output pdf file name.
+//      ex : <( pdf-file-name paraphrase_v097.pdf )>
+//
+//  html-file-name : set output html file name.
+//      ex : <( html-file-name paraphrase_v097.html )>
+//
+//  set : Declaring and setting values of document variables.
+//      ex : <( set VERSION "0.97" )>
+//
+//  print-conf : display configuration infomation.
+//      ex : <( print-conf )>
+// 
+//  echo : display args.
+//      ex1 : <( echo one liner test )>
+//      ex2 : <( echo multiple line
+//                    arguments test )>
+//	
+
+// --- (exit)
+`oneArgError :
+	`cmdName let
+	`cmdName , "%s : argument error.\n" putf
+	`cmdName , "%s requires only one argument.\n" putf
+	-1 exit
+;
+
+// L(=arg) S(=cmd name) S(=var name) --
+`set-conf-value :
+	( cmdName varName ) local
+	@size 1 != if `cmdName , oneArgError then
+	expand >string ">" `varName , + eval 
+;	
+
+>string `pdConf global // TOS(=args) -> $pdConf
+$pdConf> open `pdConfFile global
+
+// set default file name
+$pdConf> '\.pdconf' '.pdf'  replace-str `pdfName  global
+$pdConf> '\.pdconf' '.html' replace-str `htmlName global
+
+// commands
+
+`set-pdf-file-name  : "pdf-file-name"  "$pdfName"  set-conf-value ;
+`set-html-file-name : "html-file-name" "$htmlName" set-conf-value ;
+
+"./contents/" `contents-dir global
+
+// common doc-var at TeX and HTML
+"(NO TITLE)"  `title  global
+
+// setting info for TeX
+"paradocs.tex" `tex-setting-file-name global
+"a5" `paper-size global
+
+`set-paper-size : "paper-size" "$paper-size" set-conf-value ;
+`set-tex-setting-file : "tex-setting-file" "$tex-setting-file-name" set-conf-value ;
+
+true `make-toc global
+
+"(NO AUTHOR)" `author global
+"(NO PUBLISH DATE)" `date global
+true `make-title global
+
+`set-title  : "title"  "$title"  set-conf-value ;
+`set-author : "author" "$author" set-conf-value ;
+`set-date   : "date"   "$date"   set-conf-value ;
+`set-disable-toc : false >$make-toc ;
+
+// setting info for HTML
+"paradocs.html" `html-setting-file-name global
+
+`set-html-setting-file :
+	"html-setting-file" "$html-setting-file-name"
+	set-conf-value
+;
+
+// common
+new-assoc `doc-var global
+
+`set-doc-var :
+	@size 2 != if
+		"set : argument error.\n" putf
+		"'set' requires two arguments.\n" putf
+		-1 exit
+	then
+	$doc-var> swap expand set
+;
+
+( default-point 11pt ) set-doc-var
+
+() `doc-src-file global
+
+// S ---
+`register-doc-src-file : $doc-src-file> push-back ;
+
+`print-conf :
+	cr
+	"===== conf info =====\n" write
+	"pdf file name: " . $pdfName> .cr
+	"html file name:" . $htmlName> .cr
+	"paper size:" . $paper-size> .cr
+	"TeX  setting file name:" . $tex-setting-file-name>  .cr
+	"HTML setting file name:" . $html-setting-file-name> .cr
+	"--- variables" .cr
+	$doc-var> full-clone >list { expand swap . ":" . .cr } foreach
+	drop // original $doc-var
+	"--- doc src files" .cr
+	$doc-src-file> full-clone swap drop { .cr } foreach
+;
+
+( ( pdf-file-name  { set-pdf-file-name  } )
+  ( html-file-name { set-html-file-name } )
+  ( paper-size { set-paper-size } )
+  ( title  { set-title  } )
+  ( author { set-author } )
+  ( date   { set-date   } )
+  ( disable-toc { set-disable-toc } )
+  ( set { set-doc-var } )
+  ( echo { { i 0 != if ' ' write then write } foreach cr } )
+  ( print-conf { drop print-conf } )	// arg is ignored.
+) >assoc `commandDict global
+
+// S --- S
+`remove-head : "^." "" replace-str ;
+
+// S ---
+`no-such-command : "no such command '%s'.\n" putf -1 exit ;
+
+// S ---
+// S == <( ... )>
+`process-command :
+	"^\\<\\(" "( " replace-str
+	"\\)\\>$" " )" replace-str
+	eval
+	dup pop-front swap ( cmd args ) local
+	$commandDict> `cmd , @has-key? if
+		get `args , swap exec
+	else
+		no-such-command
+	then
+;
+
+// S --- S
+`remove-comment : "#.*$" "" replace-str ;
+
+// S --- S
+`remove-leading-white-spaces : "^\\s+" "" replace-str ;
+
+// S --- S
+`remove-trailing-white-spaces : "\\s+$" "" replace-str ;
+
+// S ---
+`do-command :
+	`line local
+	`line , ")>" end-with? if `line , process-command return then // one liner
+	$pdConfFile> while @fgets @valid? do
+		remove-comment remove-leading-white-spaces remove-trailing-white-spaces
+		dup `line , " " + swap + `line let
+		")>" end-with? if `line , process-command drop return then
+	repeat
+	drop drop
+;
+
+// --- main word
+
+// file string --- file string
+`apply-vars :
+	`line local
+	while `line , "<\\(.*?\\)>" search @valid? do // if drop `line , return then // no doc-vars
+		0 get "<\\(" "" replace-str "\\)>" "" replace-str
+		"\\s" "" replace-str
+		"\\$(.+)" search 1 get `doc-var-name local
+
+		$doc-var> `doc-var-name , >symbol get >string
+		`doc-var-value local
+
+		`line , "<\\(\\s*?\\$" `doc-var-name , + "\\s*\\)>" +
+		`doc-var-value , replace-str
+		`line let
+	repeat
+	drop
+	`line ,
+;
+
+// S --- S
+`convert-special-character-if-needed :
+	"&([^;]+);" "_$1_" replace-str
+	";" "_" replace-str
+;
+
+// S --- S
+`convert-greek-character-if-needed :
+	"&alpha;" '$\alpha$' replace-str
+	"&theta;" '$\theta$' replace-str
+	"&xi;"    '$\xi$'    replace-str
+	"&eta;"   '$\eta$'   replace-str
+	"&pi;"    '$\pi$'    replace-str
+	"&omega;" '$\omega$' replace-str
+;
+
+`do-nothing : drop '' ;
+
+false `is-code-mode global
+false `is-ddt-in? global
+
+// ------------------------------------
+// generate hyper link
+// ------------------------------------
+`url_forTeX :
+	@size 1 > if
+		'ERROR: invalid parameger (url tag).' error
+	then
+	expand
+	'_' '\_' replace-str
+;
+
+`url_forHTML :
+	@size 1 > if
+		'ERROR: invalid parameger (url tag).' error
+	then
+	expand `linkText local
+	`linkText , ' <a href="%s" target="_blank">' sputf
+	`linkText , '%s</a> ' sputf +
+;
+
+// ------------------------------------
+// add referece
+// 	<[ref index-value document-string]>
+// 		or
+//  <[ref index-value-and-document-string]>
+// 	ex: <[ref size-at-intro size]>
+//		<[ref drop]>
+// ------------------------------------
+
+// S --- S
+`escape-forTeX :
+	'\\%' '{\%}' replace-str
+;
+
+`get-ref-param :
+	@size switch
+		case 1 == -> expand dup 
+		case 2 == -> 0 @get swap
+					 1 get 
+		default -> 'ERROR: invalid parameter (ref tag).'
+					error
+	dispatch
+	escape-forTeX
+;
+
+// array=(index string) --- S
+`ref_forTeX :
+	get-ref-param ( index-value document-string ) local
+	`document-string , 
+	`document-string , '\index{%s}' sputf
+	+
+;
+
+new-assoc `reference-dict global
+
+`ref_forHTML :
+	get-ref-param ( index-value document-string ) local
+	$reference-dict> `document-string , `index-value , set
+	`index-value , '<a id=%s>' sputf
+	`document-string , '%s</a>' sputf +
+;
+
+// ------------------------------------
+// under line
+// 	<[u string]>
+// 	ex: 以下の下線部分は <[u 1 2 +]> 
+// ------------------------------------
+
+// L --- S
+`get-all-parameter :
+	"" swap { >string + " " + } foreach
+;
+
+`u_forTeX :
+	get-all-parameter `underline-part local
+	`underline-part ,
+	$is-code-mode> if
+		'(*@\ul{%s}@*)'
+	else
+		'\ul{%s}'
+	then
+	sputf
+;
+
+`u_forHTML :
+	get-all-parameter `underline-part local
+	`underline-part , '&thinsp;<u>%s</u>&thinsp;' sputf
+;
+
+// ------------------------------------
+// code block
+//	<[code-begin]>
+//		...
+//	<[code-end]>[
+// ------------------------------------
+
+`code-begin_forTeX :
+	drop
+	$is-ddt-in?> if
+		'\par\begin{minipage}[H]{11cm}'
+	else
+		'\par\vspace{4ex}\begin{minipage}[H]{\linewidth}'
+	then
+	// '\vspace{2ex}\hdashrule{\linewidth}{0.5pt}{2pt 2pt}\par\vspace{-1ex}\begin{lstlisting}[escapeinside={(*@}{@*)}]'
+	'\vspace{3ex}\par\begin{lstlisting}[linewidth=0.95\textwidth,escapeinside={(*@}{@*)}]'
+	+
+	true >$is-code-mode
+;
+
+`code-end_forTeX :
+	drop
+	// '\end{lstlisting}\par\par\vspace{-3ex}\hdashrule{\linewidth}{0.5pt}{2pt 1pt}'
+	'\end{lstlisting}\par\par'
+	'\end{minipage}\par\vspace{3ex}'
+	+
+	false >$is-code-mode
+;
+
+false `code-mode global
+false `enable-code-mode-for-next-line global
+
+`code-begin_forHTML :
+	drop
+	true >$enable-code-mode-for-next-line
+	$is-ddt-in?> if
+		'<br><br><div class=narrow-example><code><pre>'
+	else
+		'<br><div class=example><code><pre>'
+	then
+;
+
+`code-end_forHTML :
+	drop
+	false >$code-mode
+	'</pre></code></div><br>'
+;
+
+// ------------------------------------
+// description list
+//	<[dl-begin]>
+//		<[dl-item headline-string]>
+//		<[dd]>
+//			description document ...
+//		<[/dd]>
+//		<[dl-ref-item headline-string]>
+//		<[dd]>
+//			description document ...
+//		<[/dd]>
+//	<[dl-end]>
+// ------------------------------------
+`dl-begin_forTeX : drop '\begin{description}' ;
+`dl-end_forTeX :   drop '\end{description}' ;
+
+`dl-begin_forHTML : drop '<dl>' ;
+`dl-end_forHTML   : drop '</dl>' ;
+
+`dl-item_forTeX :
+	get-all-parameter trim `headline-part local
+	`headline-part , '\item[%s]' sputf
+;
+
+`dl-ref-item_forTeX :
+	get-all-parameter trim `headline-part local
+	`headline-part , "&" @start-with? if
+		convert-greek-character-if-needed
+	then
+	dup '\item[%s]' sputf swap
+	trim '\index{%s}' sputf
+	+
+;
+
+`dl-item_forHTML :
+	get-all-parameter trim `headline-part local
+	`headline-part , '<dt>%s</dt>' sputf
+;
+
+`dl-ref-item_forHTML :
+	get-all-parameter trim `headline-part local
+
+	`headline-part , convert-special-character-if-needed
+	`index-value local
+
+	$reference-dict> `headline-part , `index-value , set
+
+	`index-value , '<a id=%s>' sputf
+	`headline-part , '<dt>%s</dt></a>' sputf
+	+
+;
+
+`dd_forTeX   : drop /* do nothing */ "" ;
+"/dd_forTeX" : drop '\vspace{1ex}' ;
+
+`dd_forHTML   :  drop '<dd>'  ;
+"/dd_forHTML" : drop '</dd>' ;
+
+// ------------------------------------
+// description list by table
+//	<[dl-table-begin]>
+//		<[dl-table-item headline-string]>
+//		<[ddt]>
+//			description document ...
+//		<[/ddt]>
+//	<[dl-table-end]>
+// ------------------------------------
+`dl-table-begin_forTeX :
+	drop '\begin{longtable}{lp{11cm}}'
+;
+`dl-table-end_forTeX :
+	drop '\end{longtable}'
+;
+
+`dl-table-begin_forHTML : drop "<table>\n" ;
+`dl-table-end_forHTML   : drop "</table>\n" ;
+
+`dl-table-hr-begin_forTeX :
+	drop '\begin{longtable}{lp{11cm}}'
+;
+`dl-table-hr-end_forTeX :
+	drop '\end{longtable}'
+;
+
+`dl-table-hr-begin_forHTML : drop "<hr><table>\n"  ;
+`dl-table-hr-end_forHTML   : drop "</table><hr>\n" ;
+
+`dl-table-item_forTeX :
+	get-all-parameter trim `headline-part local
+	`headline-part , "&" @start-with? if
+		convert-greek-character-if-needed
+	then
+	'\rowcolor{lightgray}\textgt{\textgt %s} & ' sputf
+;
+
+`dl-table-item_forHTML :
+	get-all-parameter trim `headline-part local
+	`headline-part , '<tr valign=top><td class=table-headline>%s&nbsp;</td>' sputf
+;
+
+`dl-table-ref-item_forTeX :
+	get-all-parameter trim `headline-part local
+	`headline-part , "&" @start-with? if
+		convert-greek-character-if-needed
+	then
+	dup
+	trim '\index{%s} & ' sputf
+	+
+;
+
+`dl-table-ref-item_forHTML :
+	get-all-parameter trim `headline-part local
+
+	`headline-part , convert-special-character-if-needed
+	`index-value local
+
+	$reference-dict> `headline-part , `index-value , set
+
+	`index-value , '<tr valign=top><td><a id=%s>' sputf
+	`headline-part , '%s</a>&nbsp;</td>' sputf
+	+
+;
+
+`ddt_forTeX   : drop true >$is-ddt-in? "" ;
+"/ddt_forTeX" : drop false >$is-ddt-in? "\\\\" ;
+
+`ddt_forHTML   : drop true >$is-ddt-in? '<td>' ;
+"/ddt_forHTML" : drop false >$is-ddt-in? "</td></tr>\n" ;
+
+// ------------------------------------
+// gothic
+//	<[gt]> ... <[/gt]>
+// note: gt <- [g]o[t]hic
+// ------------------------------------
+`gt_forTeX   : drop '\textsf{' ;
+"/gt_forTeX" : drop '}' ;
+
+`gt_forHTML   : drop '<span class=sansserif>' ;
+"/gt_forHTML" : drop '</span>' ;
+
+// ------------------------------------
+// new line
+//	<[br]>
+// ------------------------------------
+
+`br_forTeX  :
+	drop
+	$is-ddt-in?> if
+		'\par\vspace{1ex}'
+	else
+		"\\\\"
+	then
+;
+
+`br_forHTML : drop "<br>" ;
+
+// ------------------------------------
+// horizontal line/rule
+//	<[hr]>
+// ------------------------------------
+
+`hr_forTeX  : drop '\noindent\hrule' ;
+`hr_forHTML : drop '<hr>' ;
+
+// ------------------------------------
+// tex (only output TeX source file)
+// 	<[tex ...]>
+// ------------------------------------
+`tex_forTeX  : get-all-parameter trim ;
+`tex_forHTML : do-nothing ;
+
+`tex-vfill_forTeX  : drop '\vfill' ;
+`tex-vfill_forHTML : do-nothing ;
+
+`tex-rightline_forTeX :
+	get-all-parameter trim
+	'\rightline{%s}' sputf
+;
+
+`tex-rightline_forHTML : do-nothing ;
+
+// ------------------------------------
+// html (only output HTML source file)
+// 	<[html ...]>
+// ------------------------------------
+`html_forTeX  : drop "" /* do nothing */ ;
+`html_forHTML : get-all-parameter trim ;
+
+
+`apply-commands-main :
+	`command-postfix local
+	`line local
+	while `line , "<\\[.*?\\]>" search @valid? do
+		0 get `command-sub-string local
+		`command-sub-string ,
+		"<\\[" "" replace-str "\\]>" "" replace-str
+		remove-leading-white-spaces
+		remove-trailing-white-spaces
+		>array >list @pop-front `command-postfix , + eval
+		`document-string local
+
+		`command-sub-string , '<\[' '<\[' replace-str
+		'\]>' '\]>' replace-str
+		'\+' '\+' replace-str
+		'\.' '\.' replace-str 
+		`command-sub-string let
+// `line , "PRE-LINE='%s'\n" putf
+// `command-sub-string , "SUB='%s'\n" putf
+// `document-string , "DSTR='%s'\n" putf
+		`line , `command-sub-string , `document-string , 
+		replace-str
+		'\n|\r\n|\r' '' replace-str
+		`line let
+// `line , "LINE='%s'\n" putf
+	repeat
+	drop
+	`line ,
+;
+
+`apply-commands-for-tex :  "_forTeX"  apply-commands-main ;
+`apply-commands-for-html : "_forHTML" apply-commands-main ;
+
+// S --- S
+`remove-tail-spaces : "\\s*$" "" replace-str ;
+
+// copy template file to target file
+// S(tmplate file path) F(target file) ---
+`init-file :
+	( template-file-path target-file ) local
+	`template-file-path , open to-read
+	while @fgets @valid? do
+		apply-vars "%s\n" sputf `target-file , fwrite
+	repeat
+	drop // for invalid value
+	drop // for file
+;
+
+// ----- generate TeX
+'tmp' fexist? not if
+	'tmp' mkdir
+then
+"tmp/tmp.tex" `tmp-file-name global
+`tmp.tex-file global-decl
+
+// S --- S
+`gen-tex-chapter :
+	"^#\\s+" "" replace-str remove-tail-spaces
+	"\\chapter{%s}" sputf
+;
+
+`gen-tex-chapter* :
+	"^#_\\s+" "" replace-str remove-tail-spaces
+	"\\chapter*{%s}" sputf
+;
+
+`gen-tex-section :
+	"^##\\s+" "" replace-str remove-tail-spaces
+	"\\section{%s}" sputf
+;
+
+`gen-tex-section* :
+	"^##_\\s+" "" replace-str remove-tail-spaces
+	"\\section*{%s}" sputf
+;
+
+`gen-tex-subsection :
+	"^###\\s+" "" replace-str remove-tail-spaces
+	"\\subsection{%s}" sputf
+;
+
+`gen-tex-subsection* :
+	"^###_\\s+" "" replace-str remove-tail-spaces
+	"\\subsection*{%s}" sputf
+;
+
+`gen-tex-subsubsection :
+	"^####\\s+" "" replace-str remove-tail-spaces
+	"\\subsubsection{%s}" sputf
+;
+
+`gen-tex-subsubsection* :
+	"^####_\\s+" "" replace-str remove-tail-spaces
+	"\\subsubsection*{%s}" sputf
+;
+
+`gen-tex-subsubsubsection :
+	"^#####\\s+" "" replace-str remove-tail-spaces
+	"\\subsubsubsection{%s}" sputf
+;
+
+( ( "^#\\s+"     { gen-tex-chapter           } )
+  ( "^#_\\s+"    { gen-tex-chapter*          } )
+  ( "^##\\s+"    { gen-tex-section           } )
+  ( "^##_\\s+"   { gen-tex-section*          } )
+  ( "^###\\s+"   { gen-tex-subsection        } )
+  ( "^###_\\s+"  { gen-tex-subsection*       } )
+  ( "^####\\s+"  { gen-tex-subsubsection     } )
+  ( "^####_\\s+" { gen-tex-subsubsection*    } )
+  ( "^#####\\s+" { gen-tex-subsubsubsection  } )
+) `md-to-tex-mapper global
+
+// S --- S
+`md-to-tex :
+	`line local
+	$md-to-tex-mapper> {
+		car `line , swap search valid?
+	} find
+	@valid? if 
+		cdr car `line , swap exec
+	else
+		drop `line ,
+	then
+;
+
+`create-tmp.tex : // ---
+	$tex-setting-file-name> fexist? not if
+		$tex-setting-file-name> "error: no TeX setting file '%s'\n" putf -1 exit
+	then
+	$tmp-file-name> new-file >$tmp.tex-file
+;
+	
+`init-tmp.tex : $tex-setting-file-name> $tmp.tex-file> init-file ;
+
+`convTeX : // S(=doc-src-file) ---
+	$contents-dir> swap + dup "PDF: processing %s ... " putf
+
+	open to-read `doc-src-file local
+	`doc-src-file ,
+	while @fgets @valid? do
+		apply-vars // dup "line='%s'\n" putf
+		apply-commands-for-tex
+		md-to-tex
+		$is-code-mode> if
+			"&gt;"     '>' replace-str
+			"&lt;"     '<' replace-str
+			"&nbsp;"   ' '  replace-str
+			"&amp;"    '&' replace-str
+		else
+			"&gt;" '\textgreater ' replace-str
+			"&lt;" '\textless ' replace-str
+			"&percnt;" '\%' replace-str
+			"&amp;"    '\&' replace-str
+			"&sim;"  '\textasciitilde '  replace-str
+			'&circ;' '\textasciicircum ' replace-str
+			"&hat;"  '\textasciicircum ' replace-str
+			"&verbar;" '\textbar ' replace-str
+			"&ast;" '$\ast$' replace-str
+		then
+		"&quest;"  '?'  replace-str
+		"&lcurly;" '\{' replace-str
+		"&rcurly;" '\}' replace-str
+		"&#92;"    '\textbackslash{}' replace-str
+		"&#95;"    '\_' replace-str
+		"%s\n" sputf $tmp.tex-file> fwrite
+	repeat
+	drop // for invalid value
+	drop // for file
+	`doc-src-file , close
+	"done" .cr
+;
+
+`genPDF : // ---
+	create-tmp.tex
+	init-tmp.tex
+	$doc-src-file> full-clone swap drop { convTeX } foreach
+	"\n\\printindex\n" $tmp.tex-file> fwrite
+	"\n\\end{document}\n" $tmp.tex-file> fwrite
+	$tmp.tex-file> close
+;
+
+// ----- generate HTML
+`target.html-file global-decl
+
+( ( ^#\s+     h1 ) ( ^#_\s+     h1 )
+  ( ^##\s+    h2 ) ( ^##_\s+    h2 )
+  ( ^###\s+   h3 ) ( ^###_\s+   h3 )
+  ( ^####\s+  h4 ) ( ^####_\s+  h4 )
+  ( ^#####\s+ h5 ) ( ^#$###_\s+ h5 )
+) `md-to-html-mapper global
+
+// S(=line) S(=pattern) S(=tag name)--- S(=converted)
+`gen-converted-html-line :
+	`tag-name local
+	"" replace-str remove-tail-spaces
+	"<" `tag-name , + ">%s</" + `tag-name , + ">\n<p>" + // gen "<h2>%s</h2>\n<p>"
+	sputf
+;
+
+`md-to-html :
+	`line local
+	$md-to-html-mapper> {
+		car `line , swap >string search valid?
+	} find
+	@valid? if
+		@car >string `pattern local
+		cdr car >string `tag-name local
+		`line , `pattern , `tag-name , gen-converted-html-line
+	else
+		drop `line ,
+	then
+;
+
+`create-target-html : // ---
+	$html-setting-file-name> fexist? not if
+		$html-setting-file-name> "error: no HTML setting file '%s'\n" putf -1 exit
+	then
+	$htmlName> new-file >$target.html-file
+;
+
+`init-target-html : $html-setting-file-name> $target.html-file> init-file ;
+
+// S --- B
+`is-blank-line? : "\\s+" "" replace-str "" == ;
+
+// write HTML tag
+`write-to-target-html-file : $target.html-file> fwrite ;
+'<p>'        : "<p>\n"         write-to-target-html-file ;
+'</p>'       : "</p>\n"        write-to-target-html-file ;
+'</div>'     : "</div>\n"      write-to-target-html-file ;
+'</article>' : "</articlev>\n" write-to-target-html-file ;
+'</html>'    : "</html\n"      write-to-target-html-file ;
+
+`convHTML : // S(=doc-src-file)
+	$contents-dir> swap + dup "HTML: processing %s ... " putf
+
+	open to-read `doc-src-file local
+	false `pre-line-is-blank local
+	`doc-src-file ,
+	while @fgets @valid? do
+		apply-vars // dup "line='%s'\n" putf
+		apply-commands-for-html
+		dup is-blank-line? if
+			`pre-line-is-blank , not if </p> then
+			true `pre-line-is-blank let drop continue
+		else
+			`pre-line-is-blank , if <p> then
+			false `pre-line-is-blank let
+		then
+		md-to-html
+		'\n|\r\n|\r' '' replace-str
+		'\\%' '%' replace-str
+		"&lcurly;" '{' replace-str
+		"&rcurly;" '}' replace-str
+		$code-mode> if
+			'%s<br>'
+		else
+			"%s"
+		then
+		sputf $target.html-file> fwrite
+		$enable-code-mode-for-next-line> if
+			true >$code-mode
+			false >$enable-code-mode-for-next-line
+		then
+	repeat
+	drop // for invalid value
+	drop // for file
+	`doc-src-file , close
+	"done" .cr
+;
+
+// ( document-string index-value ) ---
+`gen-reference-link :
+	expand ( document-sting index-value ) local
+
+	`index-value , '<a href=#%s>' sputf
+	write-to-target-html-file
+
+	`document-sting , '%s</a>&nbsp; ' sputf
+	write-to-target-html-file
+;
+
+`gen-reference :
+	"<h1>索引</h1>\n" write-to-target-html-file
+	$reference-dict> >list
+	{ ( e1 e2 ) local `e1 , car `e2 , car < } sort
+	{ gen-reference-link } foreach
+;
+
+`genHTML : // ---
+	create-target-html
+	init-target-html
+	$doc-src-file> full-clone swap drop { convHTML } foreach
+	gen-reference
+	</div> </div> </div> </article> </html>
+	$target.html-file> close
+;
+
+// === driver
+$pdConf> fexist? not if
+	$pdConf> "no such file:'%s'\n" putf -1 exit
+then
+
+$pdConfFile> to-read
+while @fgets @valid? do
+	// dup "line='%s'\n" putf show
+	remove-comment remove-leading-white-spaces remove-trailing-white-spaces
+	@size 0 == if drop continue then // skip empy line
+	"<(" @start-with? if
+		do-command
+	else
+		register-doc-src-file
+	then
+repeat
+drop
+close
+
+( paper-size {{ $paper-size> }}, ) set-doc-var
+( title  {{ $title>  }}, ) set-doc-var
+( author {{ $author> }}, ) set-doc-var
+( date   {{ $date> }},   ) set-doc-var
+( make-title {{ $make-title> if "\\maketitle" else "" then }}, ) set-doc-var
+
+( table-of-contents {{
+	$make-toc> if "\\tableofcontents" else "" then
+}}, ) set-doc-var
+
+print-conf
+cr genPDF "TeX DONE." .cr
+// should run
+// 	platex tmp
+// 	mendex tmp
+// 	platex tmp
+cr genHTML
+cr
+

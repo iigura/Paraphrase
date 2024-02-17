@@ -462,17 +462,22 @@ redo:
 
 	// S --- symbol
 	Install(new Word(">symbol",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
 		TypedValue tos=Pop(inContext.DS);
 		if( tos.IsCollection() ) {
-			return inContext.Error(NoParamErrorID::CanNotConvertToSymbol);
+			return inContext.Error(
+				NoParamErrorID::CanNotConvertToSymbol);
 		}
 		std::string s=tos.GetValueString();
 		char c=s[0];
-		if(('A'<=c && c<='Z') || ('a'<=c && c<='z') || c=='_') {
+		if(('A'<=c && c<='Z') || ('a'<=c && c<='z')
+		   || c=='_') {
 			inContext.DS.emplace_back(s,DataType::Symbol);
 		} else {
-			return inContext.Error(NoParamErrorID::CanNotConvertToSymbol);
+			return inContext.Error(
+					NoParamErrorID::CanNotConvertToSymbol);
 		}
 		NEXT;
 	}));
@@ -678,10 +683,10 @@ next:
 				if(second.dataType!=DataType::Symbol) { break; }
 				result = tos.stringPtr.get()==second.stringPtr.get();
 				break;
-			case DataType::DirectWord:
-				if(second.dataType!=DataType::DirectWord) { break; }
-				result = tos.wordPtr == second.wordPtr;
-				break;
+			// case DataType::DirectWord:
+			//	if(second.dataType!=DataType::DirectWord) { break; }
+			//	result = tos.wordPtr == second.wordPtr;
+			//	break;
 			case DataType::NewWord:
 				if(second.dataType!=DataType::NewWord) { break; }
 				result = tos.wordPtr == second.wordPtr;

@@ -24,7 +24,7 @@
 ;
 
 // check behavior with multi thread.
-`result var
+`result global-decl
 `test3 :
 	[ 1 `x local
 		[ 20 `y local

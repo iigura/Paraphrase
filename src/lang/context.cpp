@@ -33,6 +33,12 @@ bool Error(Context& inContext,
 bool Error(Context& inContext,const ErrorIdWith2int inErrorID,
 		   const int inIntValue1,const int inIntValue2);
 
+static void printLineInfo(int inLineNo) {
+	if(inLineNo>=0) {
+		fprintf(stderr,"line %d : ",inLineNo);
+	}
+}
+
 PP_API Context *GlobalContext=new Context(NULL,Level::Interpret);
 
 PP_API Context::Context(Context *inParent,Level inExecutionThreshold,
@@ -78,10 +84,10 @@ PP_API void Context::RemoveDefiningWord() {
 	lastDefinedWord=NULL;
 }
 
-PP_API bool Context::Exec(const TypedValue& inTV) {
+PP_API bool Context::Exec(const TypedValue& inTvWordPtr) {
 	const Word *wordPtr;
-	if(inTV.HasWordPtr(&wordPtr)==false) {
-		return Error(InvalidTypeErrorID::TosWp,inTV);
+	if(inTvWordPtr.HasWordPtr(&wordPtr)==false) {
+		return Error(InvalidTypeErrorID::TosWp,inTvWordPtr);
 	}
 	return Exec(wordPtr);
 }
@@ -355,7 +361,7 @@ PP_API TypedValue Context::GetLiteralFromThreadedCode(bool inIsRemoveFromThread,
 	int litIndex;
 	bool multiple;
 	if(n>2 && (thread->at(n-1).dataType==DataType::Word
-			   || thread->at(n-1).dataType==DataType::DirectWord)
+			   /* || thread->at(n-1).dataType==DataType::DirectWord */)
 	  && thread->at(n-1).wordPtr->longName=="std:create-working-value") {
 		litIndex=n-3;
 		multiple=true;
@@ -367,7 +373,7 @@ PP_API TypedValue Context::GetLiteralFromThreadedCode(bool inIsRemoveFromThread,
 	}
 
 	if((thread->at(litIndex).dataType!=DataType::Word
-		&& thread->at(litIndex).dataType!=DataType::DirectWord)
+		/* && thread->at(litIndex).dataType!=DataType::DirectWord */)
 	  || thread->at(litIndex).wordPtr->longName!="std:_lit") {
 		goto onError;
 	}
@@ -387,42 +393,50 @@ onError:
 }
 
 PP_API bool Context::Error(const NoParamErrorID inErrorID) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID);
 }
 
 PP_API bool Context::Error(const ErrorIdWithInt inErrorID,
 						   const int inIntValue) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inIntValue);
 }
 
 PP_API bool Context::Error(const ErrorIdWith2int inErrorID,
 						   const int inIntValue1,const int inIntValue2) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inIntValue1,inIntValue2);
 }
 
 PP_API bool Context::Error(const ErrorIdWithString inErrorID,
 						   const std::string& inStr) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inStr.c_str());
 }
 
 PP_API bool Context::Error(const InvalidTypeErrorID inErrorID,
 						   const TypedValue& inTV) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inTV.GetTypeStr());
 }
 
 PP_API bool Context::Error(const InvalidValueErrorID inErrorID,
 						   const TypedValue& inTV) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inTV.GetValueString());
 }
 
 PP_API bool Context::Error(const InvalidTypeTosSecondErrorID inErrorID,
 						   const TypedValue& inTos,const TypedValue& inSecond) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inTos,inSecond);
 }
 
 PP_API bool Context::Error_InvalidType(const InvalidTypeStrTvTvErrorID inErrorID,
 								const std::string& inStr,
 								const TypedValue inTV1,const TypedValue& inTV2) {
+	printLineInfo(LineNo);
 	return ::Error(*this,inErrorID,inStr,inTV1,inTV2);
 }
 

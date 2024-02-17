@@ -57,7 +57,7 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
     <Import Project="..\..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets" Condition="Exists('..\..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets')" />
-    <Import Project="..\..\packages\boost.1.81.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.81.0\build\boost.targets')" />
+    <Import Project="..\..\packages\boost.1.84.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.84.0\build\boost.targets')" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -130,6 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,6 +152,7 @@ xcopy /Y $(TargetPath) $(SolutionDir)..\..\ext</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -178,6 +180,6 @@ xcopy /Y $(TargetPath) $(SolutionDir)..\..\ext</Command>
       <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\libgmp_vc120.5.1.3.2\build\native\libgmp_vc120.targets'))" />
-    <Error Condition="!Exists('..\..\packages\boost.1.81.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.81.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\boost.1.84.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.84.0\build\boost.targets'))" />
   </Target>
 </Project>

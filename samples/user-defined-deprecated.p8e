@@ -1,0 +1,16 @@
+// usage:
+//	`hello : "HELLO" .cr ; my-deprecated
+
+`my-deprecated-body :
+	docol-target-word word-name "!!! The word '%s' is deprecated. !!!\n" putf
+	docol
+;
+
+`my-deprecated-body >word set-worded-docol-callee
+
+`my-deprecated :
+	last-defined-word
+	@invalid? if "no define word." .cr return then
+	worded-docol-caller set-code
+;
+

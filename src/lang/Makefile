@@ -11,7 +11,7 @@ LIB_OBJS=$(OBJ)/outer.o $(OBJ)/inner.o \
 		 $(OBJ)/threadMan.o \
 		 $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
 		 $(OBJ)/optimizer.o $(OBJ)/stack.o \
-		 $(OBJ)/langSys.o $(OBJ)/util.o
+		 $(OBJ)/langSys.o $(OBJ)/util.o $(OBJ)/file.o
 
 objs=$(LANG_OBJS) $(LIB_OBJS)
 

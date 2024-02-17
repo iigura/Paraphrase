@@ -110,8 +110,8 @@ struct Word {
 		TypedValue& emptySlot=tmpParam->at(inAddress);
 		if(inIsForceUpdate==false && emptySlot.dataType!=DataType::EmptySlot) {
 			fprintf(stderr,"SYSTEM ERROR at Compile(addr,tv).\n");
-			fprintf(stderr,"slot is not an empty slot.\n");
-			fprintf(stderr,"current slot is:");
+			fprintf(stderr,"target slot is not an empty slot.\n");
+			fprintf(stderr,"current slot (address is %d) is:",inAddress);
 			emptySlot.Dump();
 			return false;
 		}
@@ -133,7 +133,8 @@ struct Word {
 			TypedValue tv=tmpParam->at(i);
 			switch(tv.dataType) {
 				case DataType::Address:
-				case DataType::DirectWord:
+				// case DataType::DirectWord:
+				case DataType::Word:
 					ret++;
 					break;
 				default: ret += TvSize;

@@ -31,7 +31,7 @@ const int kType_HeavyMask=0x4000;
 enum class DataType {
 	Invalid	=999,	// no values
 	MayBeAWord =kType_HeavyMask | 998,	// for args, use stringPtr.
-	DirectWord	=900,
+	// DirectWord	=900,
 	IP			=910,
 	NewWord		=920,	// wordPtr value as NewWord.
 	Threshold	=930,	// intValue as ExecutionThreshold
@@ -276,7 +276,7 @@ struct TypedValue {
 	}
 
 	TypedValue(const Word *inWordPtr)
-	  :dataType(DataType::DirectWord),wordPtr(inWordPtr) {
+	  :dataType(DataType::Word /* DirectWord */),wordPtr(inWordPtr) {
 		// empty
 	}
 
@@ -535,7 +535,7 @@ struct TypedValue {
 				dataType=inSrc.dataType;
 				break;
 
-			case DataType::DirectWord:
+			// case DataType::DirectWord:
 			case DataType::NewWord:
 			case DataType::Word:
 				dataType=inSrc.dataType;
@@ -785,7 +785,7 @@ struct TypedValue {
 				return std::hash<int>()((int)dataType);
 
 			case DataType::Word:
-			case DataType::DirectWord:
+			// case DataType::DirectWord:
 			case DataType::NewWord:
 				return std::hash<const Word*>()(wordPtr);
 
@@ -868,7 +868,7 @@ struct TypedValue {
 
 	inline bool HasWordPtr(const Word **outWordPtr) const {
 		if(dataType==DataType::Word
-		   || dataType==DataType::DirectWord
+		   // || dataType==DataType::DirectWord
 		   || dataType==DataType::NewWord
 		   || dataType==DataType::Lambda) {
 			if(outWordPtr!=NULL) {
@@ -914,7 +914,7 @@ struct TypedValue {
 			|| dataType==DataType::KV;
 	}
 
-	PP_API int GetLevel() const;
+	// PP_API int GetLevel() const;
 
 	PP_API double ToDouble(Context& inContext);
 	PP_API float  ToFloat(Context& inContext);
@@ -943,7 +943,8 @@ inline bool operator==(const TypedValue& inTV1,const TypedValue& inTV2) {
 		case DataType::IP:
 			return inTV1.ipValue==inTV2.ipValue;
 
-		case DataType::DirectWord:
+		// case DataType::DirectWord:
+		case DataType::Word:
 		case DataType::NewWord:
 			return inTV1.wordPtr==inTV2.wordPtr;
 

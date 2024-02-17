@@ -37,6 +37,7 @@ static std::deque<char> gMockStdout;
 
 static Mutex gMutexForConsoleOutput;
 
+static bool fgetsMain(Context& inContext,File *inFile);
 
 static void *getCFuncPointer(Context& inContext,
 							 std::string *inLibPath,const char *inFuncName);
@@ -263,13 +264,31 @@ void InitDict_IO() {
 		fflush(stdout);
 		NEXT;
 	}));
-	
+
+	// S --- B
+	Install(new Word("fexist?",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(
+					InvalidTypeErrorID::TosString,tos);
+		}
+		bool result=std::filesystem::exists(tos.stringPtr->c_str());
+		inContext.DS.emplace_back(result);
+		NEXT;
+	}));
+
 	Install(new Word("open",WORD_FUNC {
-		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
 
 		TypedValue tv=Pop(inContext.DS);
 		if(tv.dataType!=DataType::String) {
-			return inContext.Error(InvalidTypeErrorID::TosString,tv);
+			return inContext.Error(
+				InvalidTypeErrorID::TosString,tv);
 		}
 		File *file=new File();
 		if(file->Open(tv.stringPtr->c_str(),"a+")==false) {
@@ -332,8 +351,9 @@ void InitDict_IO() {
 
 	// file X --- file
 	Install(new Word(">file",WORD_FUNC {
-		if(inContext.DS.size()<2) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
-
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
 		TypedValue tos=Pop(inContext.DS);
 		TypedValue& tvFile=ReadTOS(inContext.DS);
 		if(tvFile.dataType!=DataType::File) {
@@ -344,51 +364,68 @@ void InitDict_IO() {
 		NEXT;
 	}));
 
-	Install(new Word("fgets",WORD_FUNC {
+	// X file ---
+	Install(new Word("fwrite",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tvFile=Pop(inContext.DS);
+		if(tvFile.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::TosFile,tvFile);
+		}
+		TypedValue tvValue=Pop(inContext.DS);
+		File *file=tvFile.filePtr.get();
+		fprintf(file->fp,"%s",tvValue.GetValueString(0).c_str());
+		NEXT;
+	}));
+
+	Install(new Word("@fgets",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 
 		TypedValue& tos=ReadTOS(inContext.DS);
 		if(tos.dataType!=DataType::File) {
 			return inContext.Error(InvalidTypeErrorID::TosFile,tos);
 		}
-
 		File *file=tos.filePtr.get();
-		if(file->fp==NULL) {
-			return inContext.Error(NoParamErrorID::FileIsAlreadyClosed);
-		}
-
-		FILE *fp=file->fp;
-		if( feof(fp) ) {
-			inContext.DS.emplace_back();
-		} else {
-			std::string buf;
-			buf.reserve(1024);
-			while(!feof(fp)) {
-				int c=fgetc(fp);
-				if(c<0) {
-					if(buf.size()==0) {
-						inContext.DS.emplace_back();
-						goto next;
-					}
-				}
-				if(c=='\r') {
-					int d=fgetc(fp);
-					if(d=='\n') {
-						break;
-					} else {
-						ungetc(d,fp);
-						break;
-					}
-				} else if(c=='\n') {
-					break;
-				}
-				buf+=c;
-			}
-			std::string s(buf);
-			inContext.DS.emplace_back(s);
-		}
-next:
+		if(fgetsMain(inContext,file)==false) { return false; }
 		NEXT;
+	}));
+
+	Install(new Word("fgets",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::File) {
+			return inContext.Error(InvalidTypeErrorID::TosFile,tos);
+		}
+		File *file=tos.filePtr.get();
+		if(fgetsMain(inContext,file)==false) { return false; }
+		NEXT;
+	}));
+
+	// file string ---
+	//   or
+	// string file ---
+	Install(new Word("unfgets",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		TypedValue sec=Pop(inContext.DS);
+		TypedValue tvFile,tvString;
+		if(tos.dataType==DataType::File && sec.dataType==DataType::String) {
+			tvFile=tos; tvString=sec;
+		} else if(tos.dataType==DataType::String && sec.dataType==DataType::File) {
+			tvFile=sec; tvString=tos;
+		} else {
+			return inContext.Error(InvalidTypeTosSecondErrorID::BothDataInvalid,
+								   tos,sec);
+		}
+		File *file=tvFile.filePtr.get();
+		Stack *us=(Stack*)(file->ungetStack);
+		us->emplace_back(tvString);
+		inContext.DS.emplace_back(tvFile);
+		NEXT;		
 	}));
 
 	Install(new Word("flush-file",WORD_FUNC {
@@ -408,6 +445,58 @@ next:
 			return inContext.Error(NoParamErrorID::CanNotFlushFile);
 		}
 		NEXT;
+	}));
+
+	// S ---
+	Install(new Word("mkdir",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
+		TypedValue tos=Pop(inContext.DS);
+		if(tos.dataType!=DataType::String) {
+			return inContext.Error(
+					InvalidTypeErrorID::TosString,tos);
+		}
+		std::string dirPath=*tos.stringPtr;
+		std::error_code ec;
+		if( !std::filesystem::create_directory(dirPath,ec) ) {
+			if( ec ) {
+				return inContext.Error(
+						ErrorIdWithString::CanNotCreateDir,
+						ec.message());
+			} else {
+				return inContext.Error(
+						ErrorIdWithString::DirAlreadyExists,
+						dirPath);
+			}
+		}
+		NEXT;
+	}));
+
+	// s1(=src) s2(=dest) ---
+	Install(new Word("fcopy",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
+		}
+		TypedValue tvDest=Pop(inContext.DS);
+		if(tvDest.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvDest);
+		}
+		TypedValue tvSrc=Pop(inContext.DS);
+		if(tvSrc.dataType!=DataType::String) {
+			return inContext.Error(InvalidTypeErrorID::SecondString,tvSrc);
+		}
+		if(std::filesystem::exists(*tvSrc.stringPtr)==false) {
+			return inContext.Error(ErrorIdWithString::NoSuchFileExist,
+								   *tvSrc.stringPtr);
+		}
+		try {
+			std::filesystem::copy(tvSrc.stringPtr->c_str(),tvDest.stringPtr->c_str(),
+								  std::filesystem::copy_options::overwrite_existing);
+		} catch(...) {
+			inContext.Error(NoParamErrorID::SystemError);
+		}
+		NEXT;	
 	}));
 
 	Install(new Word("get-line",WORD_FUNC {
@@ -466,15 +555,15 @@ openFileError:
 		if(line.length()>1 && line[0]=='#') {
 			// emtpy <- skip shebang.
 		} else {
-			if(OuterInterpreter(inContext,line)!=OIResult::NoError) {
+			if(OuterInterpreter(inContext,line,1)!=OIResult::NoError) {
 				inContext.IS.clear();
 				return false;
 			}
 		}
 		int count=2;	// line count is 1-origin.
 		while(std::getline(inputStream,line).eof()==false) {
-			if(OuterInterpreter(inContext,line)!=OIResult::NoError) {
-				fprintf(stderr,"Error at %d, line=%s\n",count,line.c_str());
+			if(OuterInterpreter(inContext,line,count)!=OIResult::NoError) {
+				fprintf(stderr,"load error at %d, line=%s\n",count,line.c_str());
 				inContext.IS.clear();
 				return false;
 			}
@@ -517,7 +606,8 @@ openFileError:
 												second.stringPtr.get(),
 												tos.stringPtr->c_str());
 		if(func==NULL) {
-			return inContext.Error(ErrorIdWithString::CanNotFindTheEntryPoint,*tos.stringPtr);
+			return inContext.Error(ErrorIdWithString::CanNotFindTheEntryPoint,
+								   *tos.stringPtr);
 		}
 		inContext.DS.emplace_back(func);
 		NEXT;
@@ -553,6 +643,50 @@ openFileError:
 		printf("sizeof(dataType)=%d\n",(int)sizeof(tv.dataType));
 		NEXT;
 	}));
+}
+
+static bool fgetsMain(Context& inContext,File *inFile) {
+	if(inFile->fp==NULL) {
+		return inContext.Error(NoParamErrorID::FileIsAlreadyClosed);
+	}
+	Stack *us=(Stack*)(inFile->ungetStack);
+	if(us->size()>0) {
+		TypedValue tvString=Pop(us);
+		inContext.DS.emplace_back(tvString);
+		return true;
+	}
+
+	FILE *fp=inFile->fp;
+	if( feof(fp) ) {
+		inContext.DS.emplace_back();
+	} else {
+		std::string buf;
+		buf.reserve(1024);
+		while(!feof(fp)) {
+			int c=fgetc(fp);
+			if(c<0) {
+				if(buf.size()==0) {
+					inContext.DS.emplace_back();
+					return true;
+				}
+			}
+			if(c=='\r') {
+				int d=fgetc(fp);
+				if(d=='\n') {
+					break;
+				} else {
+					ungetc(d,fp);
+					break;
+				}
+			} else if(c=='\n') {
+				break;
+			}
+			buf+=c;
+		}
+		std::string s(buf);
+		inContext.DS.emplace_back(s);
+	}
+	return true;
 }
 
 static void addMockStdin(const char *inStr) {

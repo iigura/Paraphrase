@@ -1,0 +1,146 @@
+.darkmode--activated a {
+	color: #000;
+}
+
+.darkmode--activated a:visited {
+	color: blue;
+}
+
+.sansserif {
+	font-family: sans-serif;
+}
+
+body {
+	font-family:'Noto Sans JP',sans-serif;
+	text-align: center;
+	background-color: white;
+	color: black;
+}
+
+#container{
+	width: 95%;
+	max-width: 910px;
+	text-align: center;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+header {
+	width: 100%;
+	font-size: 1.5em;
+	text-align: left;
+}
+
+#column-container {
+	text-align:center;
+	display: flex; 
+	justify-content: space-between;
+}
+
+.side {
+	width:200px;
+	text-align:left;
+    padding-left: 0;
+    margin-left: 0;
+} 
+
+.paradocsWidget {
+	margin-bottom: 20px;
+	position: sticky;
+	top: 20px;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.paradocsWidget > ul {
+	padding-inline-start: 2px;
+	list-style-position: inside;
+	color: black;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.toggle-icon {
+	color: yellow;
+}
+
+.top-index {
+    list-style-type: none;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.top-index-li {
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.sub-index {
+	display: none;
+}
+
+.sub-index.open {
+	display: block;
+	font-size: 85%;
+    list-style-type: none;
+	list-style-position: inside;
+    padding-left: 15px;
+    margin-left: 0;
+}
+
+.sub-lindex-li {
+}
+
+.paradocsWidget > a {
+}
+
+.content {
+	width:700px;
+	text-align:left;
+	margin-left:10px;
+}
+
+h2 {
+	font-size: 125%;
+}
+
+p {
+	text-indent: 1em;
+}
+
+div.example {
+    text-indent: 0em;
+    padding-left: 1em;
+    border-radius: 15px;
+    border: solid 2px;
+    border-color: #888888;
+}
+
+div.narrow-example {
+	width: 500px;
+    text-indent: 0em;
+    padding-left: 1em;
+    border-radius: 15px;
+    border: solid 2px;
+    border-color: #888888;
+}
+
+table {
+  border-collapse: collapse; 
+}
+
+table tr, table td, table th {
+  padding: 0px;
+  line-height: 1.4;
+}
+
+td.table-headline {
+	width: 140px;
+}
+
+pre {
+	font-family: Consolas, 'Courier New', Courier, Monaco, monospace;
+	font-size: 14px;
+	line-height: 1.2;
+}
+

@@ -446,7 +446,7 @@ static bool execBody(Context& inContext,int inNumOfParallels) {
 	}
 
 	TypedValue tvExec=Pop(inContext.DS);
-	if(tvExec.dataType!=DataType::DirectWord && tvExec.dataType!=DataType::NewWord) {
+	if(tvExec.dataType!=DataType::Word /* DirectWord */ && tvExec.dataType!=DataType::NewWord) {
 		return inContext.Error(InvalidTypeErrorID::TosWpOrNw,tvExec);
 	}
 

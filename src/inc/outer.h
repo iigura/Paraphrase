@@ -20,7 +20,9 @@ enum class OIResult {
 };
 
 PP_API void InitOuterInterpreter();
-PP_API OIResult OuterInterpreter(Context& inContext,std::string& inLine);
+PP_API OIResult OuterInterpreter(Context& inContext,std::string& inLine,int inLineNo);
+PP_API OIResult OuterInterpreter(Context& inContext,TypedValue& inTV,
+								 const std::string& inTokVal,int inLineNo);
 PP_API TypedValue GetTypedValue(std::string inToken);
 PP_API std::string ReadFromStdin(bool *outIsEOF,const char *inPrompt);
  

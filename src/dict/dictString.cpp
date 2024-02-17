@@ -301,7 +301,8 @@ void InitDict_String() {
 			return inContext.Error(InvalidTypeErrorID::TosString,tvScriptSource);
 		}
 		size_t depthOfIS=inContext.IS.size();
-		OIResult result=OuterInterpreter(inContext,*tvScriptSource.stringPtr);
+		OIResult result=OuterInterpreter(inContext,*tvScriptSource.stringPtr,
+										 inContext.LineNo);
 		if(result!=OIResult::NoError) {
 			auto itr=inContext.IS.begin();
 			std::advance(itr,depthOfIS);

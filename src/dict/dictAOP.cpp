@@ -80,7 +80,7 @@ void InitDict_AOP() {
 
 	// --- 
 	Install(new Word("_docolMain",WORD_FUNC {
-		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IpsBroken); }
+		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IsBroken); }
 		const Word **target=inContext.IS.back();
 		const Word *targetWord=*target;
 		inContext.IS.emplace_back(inContext.ip);
@@ -94,7 +94,7 @@ void InitDict_AOP() {
 	}));
 
 	Install(new Word("_docolCleanUp",WORD_FUNC {
-		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IpsBroken); }
+		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IsBroken); }
 		const Word **target=inContext.IS.back();
 		const Word *targetWord=*target;
 		if(targetWord->numOfLocalVar>0) { inContext.Env.pop_back(); }
@@ -102,16 +102,16 @@ void InitDict_AOP() {
 	}));
 
 	// ローカル変数を考えなければ _docolMain だけで十分なのだが、
-	// ローカル変数のクリアのため、_docolCleanUp を呼ぶ必要がある。<-- 本当か？
+	// ローカル変数のクリアのため、_docolCleanUp を呼ぶ必要がある。<-- 本当か？ <-- 本当
 	// Forth であれば、docol == _docolMain で良い。
 	Install(new Word("docol",WordLevel::Immediate,WORD_FUNC {
 		inContext.newWord->CompileWord("_docolMain");
-		// inContext.newWord->CompileWord("_docolCleanUp");
+		inContext.newWord->CompileWord("_docolCleanUp");
 		NEXT;
 	}));
 
 	Install(new Word("docol-target-word",WORD_FUNC {
-		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IpsBroken); }
+		if(inContext.IS.size()<1) { return inContext.Error(NoParamErrorID::IsBroken); }
 		const Word **target=inContext.IS.back();
 		const Word *targetWord=*target;
 		inContext.DS.emplace_back(targetWord);

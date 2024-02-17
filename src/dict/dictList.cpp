@@ -677,7 +677,7 @@ onExit:
 		const size_t n=listPtr->size();
 		for(size_t i=0; i<n; i++) {
 			TypedValue& e=listPtr->at(i);
-			if(e.dataType!=DataType::Word) {
+			if(e.dataType!=DataType::Word && e.dataType!=DataType::Lambda) {
 				return inContext.Error(NoParamErrorID::TosLambdaList);
 			}
 			if(inContext.Exec(e)==false) {
@@ -704,7 +704,8 @@ onExit:
 		}
 
 		TypedValue tos=Pop(inContext.DS);
-		if(tos.dataType!=DataType::Word) {
+		// if(tos.dataType!=DataType::Word) {
+		if(tos.HasWordPtr(NULL)==false) {
 			return inContext.Error(InvalidTypeErrorID::TosWp,tos);
 		}
 
@@ -920,7 +921,7 @@ onExit:
 		}
 
 		TypedValue lambda=Pop(inContext.DS);
-		if(lambda.dataType!=DataType::Word) {
+		if(lambda.dataType!=DataType::Word && lambda.dataType!=DataType::Lambda) {
 			return inContext.Error(InvalidTypeErrorID::TosWp,lambda);
 		}
 

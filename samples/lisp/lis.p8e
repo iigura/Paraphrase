@@ -131,7 +131,7 @@
 	`env , 1 get `var , `value , set
 ;
 
-`global_env var
+`global_env global-decl
 standard_env >$global_env
 
 // ------------------------------------------------------------------

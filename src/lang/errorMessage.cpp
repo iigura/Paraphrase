@@ -209,7 +209,7 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 	//  }
 	// },
 
-	{ NoParamErrorID::IpsBroken, {
+	{ NoParamErrorID::IsBroken, {
 		{ PPLang::EN,	"IS may be broken."			},
 		{ PPLang::JP, 	"IS が壊れているようです。" },
 	  }
@@ -1248,6 +1248,12 @@ static ErrorWithStringMessageDict gErrorWithStringMessageDict {
 		{ PPLang::JP,	"ファイル '%s' を読み込めません。" },
 	  }
 	},
+	{ ErrorIdWithString::NoSuchFileExist, {
+		{ PPLang::EN,	"Not such file exist '%s'." },
+		{ PPLang::JP,	"ファイル '%s' が存在しません。" },
+	  }
+	},
+
 	{ ErrorIdWithString::CanNotFindTheEntryPoint, {
 		{ PPLang::EN,	"Can not read the entry point in '%s'." },
 		{ PPLang::JP,	"ファイル '%s' のエントリポイントが見つかりません。" },
@@ -1265,6 +1271,19 @@ static ErrorWithStringMessageDict gErrorWithStringMessageDict {
 						"The string is '%s'." },
 		{ PPLang::JP,	"文字列は 1 文字のみからなるものでなければなりｍせん。"
 						"現在の文字列の内容は '%s' です。" },
+	  }
+	},
+	
+	{ ErrorIdWithString::CanNotCreateDir, {
+	  	{ PPLang::EN,	"Failed to create directory: %s" },
+	  	{ PPLang::JP,	"ディレクトリの作成に失敗しました。"
+						"(%s)." },
+	  }
+	},
+	{ ErrorIdWithString::DirAlreadyExists, {
+		{ PPLang::EN,	"Directory '%s' already exists." },
+		{ PPLang::JP,	"ディレクトリ '%s' は"
+						"既に存在しています。" },
 	  }
 	},
 };

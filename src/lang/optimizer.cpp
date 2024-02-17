@@ -298,11 +298,11 @@ void ReplaceTailRecursionToJump(Word *inWord,CodeThread *ioThread) {
 	size_t n=ioThread->size();
 	if(n<2) { return; }
 	TypedValue& semis=ioThread->at(n-1);
-	if(semis.dataType!=DataType::DirectWord || semis.wordPtr!=Dict["std:_semis"]) {
+	if(semis.dataType!=DataType::Word /* DirectWord */ || semis.wordPtr!=Dict["std:_semis"]) {
 		return;
 	}
 	TypedValue& lastCall=ioThread->at(n-2);
-	if(lastCall.dataType!=DataType::DirectWord || lastCall.wordPtr!=inWord) {
+	if(lastCall.dataType!=DataType::Word /* DirectWord */ || lastCall.wordPtr!=inWord) {
 		return;
 	}
 
@@ -366,7 +366,7 @@ static bool mathOpOptimize(CodeThread *ioThread) {
 		if(tvN.IsNumber()==false) { continue; }
 		TypedValue& op=ioThread->at(i+2);
 		int mathOpDB_index=-1;
-		for(int j=0; gMathOp[j].originalOp.dataType==DataType::DirectWord; j++) {
+		for(int j=0; gMathOp[j].originalOp.dataType==DataType::Word /* DirectWord */; j++) {
 			if(op==gMathOp[j].originalOp) { mathOpDB_index=j; break; }
 		}	
 		if(mathOpDB_index<0) { continue; }
@@ -488,7 +488,7 @@ static bool lvopOptimize(CodeThread *ioThread) {
 static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::DirectWord) { return false; }
+	if(tv.dataType!=DataType::Word /* DirectWord */) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	if((lvop&LVOP::opMask)!=inLVOP) { return false; }
 	return (lvop & LVOP::destMask)==LVOP::dDS;
@@ -497,7 +497,7 @@ static bool toDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 static bool fromDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::DirectWord) { return false; }
+	if(tv.dataType!=DataType::Word /* DirectWord */) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	if((lvop&LVOP::opMask)!=inLVOP) { return false; }
 	return (lvop & LVOP::src1Mask)==LVOP::sDS;
@@ -506,7 +506,7 @@ static bool fromDsOpCheck(CodeThread *inThread,int inTarget,LVOP inLVOP) {
 static bool isLVOpSupport(CodeThread *inThread,int inTarget,LVOP inArgMask) {
 	if(inThread->size()<=inTarget) { return false; }
 	TypedValue& tv=inThread->at(inTarget);
-	if(tv.dataType!=DataType::DirectWord) { return false; }
+	if(tv.dataType!=DataType::Word /* DirectWord */) { return false; }
 	LVOP lvop=tv.wordPtr->LVOpHint;
 	return (lvop & inArgMask) !=0;
 }

@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.96"
+#define VERSION "0.97"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -62,6 +62,7 @@ const int kMaxHistory=255;
 
 static std::deque<TypedValue> *gTvListForArgs=new std::deque<TypedValue>();
 static const char *gInputFilePath=NULL;
+static int gLineNo=-1;
 static std::string (*gReadLineFunc)();
 static bool gIsEOF=false;
 
@@ -151,7 +152,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
 	StartThreadCollector();
 
 	if(gToEvalStr!="") {
-		OIResult result=OuterInterpreter(*GlobalContext,gToEvalStr);
+		OIResult result=OuterInterpreter(*GlobalContext,gToEvalStr,-1);
 		if(result!=OIResult::NoError) { return -1; }
 	}
 	if(gInputFilePath==NULL && gEvalAndExit ) { return 0; }
@@ -171,7 +172,8 @@ static_assert(sizeof(double)>=sizeof(Word*)
 		if(gInputFilePath==NULL) { printVersion(); }
 		while(gIsEOF==false) {
 			std::string line=gReadLineFunc();
-			OIResult result=OuterInterpreter(*GlobalContext,line);
+			GlobalContext->LineNo=gLineNo;
+			OIResult result=OuterInterpreter(*GlobalContext,line,gLineNo);
 			if(gInputFilePath==NULL) {
 				if(result!=OIResult::NoError) {
 					if(GlobalContext->IsInterpretMode()==false) {
@@ -190,13 +192,13 @@ static_assert(sizeof(double)>=sizeof(Word*)
 		}
 	}
 
-	if(gArgsToExec.size()>0) {
-		const size_t n=gArgsToExec.size();
-		for(size_t i=0; i<n; i++) {
-			std::string s=gArgsToExec[i];
-			OIResult result=OuterInterpreter(*GlobalContext,s);
-			if(result!=OIResult::NoError) { return -1; }
-		}
+	while(gTvListForArgs->size()>0) {
+		TypedValue arg=gTvListForArgs->at(0);
+		TypedValue tv = arg.dataType==DataType::MayBeAWord
+					  ? GetTypedValue(*arg.stringPtr) : arg;
+		gTvListForArgs->erase(gTvListForArgs->begin());
+		OIResult result=OuterInterpreter(*GlobalContext,tv,arg.GetValueString(),-1);
+		if(result!=OIResult::NoError) { return -1; }
 	}
 
 	if(gInputFilePath!=NULL) {
@@ -212,6 +214,7 @@ static_assert(sizeof(double)>=sizeof(Word*)
     	std::cout << result << std::endl;
 	}
 
+	fflush(stdout);
 	StopThreadCollector();
 	return 0;
 }
@@ -342,6 +345,7 @@ static bool initReadLineFunc() {
 				return GlobalContext->Error(ErrorIdWithString::CanNotOpenFile,
 											std::string(gInputFilePath));
 			}
+			gLineNo=0;
 			std::string s=gInputFilePath;
 			std::filesystem::path argPath=std::filesystem::path(s);
 			if(argPath.parent_path()=="") {
@@ -374,6 +378,7 @@ static const char *getPrompt() {
 static std::string readFromFile() {
 	std::string ret;
 	gIsEOF=std::getline(gFileStream,ret).eof();
+	gLineNo++;
 	return ret;
 }
 
@@ -402,7 +407,7 @@ static void printUsage() {
 }
 
 static void printVersion() {
-	printf("Paraphrase %s  Copyright (C) 2018-2023 Koji Iigura <@paraphrase_lang>\n",kVersion);
+	printf("Paraphrase %s  Copyright (C) 2018-2024 Koji Iigura <@paraphrase_lang>\n",kVersion);
 }
 
 static void showBuildInfo() {

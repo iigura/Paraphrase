@@ -12,6 +12,12 @@ inline TypedValue Pop(Stack& inStack) {
 	return ret;
 }
 
+inline TypedValue Pop(Stack *inStack) {
+	TypedValue ret=inStack->back();
+	inStack->pop_back();
+	return ret;
+}
+
 inline TypedValue& ReadTOS(Stack& inStack) {
 	return inStack.back();
 }

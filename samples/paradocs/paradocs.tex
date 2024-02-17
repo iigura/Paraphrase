@@ -1,0 +1,61 @@
+\documentclass[<($default-point)>,<($paper-size)>]{jsbook}
+
+\usepackage[margin=20truemm]{geometry}
+\usepackage{here}
+\usepackage{udline}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+\usepackage{imakeidx}
+
+\usepackage{listings,jvlisting}
+\usepackage{dashrule}
+% \usepackage{courier}
+\usepackage{dejavu}
+
+\lstset{
+  basicstyle=\ttfamily,
+  % identifierstyle={\small},
+  % commentstyle={\smallitshape},
+  % keywordstyle={\small\bfseries},
+  % ndkeywordstyle={\small},
+  % stringstyle={\small\tightttfamily},
+  % frame={tb},
+  % frame=none,
+  frame=single,
+  breaklines=true,
+  % columns=[l]{fullflexible},
+  columns=fixed,
+  % numbers=left,
+  numbers=none,
+  xrightmargin=0zw,
+  xleftmargin=0zw,
+  % numberstyle={\scriptsize},
+  % stepnumber=1,
+  % numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\makeindex
+
+\makeatletter
+\newcounter{subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection.\@arabic\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{4}{7.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\title{<($title)>}
+\author{<($author)>}
+\date{<($date)>}
+
+\begin{document}
+\definecolor{lightgray}{gray}{0.92}
+\setlength{\tabcolsep}{10pt} % 左右のパディングを10ptに設定
+\setlength{\extrarowheight}{5pt} % 上下のパディングを5ptに追加
+<($make-title)>
+<($table-of-contents)>
+

@@ -20,9 +20,10 @@ static int findCharForRawString(std::string& inLine,size_t inStartPos);
 
 static std::string getToken(std::string& inLine,int *inScanPos,bool *outIsSuccess=NULL);
 
-static bool doInterpretLevel(Context& inContext,TypedValue& inTV);
-static bool doCompileLevel(Context& inContext,TypedValue& inTV);
-static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inToken);
+static bool doInterpretLevel(Context& inContext,TypedValue& inTV,int inLineNo=-1);
+static bool doCompileLevel(Context& inContext,TypedValue& inTV,int inLineNo=-1);
+static bool doSymbolLevel(Context& inContext,TypedValue& inTV,
+						  const std::string& inToken,int inLineNo=-1);
 
 static bool execute(Context& inContext,const TypedValue& inTypedValue);
 
@@ -32,52 +33,15 @@ PP_API void InitOuterInterpreter() {
 	gTvEOL=TypedValue(Dict[EOL_WORD]);
 }
 
-PP_API OIResult OuterInterpreter(Context& inContext,std::string& inLine) {
+PP_API OIResult OuterInterpreter(Context& inContext,std::string& inLine,int inLineNo) {
 	inContext.line=inLine;
 	int scanPos=0;
 	bool isSuccess=true;
 	for(std::string tokVal=getToken(inLine,&scanPos,&isSuccess);
 	  tokVal!=""; tokVal=getToken(inLine,&scanPos)) {
 		TypedValue tv=GetTypedValue(tokVal);
-		if(tv.dataType==DataType::Invalid && inContext.IsSymbolMode()==false) {
-			inContext.Error(ErrorIdWithString::InvalidToken,tokVal);
-			return OIResult::InvalidToken;
-		}
-		const Level theta=inContext.ExecutionThreshold;
-		switch(theta) {
-			case Level::Interpret:
-				if(tv.dataType==DataType::Invalid) {
-					inContext.ip=NULL;
-					inContext.Error(ErrorIdWithString::CanNotFindTheWord,tokVal);
-					return OIResult::NoSuchWord;
-				} else {
-					if(doInterpretLevel(inContext,tv)==false) {
-						return OIResult::WordExecutingError;
-					}
-				}
-				break;
-			case Level::Compile:
-				if(tv.dataType==DataType::Invalid) {
-					inContext.Error(ErrorIdWithString::CanNotFindTheWord,tokVal);
-					return OIResult::NoSuchWord;
-				} else {
-					if(doCompileLevel(inContext,tv)==false) {
-						return OIResult::WordExecutingError;
-					}
-				}
-				break;
-			case Level::Symbol:
-				if(tv.dataType==DataType::Invalid) {
-					tv=TypedValue(tokVal,DataType::Symbol);
-				}
-				if(doSymbolLevel(inContext,tv,tokVal)==false) {
-					return OIResult::WordExecutingError;
-				}
-				break;
-			default:
-				fprintf(stderr,"SYSTEM ERROR at OuterInterpreter.\n");
-				return OIResult::SystemError;	
-		}
+		OIResult result=OuterInterpreter(inContext,tv,tokVal,inLineNo);
+		if(result!=OIResult::NoError) { return result; }
 	}
 	if( isSuccess ) {
 		execute(inContext,gTvEOL);
@@ -86,28 +50,81 @@ PP_API OIResult OuterInterpreter(Context& inContext,std::string& inLine) {
 		return OIResult::OpenQuoteError;
 	}
 }
-static bool doInterpretLevel(Context& inContext,TypedValue& inTV) {
-	if(inTV.dataType==DataType::DirectWord) {
+
+PP_API OIResult OuterInterpreter(Context& inContext,TypedValue& inTV,
+								 const std::string& inTokVal,int inLineNo) {
+	if(inTV.dataType==DataType::Invalid && inContext.IsSymbolMode()==false) {
+		inContext.LineNo=inLineNo;
+		inContext.Error(ErrorIdWithString::InvalidToken,inTokVal);
+		return OIResult::InvalidToken;
+	}
+	const Level theta=inContext.ExecutionThreshold;
+	switch(theta) {
+		case Level::Interpret:
+			if(inTV.dataType==DataType::Invalid) {
+				inContext.ip=NULL;
+				inContext.LineNo=inLineNo;
+				inContext.Error(ErrorIdWithString::CanNotFindTheWord,inTokVal);
+				return OIResult::NoSuchWord;
+			} else {
+				if(doInterpretLevel(inContext,inTV,inLineNo)==false) {
+					return OIResult::WordExecutingError;
+				}
+			}
+			break;
+		case Level::Compile:
+			if(inTV.dataType==DataType::Invalid) {
+				inContext.LineNo=inLineNo;
+				inContext.Error(ErrorIdWithString::CanNotFindTheWord,inTokVal);
+				return OIResult::NoSuchWord;
+			} else {
+				if(doCompileLevel(inContext,inTV,inLineNo)==false) {
+					return OIResult::WordExecutingError;
+				}
+			}
+			break;
+		case Level::Symbol:
+			if(inTV.dataType==DataType::Invalid) {
+				inTV=TypedValue(inTokVal,DataType::Symbol);
+			}
+			if(doSymbolLevel(inContext,inTV,inTokVal,inLineNo)==false) {
+				return OIResult::WordExecutingError;
+			}
+			break;
+		default:
+			if(inLineNo>=0) { fprintf(stderr,"line %d : ",inLineNo); }
+			fprintf(stderr,"SYSTEM ERROR at OuterInterpreter.\n");
+			return OIResult::SystemError;	
+	}
+	return OIResult::NoError;
+}
+
+static bool doInterpretLevel(Context& inContext,TypedValue& inTV,int inLineNo) {
+	inContext.LineNo=inLineNo;
+	if(/* inTV.dataType==DataType::DirectWord || */ inTV.dataType==DataType::Word) {
 		if(inContext.Exec(inTV)==false) { return false; }
 	} else {
 		inContext.DS.emplace_back(inTV);
 	}
 	return true;
 }
-static bool doCompileLevel(Context& inContext,TypedValue& inTV) {
-	if(inTV.dataType==DataType::DirectWord
+static bool doCompileLevel(Context& inContext,TypedValue& inTV,int inLineNo) {
+	inContext.LineNo=inLineNo;
+	if((/* inTV.dataType==DataType::DirectWord || */ inTV.dataType==DataType::Word)
 	  && (int)inTV.wordPtr->level>=(int)inContext.ExecutionThreshold) {
 		if(inContext.Exec(inTV)==false) { return false; }
 	} else {
-		if(inTV.dataType!=DataType::DirectWord) {
+		if(/* inTV.dataType!=DataType::DirectWord && */ inTV.dataType!=DataType::Word) {
 			inContext.newWord->CompileWord("_lit");
 		}
 		inContext.newWord->CompileValue(inTV);
 	}
 	return true;
 }
-static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inToken) {
-	if(inTV.dataType==DataType::DirectWord) {
+static bool doSymbolLevel(Context& inContext,TypedValue& inTV,
+						  const std::string& inToken,int inLineNo) {
+	inContext.LineNo=inLineNo;
+	if(inTV.dataType==DataType::Word) {
 		if((int)inTV.wordPtr->level>=(int)inContext.ExecutionThreshold) {
 			if(inContext.Exec(inTV)==false) { return false; }
 		} else {
@@ -120,7 +137,7 @@ static bool doSymbolLevel(Context& inContext,TypedValue& inTV,std::string& inTok
 }
 
 static bool execute(Context& inContext,const TypedValue& inTypedValue) {
-	if(inTypedValue.dataType==DataType::DirectWord) {
+	if(/* inTypedValue.dataType==DataType::DirectWord || */ inTypedValue.dataType==DataType::Word) {
 		return inContext.Exec(inTypedValue);
 	} else {
 		inContext.DS.push_back(inTypedValue);

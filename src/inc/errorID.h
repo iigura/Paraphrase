@@ -28,7 +28,7 @@ enum class NoParamErrorID {
 
 	RsBroken, RsBrokenTosShouldBeInt, RsBrokenSecondShouldBeInt, // RsNotEnough,
 
-	IpsBroken,	// IP Stack is broken
+	IsBroken,	// IS (=IP stack) is broken
 
 	SsBroken,
 
@@ -184,12 +184,16 @@ enum class ErrorIdWithString {
 	AlreadyRegisteredLocalVar, NoSuchLocalVar,
 
 	CanNotOpenFile, CanNotCreateFile, CanNotCloseTheFile, CanNotReadFile,
+	NoSuchFileExist,
 
 	CanNotFindTheEntryPoint,
 
 	NotEnoughParamValues,
 
 	StringShouldBeOneChar,
+
+	CanNotCreateDir,
+	DirAlreadyExists,
 };
 
 enum class ErrorIdWithInt {

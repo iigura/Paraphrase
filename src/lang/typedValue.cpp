@@ -99,7 +99,7 @@ PP_API std::string TypedValue::GetTypeStr() const {
 		case DataType::Invalid:		return std::string("(INVALID)");
 		case DataType::EoC:			return std::string("EoC");
 		case DataType::EmptySlot:	return std::string("(EMPRY-SLOT)");
-		case DataType::DirectWord:	return std::string("(WORD-PTR)");
+		// case DataType::DirectWord:	return std::string("(WORD-PTR)");
 		case DataType::IP:			return std::string("(IPDATA)");
 		case DataType::ParamDest:	return std::string("PARAM-DEST");
 		case DataType::NewWord:		return std::string("(NEW-WORD-PTR)");
@@ -144,9 +144,11 @@ PP_API std::string TypedValue::GetTypeStr() const {
 static void printIndent(int inIndent);
 static std::string indentStr(int inIndent);
 
+#if 0
 PP_API int TypedValue::GetLevel() const {
 	return dataType==DataType::DirectWord ? (int)wordPtr->level : 0;
 }
+#endif
 
 PP_API void TypedValue::PrintValue(int inIndent,bool inTypePostfix) const {
 	printIndent(inIndent);
@@ -257,7 +259,7 @@ PP_API std::string TypedValue::GetValueString(int inIndent,
 			ret=(boost::format("(PARAM-DEST %p)")%ipValue).str();
 			break;
 
-		case DataType::DirectWord:
+		// case DataType::DirectWord:
 		case DataType::NewWord:
 		case DataType::Word:
 			ret=(boost::format("%p[%s]")%wordPtr%wordPtr->longName).str();
@@ -497,7 +499,7 @@ PP_API bool IsValidDataTypeValue(DataType inDataType) {
 		case DataType::Invalid:
 		case DataType::EoC:
 		case DataType::EmptySlot:
-		case DataType::DirectWord:
+		// case DataType::DirectWord:
 		case DataType::IP:
 		case DataType::ParamDest:
 		case DataType::NewWord:

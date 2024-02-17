@@ -4,6 +4,8 @@
 #include "word.h"
 #include "context.h"
 
+static bool registerGlobalVar(Context& inContext,
+							  std::shared_ptr<std::string>& inVarName);
 static bool colon(Context& inContext,bool inDefineShortend);
 static bool compileLambda(Context& inContext,TypedValue& inLambda);
 static bool constant(Context& inContext,
@@ -214,6 +216,19 @@ onError:
 		NEXT;
 	}));
 
+	Install(new Word("caller",WORD_FUNC {
+		if(inContext.IS.size()<2) {
+			// the case of executed this word at top-level
+			// or call the word at top-level which call this word.
+			inContext.DS.emplace_back(TypedValue());
+		} else {
+			int n=(int)inContext.IS.size();
+			const Word **caller=inContext.IS[n-2];
+			inContext.DS.emplace_back(DataType::Word,*caller);
+		}
+		NEXT;
+	}));
+
 	// string ---
 	Install(new Word("forget",WORD_FUNC {
 		if(inContext.DS.size()<1) {
@@ -399,75 +414,31 @@ onError:
 		NEXT;
 	}));
 
-	// usage: "varName" var
+	// usage: `varName global-decl
 	// string ---
-	Install(new Word("var",WORD_FUNC {
+	Install(new Word("global-decl",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue tos=Pop(inContext.DS);
 		if(tos.dataType!=DataType::String && tos.dataType!=DataType::Symbol) {
 			return inContext.Error(InvalidTypeErrorID::TosString,tos);
 		}
+		if(registerGlobalVar(inContext,tos.stringPtr)==false) { return false; }
+		NEXT;
+	}));
 
-		auto iter=Dict.find(*tos.stringPtr);
-		if(iter!=Dict.end()) {
-			return inContext.Error(ErrorIdWithString::AlreadyDefined,*tos.stringPtr);
+	// usage: initial-value `varName global
+	Install(new Word("global",WORD_FUNC {
+		if(inContext.DS.size()<2) {
+			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}
-
-		Word *newWord=new Word(tos.stringPtr.get());
-
-		const int paramSize=2+TvSize*2+MutexSize;
-		newWord->param=new const Word*[paramSize];
-		
-		const Word *lit=GetWordPtr("_lit");
-		if(lit==NULL) {
-			return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
-								   std::string("_lit"));
+		TypedValue tvVarName=Pop(inContext.DS);
+		if(tvVarName.dataType!=DataType::String
+		   && tvVarName.dataType!=DataType::Symbol) {
+			return inContext.Error(InvalidTypeErrorID::TosString,tvVarName);
 		}
-		const Word *semis=GetWordPtr("_semis");
-		if(semis==NULL) {
-			return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
-								   std::string("_semis"));
-		}
-
-		const int storageIndex=1+TvSize+1;
-		const int mutexIndex=1+TvSize+1+TvSize;
-		newWord->param[0]=lit;
-		new((TypedValue*)(newWord->param+1)) TypedValue(DataType::ParamDest,
-														newWord->param+storageIndex);
-		newWord->param[1+TvSize]=semis;
-		new((TypedValue*)(newWord->param+storageIndex)) TypedValue();	// <- storage
-		new ((Mutex *)(newWord->param+mutexIndex)) Mutex();
-		initMutex(*((Mutex *)(newWord->param+mutexIndex))); 
-
-		Dict[newWord->shortName]=newWord;
-		Dict[newWord->longName ]=newWord;
-
-		// define utility words.
-		Word *newWordBackup=inContext.newWord;
-			// define >$varName (ex: >$x)
-			std::string toVarName((">$"+*tos.stringPtr.get()).c_str());
-			Word *toVar=new Word(&toVarName);
-			toVar->CompileWord(tos.stringPtr->c_str());
-			toVar->CompileWord("store");
-			toVar->CompileWord("_semis");
-			toVar->BuildParam();
-			inContext.newWord=toVar;
-			inContext.FinishWordDef();
-			Dict[toVar->shortName]=toVar;
-			Dict[toVar->longName ]=toVar;
-
-			// define $varName> (ex: $x>)
-			std::string fromVarName((("$"+*tos.stringPtr.get())+">").c_str());
-			Word *fromVar=new Word(&fromVarName);
-			fromVar->CompileWord(tos.stringPtr->c_str());
-			fromVar->CompileWord("fetch");
-			fromVar->CompileWord("_semis");
-			fromVar->BuildParam();
-			inContext.newWord=fromVar;
-			inContext.FinishWordDef();
-			Dict[fromVar->shortName]=fromVar;
-			Dict[fromVar->longName ]=fromVar;
-		inContext.newWord=newWordBackup;
+		if(registerGlobalVar(inContext,tvVarName.stringPtr)==false) { return false; }
+		inContext.Exec(*tvVarName.stringPtr);
+		inContext.Exec(std::string("store"));
 		NEXT;
 	}));
 
@@ -707,6 +678,34 @@ onError:
 		NEXT;
 	}));
 
+	// W --- W S
+	Install(new Word("@word-short-name",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
+		TypedValue& tvWord=ReadTOS(inContext.DS);
+		const Word *wordPtr;
+		if(tvWord.HasWordPtr(&wordPtr)==false) {
+			return inContext.Error(InvalidTypeErrorID::TosWp,tvWord);
+		}
+		inContext.DS.emplace_back(wordPtr->shortName);
+		NEXT;
+	}));
+
+	// W --- S
+	Install(new Word("word-short-name",WORD_FUNC {
+		if(inContext.DS.size()<1) {
+			return inContext.Error(NoParamErrorID::DsIsEmpty);
+		}
+		const Word *wordPtr;
+		TypedValue tvWord=Pop(inContext.DS);
+		if(tvWord.HasWordPtr(&wordPtr)==false) {
+			return inContext.Error(InvalidTypeErrorID::TosWp,tvWord);
+		}
+		inContext.DS.emplace_back(wordPtr->shortName);
+		NEXT;
+	}));
+
 	// --------------------------------
 	// 	attribute
 	// --------------------------------
@@ -849,6 +848,72 @@ onError:
 		}
 		NEXT;
 	}));
+}
+
+static bool registerGlobalVar(Context& inContext,
+							  std::shared_ptr<std::string>& inVarName) {
+	auto iter=Dict.find(*inVarName);
+	if(iter!=Dict.end()) {
+		return inContext.Error(ErrorIdWithString::AlreadyDefined,*inVarName);
+	}
+
+	Word *newWord=new Word(inVarName.get());
+
+	const int paramSize=2+TvSize*2+MutexSize;
+	newWord->param=new const Word*[paramSize];
+
+	const Word *lit=GetWordPtr("_lit");
+	if(lit==NULL) {
+		return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
+							   std::string("_lit"));
+	}
+	const Word *semis=GetWordPtr("_semis");
+	if(semis==NULL) {
+		return inContext.Error(ErrorIdWithString::CanNotFindTheWord,
+							   std::string("_semis"));
+	}
+
+	const int storageIndex=1+TvSize+1;
+	const int mutexIndex=1+TvSize+1+TvSize;
+	newWord->param[0]=lit;
+	new((TypedValue*)(newWord->param+1)) TypedValue(DataType::ParamDest,
+													newWord->param+storageIndex);
+	newWord->param[1+TvSize]=semis;
+	new((TypedValue*)(newWord->param+storageIndex)) TypedValue();	// <- storage
+	new ((Mutex *)(newWord->param+mutexIndex)) Mutex();
+	initMutex(*((Mutex *)(newWord->param+mutexIndex))); 
+
+	Dict[newWord->shortName]=newWord;
+	Dict[newWord->longName ]=newWord;
+
+	// define utility words.
+	Word *newWordBackup=inContext.newWord;
+		// define >$varName (ex: >$x)
+		std::string toVarName((">$"+*inVarName.get()).c_str());
+		Word *toVar=new Word(&toVarName);
+		toVar->CompileWord(inVarName->c_str());
+		toVar->CompileWord("store");
+		toVar->CompileWord("_semis");
+		toVar->BuildParam();
+		inContext.newWord=toVar;
+		inContext.FinishWordDef();
+		Dict[toVar->shortName]=toVar;
+		Dict[toVar->longName ]=toVar;
+
+		// define $varName> (ex: $x>)
+		std::string fromVarName((("$"+*inVarName.get())+">").c_str());
+		Word *fromVar=new Word(&fromVarName);
+		fromVar->CompileWord(inVarName->c_str());
+		fromVar->CompileWord("fetch");
+		fromVar->CompileWord("_semis");
+		fromVar->BuildParam();
+		inContext.newWord=fromVar;
+		inContext.FinishWordDef();
+		Dict[fromVar->shortName]=fromVar;
+		Dict[fromVar->longName ]=fromVar;
+	inContext.newWord=newWordBackup;
+
+	return true;
 }
 
 static bool colon(Context& inContext,bool inDefineShortend) {

@@ -620,7 +620,7 @@ static TypedValue getSymbolForAssignOp(Context& inContext) {
 	}
 	if(n<targetPos) { inContext.Error(NoParamErrorID::SsBroken); return TypedValue(); }
 	if((thread->at(targetPos-2).dataType!=DataType::Word
-		&& thread->at(targetPos-2).dataType!=DataType::DirectWord)
+		/* && thread->at(targetPos-2).dataType!=DataType::DirectWord */)
 	  || thread->at(targetPos-2).wordPtr->longName!="std:_lit"
 	  || thread->at(targetPos-1).dataType!=DataType::Symbol) {
 		inContext.Error(NoParamErrorID::SsBroken); return TypedValue();

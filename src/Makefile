@@ -19,7 +19,7 @@ LIB_OBJS= $(OBJ)/outer.o $(OBJ)/inner.o \
 		  $(OBJ)/context.o $(OBJ)/typedValue.o $(OBJ)/chan.o $(OBJ)/threadMan.o \
 		  $(OBJ)/dictMan.o $(OBJ)/errorMessage.o \
 		  $(OBJ)/optimizer.o $(OBJ)/stack.o \
-		  $(OBJ)/langSys.o $(OBJ)/util.o
+		  $(OBJ)/langSys.o $(OBJ)/util.o $(OBJ)/file.o
 
 DICT_OBJS=$(OBJ)/dictWord.o $(OBJ)/dictLangSys.o \
 		  $(OBJ)/dictObject.o $(OBJ)/dictStack.o \

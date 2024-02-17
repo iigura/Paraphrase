@@ -2,28 +2,13 @@
 
 struct File {
 	FILE *fp=NULL;
+	void* ungetStack=NULL;	// Stack *ungetStack
 
-	File() { /* empty */ }
-	~File() { Close(); }
+	PP_API File();
+	PP_API ~File();
 
-	bool Open(const char *inFileName,const char *inMode) {
-#ifdef _MSVC_LANG
-		errno_t result=fopen_s(&fp,inFileName,inMode);
-		return result==0;
-#else
-		fp=fopen(inFileName,inMode);
-		return fp!=NULL;
-#endif
-	}
-
-	bool Close() {
-		if(fp!=NULL) {
-			bool ret = fclose(fp)==0;
-			fp=NULL;
-			return ret;
-		} else {
-			return true;
-		}
-	}
+	PP_API bool Open(const char *inFileName,const char *inMode);
+	PP_API bool Close();
+	PP_API bool IsValid() const;
 };
 

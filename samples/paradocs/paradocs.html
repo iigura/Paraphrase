@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<link rel="stylesheet" href="paradocs.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+<script>
+function bright() {
+	$("body").css({
+		"background-color": "white",
+		"color": "black"
+	});
+	$("a").css("color", "blue");
+	Cookies.set("mode","bright")
+}
+function dark() {
+	$("body").css({
+		"background-color": "black",
+		"color": "white"
+	});
+	$("a").css("color", "yellow");
+	Cookies.set("mode","dark")
+}
+</script>
+<meta charset="UTF-8">
+<title><($title)></title>
+</head>
+<body>
+<article>
+<div id="container">
+<header><($title)></header>
+<div id="column-container">
+<div class="side">
+  <div class="paradocsWidget" id="toc">
+    <script>
+    $(document).ready(function() {
+      var toc=$('#toc')
+      var tocUL=$('<ul>').addClass('top-index')
+	  tocUL.appendTo(toc)
+      $('h1').each(function(index) {
+        var title=$(this).text();
+        var sectionId='section'+(index+1);
+        $(this).attr('id',sectionId);
+        var sectionItem=$('<li>').addClass('top-index-li').append($('<a>').attr('href','#'+sectionId).text(title)).appendTo(tocUL);
+
+	    var h1=$(this);
+		var subUL=$('<ul>').addClass('sub-index');
+		var hasSubMenu=false
+	    h1.nextUntil('h1').filter('h2').each(function(subIndex) {
+          var h2=$(this);
+          var subSectionId=sectionId+'-sub'+(subIndex+1);
+          h2.attr('id', subSectionId);
+          $('<li>').addClass('sub-index-li').append(
+            $('<a>').attr('href', '#' + subSectionId).text(h2.text())
+          ).appendTo(subUL);
+		  hasSubMenu=true
+        });
+	    if(hasSubMenu) {
+		  subUL.appendTo(tocUL);
+          var toggleIconLink=$('<a>').attr('href','#').text('>').appendTo(tocUL);
+          toggleIconLink.on('click',function(event) {
+            event.preventDefault();
+			var linkElement=$(event.target);
+        	var currentText=linkElement.text();
+        	var newText = currentText==='>' ? 'v' : '>';
+        	linkElement.text(newText);		    
+		    subUL.toggleClass('open');
+           });
+		   sectionItem.append('&nbsp;').append(toggleIconLink)
+		}
+      });
+
+	  var toggleButton=$('<p class="changeable-text"><u>[ toggle dark mode ]</u></p>');
+      $("#toc").append(toggleButton);
+	  mode=Cookies.get("mode")
+	  if(mode=='bright') { bright() } else { dark() }
+	  $(".changeable-text").click(function(){
+		const currentColor=$("body").css("background-color");
+		if(currentColor==="rgb(255, 255, 255)") {
+		  dark()
+		  $('.toggle-icon').css('color','yellow');
+		} else {
+		  bright()
+		  $('.toggle-icon').css('color','blue');
+		}
+	  });
+	  if(mode=='bright' || currentColor==="rgb(255, 255, 255)") {
+		  dark()
+		  $('.toggle-icon').css('color','yellow');
+	  } else {
+		  bright()
+		  $('.toggle-icon').css('color','blue');
+	  }
+    });
+  </script>
+  </div>
+</div>
+<div class="content">
+

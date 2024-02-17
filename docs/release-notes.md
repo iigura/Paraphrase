@@ -1,38 +1,32 @@
-# Release Notes: Changes from version 0.95 to 0.96
+# Release Notes: Changes from version 0.96 to 0.97
 
 ## Major changes
-* Abolished big-float type
-* Organize and redesign inter-thread communication
+There are no major changes in the language system.
 
 ## Changes to existing Words
-* true , false - changed to work correctly in lists
-* [[=&gt; - now also supports listings with more elements than the number of cores installed 
-* printf - now supports multithreaded
-* () - now correctly generates an empty list even in a list
-* full-clone - fixed a bug that caused symbols to turn into strings
+* Changes to “args” are now reflected in script arguments.
 
 ### Name change
-There are no Words that have been renamed.
+* fgets to @fgets
+* 'var' to global-decl
 
 ## Newly added Words
-* putc
-* word? , @word?
-* sleep
-* &gt;[ , &gt;&gt;[ , &gt;[[ , &gt;&gt;[[ , &gt;[-&gt; , &gt;&gt;[-&gt; , <br>
-  &gt;[[-&gt; , &gt;&gt;[[-&gt; , &gt;[[=&gt; , &gt;[[=&gt; , ]= , ]&gt; , <br>
-  ]=&gt; , ]&gt;&gt; , ]=&gt;&gt; , ]]= , ]]&gt; , ]]=&gt; , ]]&gt;&gt; , <br>
-  ]]=&gt;&gt;
-* join
+* global
+* caller
+* word-short-name , @word-short-name
+* fcopy , fexist? , fwrite , mkdir
 
 ## Obsolete Words
-* &gt;big-float , big-float?
-* &gt;child , &gt;parent , child&gt; , parent&gt;
+* There are no obsolete Words.
 
 ## About Language Processing System 'para'
-No changes.
+* Error lines are now also displayed with script files.
+* The list pointed to by the 'args' is now identical to the arguments to the script file.
 
 ## About the sample programs included in the package
-* attr.p8e, which unit tests with attributes, is added.
+* Documentation system Paradocs has been added to the samples.
+* Added caller.p8e showing how to use the Word 'caller'.
+* AOP-based user-defined warning display sample 'user-defined-deprecated.p8e' has been added.
 
 ## Other changes
 Nothing in particular.

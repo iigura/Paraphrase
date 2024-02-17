@@ -60,6 +60,7 @@ struct Context {
 	int threadIdx;
 
 	bool suppressError=false;
+	int LineNo=-1;
 
 	Attr *attr=NULL;
 	
@@ -79,7 +80,7 @@ struct Context {
 
 	PP_API Context *NewContextForCoroutine();
 
-	PP_API bool Exec(const TypedValue& inTypedValue);
+	PP_API bool Exec(const TypedValue& inTvWordPtr);
 	PP_API bool Exec(const std::string inWordName);
 	PP_API bool Exec(const Word *inWord);
 

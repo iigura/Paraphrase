@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.96)  by K.Iigura 
+Paraphrase sample programs' README (ver.0.97)  by K.Iigura 
 
 　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
 い（\ は円マークを表します）。
@@ -35,6 +35,10 @@ attr.p8e
 	本サンプルプログラムでは、ワード twice に test-code という属性を与え、
 	その属性の値として当該ワードのユニットテストプログラム（文字列）を格納します。
 	ワード test では、その属性値を用いてユニットテストを実施します。
+
+caller.p8e
+	呼び出したワードをスタックに積むワード caller のサンプルプログラムです。
+	使い方を示しているので、ファイルの中身を御覧ください。
 
 check-scriptFile-args.p8e
 	samples ディレクトリにて
@@ -123,6 +127,28 @@ join.p8e
     ワード join を使ったサンプルです。
 	並列処理の完了を待って、計算結果の集計を行います。
 
+lisp（ディレクトリ）
+	　Paraphrase で実装した Lisp - lis.p8e 関連ファイルが格納されています。
+	lis.p8e は Pter Morvig さんの Lispy を Paraphrase で記述したものです
+	（オリジナルは Python で書かれています）。
+
+	Lisp として動かすには samples/lisp ディレクトリにて
+
+		../../para lis.p8e repl
+	
+	として下さい。Read Eval Print Loop が開始し、対話モードになります。
+	終了は Ctrl-D （Windows の場合は Ctrl-Z）を入力して下さい。
+
+	　test-lis.p8e は lis.p8e のテストプログラムです。
+
+		../../para test-lis.p8e
+
+	として実行し、lis.p8e が正常に動作していれば、最終行に
+
+		=== all tests are passed. ===
+
+	と表示されます。
+
 Mersenne.p8e
     メルセンヌ数の素数性を判定します。詳細は
 
@@ -130,6 +156,20 @@ Mersenne.p8e
 
     として、表示される使用方法を御覧ください。
 	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
+
+mabdelbrot.p8e
+	マンデルブロ集合をターミナルに出力します。名前が mabdelbrot となっているのは、
+	元とした Dmitry Stogov さんのプロジェクトに倣っているからです
+
+mabdelbrotMT.p8e
+	mabdelbrot.p8e のマルチスレッド版です。mabdelbrot.p8e はシングルスレッドでの
+	実行でしたが、こちらはマルチスレッドで高速に計算します。
+
+paradocs（ディレクトリ）
+	Paradocs は、Paraphrase で記述された、索引付きのドキュメントを作成する
+	シングルソースマルチユースなドキュメントシステムです。
+	まだ、プログラムもサンプルとして同梱されている Paraphrase のワードリファレンスも
+	未完成です。詳細については paradocs/README.txt を御覧ください。
 
 pass.p8e
 　　正常に終了したことを伝えるサンプルプログラムです。
@@ -174,6 +214,35 @@ PE56.p8e
     にて計算できます。
 	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
 
+PolishNotation.p8e
+	Lisp のような前置記法を Paraphrase で行うサンプルプログラムです。
+	ワード :( と ); を用いて実現します（注：これらはアスキーアート
+	ではありません）。
+
+	使用方法についてはファイルの中身を御覧ください。
+	正しく動作することを確認するには、
+
+		../para PolishNotation.p8e test
+	
+	として下さい（GOOD と表示されれば正しく動作しています）。
+
+pseudo_shebang.bat
+	Windows にて Unix 系 OS の shebang を実現するサンプルプログラムです。
+	詳細は後述していますので、そちらも御覧ください。
+
+shebang_example
+	Linux や MacOS にて shebang を用いて Paraphrase を実行するサンプルプログラムです。
+
+test.bat
+	Windows 用のテストプログラムです。
+	Linux や MacOS では make を使って make test としてテストプログラムが実行されますが、
+	Windows は Visual Studio のビルドシステムを使っているため、別途このようなテスト用の
+	バッチファイルを用意しています。
+
+user-defined-deprecated.p8e
+	Paraphrase では AOP を用いて、実行時に警告の表示等が簡単にできる仕組みを有しています。
+	このファイルはそれを示したサンプルプログラムです。
+
 zdk.p8e
 	いわゆるズンドコキヨシ問題を処理するワード zdk が定義されています。samples ディ
     レクトリにて
@@ -182,6 +251,10 @@ zdk.p8e
 
 	とすると、ズンドコキヨシ問題を処理する様子が表示されます。
 	※ 本サンプルプログラムの動作は make test または test.bat でも実行の確認ができます。
+
+zdk2.p8e
+	相互参照ワードの記述例です。
+	上記のズンドコキヨシの処理を相互参照ワードにて実装しています。
 
 -----
 

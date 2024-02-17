@@ -1,0 +1,15 @@
+`print-caller : "called by" . caller word-name .cr ;
+`print-caller-short : "called by" . caller word-short-name .cr ;
+
+`test1 : print-caller ;
+`test2 : print-caller ;
+
+`test3 : print-caller-short ;
+`test4 : print-caller-short ;
+
+
+test1
+test2
+test3
+test4
+

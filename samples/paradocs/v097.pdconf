@@ -1,0 +1,35 @@
+# paradocs ワードリファレンス生成用 pdconf
+#
+# command usage: <(command args ...)>
+# <(echo "one liner test.")>
+# <(echo multiple line
+#        arguments
+#        test.)>
+
+<(pdf-file-name  paraphrase_v097.pdf)>
+<(html-file-name paraphrase_v097.html)>
+
+<(paper-size a5)>
+
+<(title  "Paraphrase ver. 0.97 ワードリファレンス")>
+<(author 飯倉宏治)>
+<(date   2024.mm.dd)>
+
+<(set PUBLISH_DATE 2024.03.26)>
+<(set VERSION      "0.97")>
+
+# <(print-conf)>
+
+00_intro.md
+01_howToRead.md
+02_paraphraseOverview.md
+03_stack.md
+04_stdout.md
+05_arithAndMath.md
+06_logical.md
+07_comp.md
+08_string.md
+09_array.md
+
+# <(print-conf)>
+

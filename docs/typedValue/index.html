@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="typedValue.css">
-	<style type="text/css"><!-- .VERSION:before{content:"0.96";} --></style>
-	<style type="text/css"><!-- .DATE:before{content:"2023.3.14";} --></style>
+	<style type="text/css"><!-- .VERSION:before{content:"0.97";} --></style>
+	<style type="text/css"><!-- .DATE:before{content:"2024.2.18";} --></style>
 	<title>Paraphrase 値型リファレンス</title>
 </head>
 <body>
@@ -35,7 +35,6 @@
 		<td><a href="#big-int">big-int</a></td>
 		<td><a href="#float">float</a></td>
 		<td><a href="#double">double</a></td>
-		<td><a href="#big-float">big-float</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>文字列</th>
@@ -482,57 +481,6 @@ DS:---------------------------
 				</code>
 			</div>
 		</p>
-	</td>
-</tr>
-</table>
-<br>
-</div><!-- chunk -->
-
-<!-- ========== big-float ========== -->
-<div class=chunk>
-<h4 class=itemHeader id=big-float>big-float </h4>
-<table>
-<tr>
-	<th class=boldLabel>解説</th>
-	<td class=note>
-		10 進 100 桁の浮動小数点数を表します。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>実体</th>
-	<td class=note>
-		この値は C++ の boost::multiprecision::cpp_dec_float_100 にて
-		実装されています。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>変換用ワード等</th>
-	<td class=note>
-		ワード &gt;FLOAT により、TOS にある値を big-float に変換可能です。
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>接頭・接尾詞</th>
-	<td class=note>
-		ありません。
-	</td>
-</tr>
-<tr>
-	<th class="boldLabel">使用例</th>
-	<td class=note>
-		次男例では、1.23 という値を big-float に変換し、スタックに積んでいます：
-		<div class=example>
-			<code>
-				&gt; <u> 1.23 &gt;FLOAT show </u>
-<pre>
-      +----------------------------------+
-TOS--&gt;| bigFloat 1.230000019073486328125 |
-DS:------------------------------------------
- ok.
-</pre>
-			</code>
-		</div>
-		※ 正確に 1.23 という値を格納できないため、このような値になっています。
 	</td>
 </tr>
 </table>

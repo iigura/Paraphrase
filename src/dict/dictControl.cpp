@@ -888,7 +888,9 @@ void InitDict_Control() {
 	}));
 
 	Install(new Word("default",WordLevel::Immediate,WORD_FUNC {
-		if(inContext.Exec(std::string("case"))==false) { return false; }
+		if(inContext.Exec(std::string("case"))==false) {
+			return false;
+		}
 		TypedValue& tvSyntax=ReadTOS(inContext.SS);
 		if(tvSyntax.intValue==(int)ControlBlockType::SyntaxSwitch) {
 			inContext.newWord->CompileWord("drop");
@@ -933,7 +935,9 @@ void InitDict_Control() {
 	}));
 
 	Install(new Word("break",WordLevel::Immediate,WORD_FUNC {
-		if(genExitSwitchBlock(inContext)==false) { return false; }
+		if(genExitSwitchBlock(inContext)==false) {
+			return false;
+		}
 		NEXT;
 	}));
 

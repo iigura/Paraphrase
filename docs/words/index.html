@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="words.css">
 
-<style type="text/css"><!-- .VERSION:before{content:"0.96";} --> </style>
-<style type="text/css"><!-- .NUM_OF_WORDS:before{content:"396";} --> </style>
+<style type="text/css"><!-- .VERSION:before{content:"0.97";} --> </style>
+<style type="text/css"><!-- .NUM_OF_WORDS:before{content:"404";} --> </style>
 <!-- ref_mod が追加されていないので、本当は　352 words -->
-<style type="text/css"><!-- .DATE:before{content:"2023.3.14";} --> </style>
-<title>Paraphrase ワードリファレンス ver. 0.96</title>
+<style type="text/css"><!-- .DATE:before{content:"2024.2.18";} --> </style>
+<title>Paraphrase ワードリファレンス ver. 0.97</title>
 
 </head>
 <body>
@@ -542,7 +542,8 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th class=categGroup>大域変数</th>
-		<td><a href="#var">var</a></td>
+		<td><a href="#global">global</a></td>
+		<td><a href="#global-decl">global-decl</a></td>
 		<td><a href="#store">store</a></td>
 		<td><a href="#fetch">fetch</a></td>
 	</tr>
@@ -714,7 +715,8 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th></th>
-		<td colspan=2><a href="#flush-stdout">flush-stdout</a></td>
+		<td><a href="#flush-stdout">flush-stdout</a></td>
+		<td><a href="#is_fexist">fexist?</a></td>
 		<td><a href="#open">open</a></td>
 		<td><a href="#to_read">to-read</a></td>
 		<td><a href="#new_file">new-file</a></td>
@@ -723,20 +725,28 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<th></th>
 		<td><a href="#close">close</a></td>
 		<td><a href="#to_file">&gt;file</a></td>
+		<td><a href="#fwrite">fwrite</a></td>
 		<td><a href="#fgets">fgets</a></td>
+		<td><a href="#ref_fgets">@fgets</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#unfgets">unfgets</a></td>
 		<td><a href="#flush-file">flush-file</a></td>
 		<td><a href="#load">load</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td><a href="#import">import</a></td>
 		<td><a href="#get-line">get-line</a></td>
-		<td><a href="#is_eof">eof?</a></td>
-		<td><a href="#ref_is_eof">@eof?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#is_eof">eof?</a></td>
+		<td><a href="#ref_is_eof">@eof?</a></td>
+		<td><a href="#fcopy">fcopy</a></td>
 		<td colspan=2><a href="#get-std-code">get-std-code</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#mkdir">mkdir</a></td>
 	</tr>
 	<tr>
 		<th class=categGroup>制御構造定義用</th>
@@ -847,13 +857,19 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th></th>
 		<td><a href="#word-name">word-name</a></td>
-		<td colspan=2><a href="#show-local-vars">show-local-vars</a></td>
-		<td><a href="#quit">quit</a></td>
-		<td><a href="#exit">exit</a></td>
+		<td colspan=2><a href="#ref_word-short-name">@word-short-name</a></td>
+		<td colspan=2><a href="#word-short-name">word-short-name</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#show-local-vars">show-local-vars</a></td>
+		<td><a href="#quit">quit</a></td>
+		<td><a href="#exit">exit</a></td>
 		<td><a href="#self">self</a></td>
+	</tr>
+	<tr>
+		<th></th>
+		<td><a href="#caller">caller</a></td>
 		<td><a href="#is_windows">windows?</a></td>
 		<td><a href="#is_linux">linux?</a></td>
 		<td><a href="#is_mac">mac?</a></td>
@@ -1098,59 +1114,64 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_fgets">@fgets</a></td>
 		<td><a href="#ref_get">@get</a></td>
 		<td><a href="#ref_has-key_p">@has-key?</a></td>
 		<td><a href="#ref_has_p">@has?</a></td>
 		<td><a href="#ref_in_p">@in?</a></td>
-		<td><a href="#ref_is_invalid">@invalid?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_is_invalid">@invalid?</a></td>
 		<td><a href="#ref_join">@join</a></td>
 		<td><a href="#ref_last">@last</a></td>
 		<td><a href="#ref_is_list_p">@list?</a></td>
-		<td colspan=2><a href="#@is_not-empty-list">@not-epmty-list?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#@is_not-empty-list">@not-epmty-list?</a></td>
 		<td colspan=2><a href="#ref_is_not-empty-str">@not-empty-str?</a></td>
 		<td><a href="#ref_pop-front">@pop-front</a></td>
-		<td><a href="#ref_push-back">@push-back</a></td>
-		<td><a href="#@from_r">@r&gt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_push-back">@push-back</a></td>
+		<td><a href="#@from_r">@r&gt;</a></td>
 		<td><a href="#ref_search">@search</a></td>
 		<td><a href="#ref_set">@set</a></td>
 		<td><a href="#ref_set-attr">@set-attr</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#ref_size">@size</a></td>
 		<td><a href="#ref_sqrt">@sqrt</a></td>
-	</tr>
-	<tr>
-		<th></th>
 		<td colspan=2><a href="#ref_is_start-with">@start-with?</a></td>
 		<td><a href="#ref_type-name">@type-name</a></td>
-		<td><a href="#ref_from_type">@type&gt;</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ref_from_type">@type&gt;</a></td>
 		<td colspan=2><a href="#ref_is_valid-index">@valid-index?</a></td>
 		<td><a href="#ref_is_valid">@valid?</a></td>
 		<td><a href="#ref_word-name">@word-name</a></td>
-		<td><a href="#ref_is_word">@word?</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#ref_word-short-name">@word-short-name</a></td>
+		<td><a href="#ref_is_word">@word?</a></td>
 		<td><a href="#ref_bit_not">@~</a></td>
 		<td><a href="#_c">_c</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td><a href="#bit_not">~</a></td>
 		<td><a href="#_b">_b</a></td>
 		<td><a href="#_cb">_cb</a></td>
+		<td><a href="#_n">_n</a></td>
+		<td><a href="#_q">_q</a></td>
 	</tr>
 	<tr>
 		<th></th>
-		<td><a href="#_n">_n</a></td>
-		<td><a href="#_q">_q</a></td>
 		<td><a href="#_s">_n</a></td>
 	</tr>
 	<tr>
@@ -1191,14 +1212,15 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th class=indexGroup>C</th>
+		<td><a href="#caller">caller</a></td>
 		<td><a href="#car">car</a></td>
 		<td><a href="#case">case</a></td>
 		<td><a href="#ccc-str">ccc-str</a></td>
 		<td><a href="#cdr">cdr</a></td>
-		<td><a href="#ceil">ceil</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#ceil">ceil</a></td>
 		<td colspan=2><a href="#check-delete-by-forget">check-delete-by-forget</a>
 		<td><a href="#clear">clear</a></td>
 	</tr>
@@ -1282,29 +1304,32 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th class=indexGroup>F</th>
 		<td><a href="#false">false</a></td>
+		<td><a href="#fcopy">fcopy</a></td>
 		<td><a href="#fetch">fetch</a></td>
+		<td><a href="#is_fexist">fexist?</a></td>
 		<td><a href="#fgets">fgets</a></td>
-		<td><a href="#filter">filter</a></td>
-		<td><a href="#find">find</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#filter">filter</a></td>
+		<td><a href="#find">find</a></td>
 		<td><a href="#float-type">float-type</a></td>
 		<td><a href="#is_float">float?</a></td>
 		<td><a href="#floor">floor</a></td>
-		<td colspan=2><a href="#flush-stdout">flush-stdout</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#flush-stdout">flush-stdout</a></td>
 		<td><a href="#flush-file">flush-file</a></td>
 		<td><a href="#for">for</a></td>
 		<td><a href="#for-dec">for-dec</a></td>
-		<td><a href="#foreach">foreach</a></td>
-		<td><a href="#forget">forget</a></td>
 	</tr>
 	<tr>
 		<th></th>
+		<td><a href="#foreach">foreach</a></td>
+		<td><a href="#forget">forget</a></td>
 		<td><a href="#full-clone">full-clone</a></td>
+		<td><a href="#fwrite">fwrite</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>G</th>
@@ -1321,6 +1346,8 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	<tr>
 		<th></th>
 		<td><a href="#get-voc">get-voc</a></td>
+		<td><a href="#global">global</a></td>
+		<td><a href="#global-decl">global-decl</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>H</th>
@@ -1401,6 +1428,7 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<th></th>
 		<td><a href="#min">min</a></td>
 		<td><a href="#min-zip">min-zip</a></td>
+		<td><a href="#mkdir">mkdir</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>N</th>
@@ -1591,11 +1619,11 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 		<td><a href="#use-stdin">use-stdin</a></td>
 		<td><a href="#use-stdout">use-stdout</a></td>
 		<td><a href="#utf8_to_sjis">utf8&gt;sjis</a></a>
+		<td><a href="#unfgets">unfgets</a></td>
 	</tr>
 	<tr>
 		<th class=indexGroup>V</th>
 		<td><a href="#is_valid">valid?</a></td>
-		<td><a href="#var">var</a></td>
 		<td><a href="#vmap">vmap</a></td>
 		<td><a href="#vocabulary">vocabulary</a></td>
 	</tr>
@@ -1609,8 +1637,12 @@ Forth に存在するワードであっても、処理内容が異なる場合�
 	</tr>
 	<tr>
 		<th></th>
+		<td colspan=2><a href="#word-short-name">word-short-name</a></td>
 		<td><a href="#word-type">word-type</a></td>
 		<td><a href="#is_word">word?</a></td>
+	</tr>
+	<tr>
+		<th></th>
 		<td colspan=2><a href="#worded-docol-caller">worded-docol-caller</a></td>
 		<td><a href="#write">write</a></td>
 	</tr>
@@ -7441,6 +7473,78 @@ DS:---------------------------
 </table>
 
 <div class=chunk>
+<!-- ============================== @fgets ============================== -->
+<h3 class=wordHeader id=ref_fgets>@fgets</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_File">&#8497;</a>
+		---
+		<a href="#_File">&#8497;</a> <a href="#_String">S</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		ワード <a href="#fgets">fgets</a> の参照版です。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、まず title.txt というファイルを新規作成し、
+		そのファイルに文字列を書き込みます。
+		次に、そのファイルを再度オープンし、
+		先程書き込んだ文字列を読み込んで表示します。<br>
+		<br>
+		まずは書き込み：
+		<div class=example>
+			<code>
+				&gt; <u> "title.txt" new-file </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> "cadet mitochondria\n" &gt;file </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> "cadet microbe\n" &gt;file </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> "cadet amoeba\n" &gt;file </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> close</u><br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+		つぎに読み込み：
+		<div class=example>
+			<code>
+				&gt; <u> "title.txt" open to-read </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> fgets . </u><br>
+				&nbsp; cadet mitochondrila ok.<br>
+				&gt; <u> fgets . </u><br>
+				&nbsp; cadet microbe ok.<br>
+				&gt; <u> fgets . </u><br>
+				&nbsp; cadet amoeba ok.<br>
+				&gt; <u> fgets . </u><br>
+				&nbsp; (invalid-value) ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、
+		TOS がファイルオブジェクトでない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk>
 <!-- ============================== @get ============================== -->
 <h3 class=wordHeader id=ref_get>@get</h3>
 <table>
@@ -8393,6 +8497,54 @@ DS:---------------------------
 				&nbsp; ok.<br>
 				&gt; <u> "test" &gt;word @word-name . </u><br>
 				&nbsp; 'user:test' ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS にワードポインタが無い場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
+<div class=chunk> 
+<!-- ========================= @word-short-name ========================= -->
+<h3 class=wordHeader id=ref_word-short-name>@word-short-name</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Word">W</a>
+		---
+		<a href="#_Word">W</a> <a href="#_String">S</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるワードポインタを参照し、
+		短縮ワード名を取得しスタックに積みます。
+		TOS にあるワードへのポインタはそのままスタックに残ります。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、test というワードへのポインタから
+		"test" という文字列を取得しています。
+		<div class=example>
+			<code>
+				&gt; <u> `test : /* empty */ ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> "test" &gt;word @word-short-name . </u><br>
+				&nbsp; 'test' ok.<br>
 			</code>
 		</div>
 	</td>
@@ -11622,6 +11774,37 @@ DS:-----------------
 			args に格納される時点では、まだワードとして認識されないため、
 			「ワードの可能性のあるトークン」として評価・格納されます。
 		</p>
+		<p>
+			本ワードでスタックに積まれるリストは、
+			言語処理系 para と連携しています。
+			args dup { drop } foreach などとすると、
+			args と連携するリストは空となります。
+		</p>
+		<p>
+			上記の処理がスクリプトファイル中で実行された場合、
+			当該スクリプトの実行の終了後は実行すべき
+			引数が存在しないこととなります。
+			この場合は、コマンドライン引数として
+			いくつかの引数を与えたとしても
+			言語処理系 para は何も外部インタプリタにそれらを
+			引き渡すことはありません（つまり何もしません）。
+		</p>
+		<p>
+			args のこのような機能は、言語処理系 para と
+			スクリプトファイルによって実用的な処理を行う場合に
+			利用できます。
+			例えば、para cat.p8e filePath などとした場合でも、
+			args のこの機能を利用すれば、
+			para -e "'filePath'" cat.p8e などと書く必要がなくなります
+			（もちろん、cat.p8e の処理として、
+			args が指すリストより適切に対象ファイルのファイルパスを
+			取り出し、その後、当該リストを空にする必要があります）。
+		</p>
+		<p>
+			以上では、args の示すリストの要素を減らす場合でしたが、
+			要素を増やした場合、当該スクリプトの実行後に
+			評価される引数を増やすこともできます。
+		</p>
 	</td>
 </tr>
 <tr>
@@ -12152,6 +12335,72 @@ DS:--------------------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== caller ============================== -->
+<h3 class=wordHeader id=caller> </h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		--- { <a href="#_Word">W</a>
+			| <a href="#_Invalid">&eta;</a> }
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		本ワードを呼び出したワードを呼び出したワードをスタックに積みます
+		（同じような文章が続いていますが間違いではありません）。
+		ワード中ではなく、トップレベルから呼び出された場合や、
+		本ワードを呼び出しているワードをトップレベルから呼び出した場合などでは、
+		無効な値をスタックに積みます。
+		<p>
+		本ワードの定義としては以上の説明のとうりなのですが、
+		プログラマの感覚からすると、caller と記述されている
+		ユーザー定義ワードを呼び出しているワードをスタックに積むと
+		理解してもらっても構いません。
+		というのも、caller を呼び出しているワードを呼び出しているワードは、
+		caller から見れば「本ワードを呼び出したワードを呼び出したワード」に
+		他ならないからです。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、print-caller を呼び出したワード test1 および test2 の名前を、
+		print-caller にて表示しています。
+		<div class=example>
+			<code>
+				&gt; <u> `print-caller : "called by" . caller word-name .cr ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> `test1 : print-caller ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> `test2 : print-caller ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> test1 </u><br>
+				&nbsp; called by user:test1<br>
+				&nbsp; ok.<br>
+				&gt; <u> test2 </u><br>
+				&nbsp; called by user:test2<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		エラーは発生しません。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=chunk>
 <!-- ============================== car ============================== -->
 <h3 class=wordHeader id=car>car</h3>
@@ -12718,7 +12967,7 @@ DS:--------------------
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		ワード <a href="#open">open"</a> の例を参照して下さい。
+		ワード <a href="#open">open</a> の例を参照して下さい。
 	</td>
 </tr>
 <tr>
@@ -14839,6 +15088,51 @@ the word 'std:sq' is:
 </table>
 
 <div class=chunk>
+<!-- ============================== fcopy ============================== -->
+<h3 class=wordHeader id=fcopy>fcopy</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		<a href="#_String">S1</a> <a href="#_String">S2</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS およびセカンドから文字列を取り出し、
+		セカンドで示される文字列により指定されるファイルを、
+		TOS で示される文字列をファイル名に持つファイルにコピーします。
+		コピー先のファイルが既に存在する場合は上書きされます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、a.txt の内容を b.txt にコピーします。
+		<div class=example>
+			<code>
+				&gt; <u> "a.txt" "b.txt" fcopy </u><br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS およびセカンドが文字列でない場合、
+		またはセカンドで示されたファイルが存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
+<div class=chunk>
 <!-- ============================== fetch ============================== -->
 <h3 class=wordHeader id=fetch>fetch</h3>
 <table>
@@ -14884,6 +15178,46 @@ the word 'std:sq' is:
 </div>
 
 <div class=chunk>
+<!-- ==================== fexist? ==================== -->
+<h3 class=wordHeader id=is_fexist>fexist?</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		<a href="#_String">S</a> --- <a href="#_Bool">B</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS から文字列を取り出し、
+		その文字列により指定されるファイルが
+		存在するか否かを調べます。
+		存在する場合は true を、
+		存在しない場合は false をスタックに積みます。
+		大文字と小文字の違いは区別しません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS が文字列でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
+<div class=chunk>
 <!-- ============================== fgets ============================== -->
 <h3 class=wordHeader id=fgets>fgets</h3>
 <table>
@@ -14894,9 +15228,7 @@ the word 'std:sq' is:
 <tr>
 	<th class=boldLabel>スタックの変化</th>
 	<td class=note>
-		<a href="#_File">&#8497;</a>
-		---
-		<a href="#_File">&#8497;</a> <a href="#_String">S</a>
+		<a href="#_File">&#8497;</a> --- <a href="#_String">S</a>
 	</td>
 </tr>
 <tr>
@@ -14912,41 +15244,9 @@ the word 'std:sq' is:
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
-		次の例では、まず title.txt というファイルを新規作成し、
-		そのファイルに文字列を書き込みます。
-		次に、そのファイルを再度オープンし、
-		先程書き込んだ文字列を読み込んで表示します。<br>
-		<br>
-		まずは書き込み：
-		<div class=example>
-			<code>
-				&gt; <u> "title.txt" new-file </u><br>
-				&nbsp; ok.<br>
-				&gt; <u> "cadet mitochondria\n" >file </u><br>
-				&nbsp; ok.<br>
-				&gt; <u> "cadet microbe\n" >file </u><br>
-				&nbsp; ok.<br>
-				&gt; <u> "cadet amoeba\n" >file </u><br>
-				&nbsp; ok.<br>
-				&gt; <u> close</u><br>
-				&nbsp; ok.<br>
-			</code>
-		</div>
-		つぎに読み込み：
-		<div class=example>
-			<code>
-				&gt; <u> "title.txt" open to-read </u><br>
-				&nbsp; ok.<br>
-				&gt; <u> fgets . </u><br>
-				&nbsp; cadet mitochondrila ok.<br>
-				&gt; <u> fgets . </u><br>
-				&nbsp; cadet microbe ok.<br>
-				&gt; <u> fgets . </u><br>
-				&nbsp; cadet amoeba ok.<br>
-				&gt; <u> fgets . </u><br>
-				&nbsp; (invalid-value) ok.<br>
-			</code>
-		</div>
+		本ワードの使用例はありません
+		（本ワードの参照型である <a href="#ref_fgets">@fgets</a> には
+		サンプルコードが存在します）。
 	</td>
 </tr>
 <tr>
@@ -15651,6 +15951,41 @@ element[1]= 23 true
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== fwrite ============================== -->
+<h3 class=wordHeader id=fwrite>fwrite</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		<a href="#_Any">X</a> <a href="#_File">&#8497;</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるファイルに対し、セカンドにある値を文字列化し出力します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが想定されている状態でない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=chunk>
 <!-- ============================== get ============================== -->
 <h3 class=wordHeader id=get>get</h3>
@@ -15977,6 +16312,142 @@ element[1]= 23 true
 </table>
 </div>
 
+<div class=chunk>
+<!-- ============================== global ============================== -->
+<h3 class=wordHeader id=global>global</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		<a href="#_Any">X</a> <a href="#_String">S</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるシンボル（または文字列）と同名の大域変数を定義し、
+		セカンドにある値で初期化します。
+		大域変数の詳しい説明については、
+		ワード <a href="#global-decl">global-decl</a> の説明を参照して下さい。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、x という大域変数を定義し、
+		値の取り出しを行っています。
+		<div class=example>
+			<code>
+				&gt; <u> "zapper" `weapon-name global </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> $weapon-name&gt; . </u><br>
+				&gt; zapper ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がシンボルや文字列でない場合はエラーとなります。
+		また、スタックの深さが 2 以上出ない場合
+		（セカンドが存在しない場合）もエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
+<div class=chunk>
+<!-- ========================= global-decl ========================= -->
+<h3 class=wordHeader id=global-decl>global-decl</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_String">S</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるシンボル（または文字列）と同名の変数を定義します。
+		変数と言っても、その実態は変数名と同名のワードを定義するものです。
+		変数として定義されるワードでは、
+		情報の格納場所となるメモリアドレスをスタックに積む動作をします。
+		実際に変数に値を格納する場合、このアドレスに対しワード
+		<a href="#store">store</a> を実行します。
+		また、値を参照する場合にはワード
+		<a href="#fetch">fetch</a> を実行します。
+		<p>
+		変数への代入や参照のために、2 ワードも使用するのは煩雑です。
+		そのため、本ワードでは、&gt;$変数名 や $変数名&gt; というワードをあわせて
+		定義します。
+		例えば、x という変数名を "x" global-decl として定義した場合、
+		x に代入を行う &gt;$x や、変数 x に格納されている値を取り出す
+		$x&gt; というワードも定義します。
+		もちろん、変数名が count というものであれば、
+		&gt;$count と $count&gt; というワードを定義します。
+		</p>
+		<p>
+		本ワードにて定義されるワード群は、
+		他のワード同様に辞書に格納されます。
+		そのため、並列実行している（もしくはしていない）
+		全てのコンテキストから使用可能です。
+		また、保持している値も、全てのコンテキストにて同じ値となります。
+		このことは、コンテキスト単位でローカルに変数を宣言する
+		<a href="#local">local</a> と大きく異なる部分です。
+		ワード <a href="#local">local</a> で宣言した変数の場合、
+		同名の変数であっても各コンテキスト毎に保持している値が異なりますし、
+		また、場合によってはあるコンテキストでは、
+		指定されたローカル変数が存在しない可能性もあります。
+		</p>
+		<p>
+		ローカル変数はワード内でしか宣言できませんが、
+		本ワードはそのような制限はありません。
+		なので、インタラクティブモードでも変数の定義が可能です。
+		</p>
+		<p>
+		なお、&gt;$x などのユーティリティワードはスレッドセーフです。
+		</p>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、x という大域変数を定義し、
+		値の代入と取り出しを行っています。
+		<div class=example>
+			<code>
+				&gt; <u> "x" global-decl </u>
+					<span class="rem">← x という大域変数を宣言します</span><br>
+				&nbsp; ok.<br>
+				&gt; <u> 123 &gt;$x </u>
+					<span class="rem">← x に 123 を代入します</span><br>
+				&gt; <u> $x&gt; . </u>
+					<span class="rem">← x に格納された値を取り出します</span><br>
+				&nbsp; 123 ok.
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS がシンボルや文字列でない場合はエラーとなります。
+		また、TOS の文字列と同名のワードが存在する場合もエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 <div class=chunk> 
 <!-- ============================== has-any-attr? ============================== -->
 <h3 class=wordHeader id=has-any-attr_p>has-any-attr?</h3>
@@ -16140,6 +16611,9 @@ element[1]= 23 true
 		スタックより TOS およびセカンドを取り出し、TOS にあるリスト中に、
 		セカンドの要素が含まれているか否かを調べます。
 		含まれている場合は true をプッシュします。
+		<p>
+		swap in? と同値です。
+		</p>
 	</td>
 </tr>
 <tr>
@@ -18200,6 +18674,46 @@ element 2 is  3
 </tr>
 </table>
 </div>
+
+<div class=chunk>
+<!-- ==================== mkdir ==================== -->
+<h3 class=wordHeader id=mkdir>mkdir</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		<a href="#_String">S</a> ---
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS より文字列を取り出し、
+		その文字列をパスとするディレクトリを作成します。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタックが空であったり、
+		TOS が文字列でなかった場合はエラーとなります。
+		また、文字列で指定されたパスに既に
+		同名のディレクトリが存在する場合など、
+		当該ディレクトリを作成できない場合もエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
  
 <!-- ============================== new-array ============================== -->
 <h3 class=wordHeader id=new-array>new-array</h3>
@@ -18394,7 +18908,7 @@ DS:-----------------------------------
 		そのファイルに hello world と改行コード付きで主力します。
 		<div class=example>
 			<code>
-				&gt; <u> "hello.txt" new-file "hello world\n\n" >file close </u><br>
+				&gt; <u> "hello.txt" new-file "hello world\n\n" &gt;file close </u><br>
 				&nbsp; ok.<br>
 			</code>
 		</div>
@@ -18654,7 +19168,7 @@ DS:-----------------------------------
 		そのファイルに hello world と改行コード付きで主力します。
 		<div class=example>
 			<code>
-				&gt; <u> "hello.txt" open "hello world\n\n" >file close </u><br>
+				&gt; <u> "hello.txt" open "hello world\n\n" &gt;file close </u><br>
 				&nbsp; ok.<br>
 			</code>
 		</div>
@@ -20639,11 +21153,31 @@ DS:-----------
 		本ワードを呼び出したワードをスタックに積みます。
 		ワード中ではなく、
 		トップレベルから呼び出された場合は無効な値をスタックに積みます。
+		<p>
+		本ワードの説明としては以上の説明のとうりなのですが、
+		プログラマの感覚からすると、self と記述されている
+		ユーザー定義ワード自身をスタックに積むと理解してもらって構いません。
+		というのも、self を呼び出しているワードは、
+		ユーザーが定義したワード自身となるからです。
+		</p>
 	</td>
 </tr>
 <tr>
 	<th class=boldLabel>使用例</th>
 	<td class=note>
+		次の例では、self を呼び出している test というワード名を
+		表示します。<br>
+		<br>
+		<div class=example>
+			<code>
+				&gt; <u> `test : "this word is" . self word-name .cr ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> test </u><br>
+				&nbsp; this word is user:test<br>
+				&nbsp; ok.<br>
+			</code>
+		</div>
+		<br>
 		次の例では、呼び出された回数を属性 count に記録するワード
 		test を定義しています。<br>
 		<br>
@@ -20675,6 +21209,7 @@ DS:-----------
 <tr>
 	<th class=boldLabel>エラー</th>
 	<td class=note>
+		エラーは発生しません。
 	</td>
 </tr>
 </table>
@@ -22220,7 +22755,8 @@ DS:---------------------------------
 	<td class=note>
 		TOS にあるアドレスに Second の値を格納します。
 		標準的な使い方としては、TOS のアドレスは
-		ワード <a href="#global">global</a> で作成されたワードにて
+		ワード <a href="#global">global</a> または
+		<a href="#global-decl">global-decl</a> で作成されたワードにて
 		プッシュされるものを想定しています。
 		<p>
 			このワードはスレッドセーフです。
@@ -23395,6 +23931,51 @@ DS:---------------------------------
 </table>
 </div>
 
+<div class=chunk> 
+<!-- ============================== unfgets ============================== -->
+<h3 class=wordHeader id=unfgets>unfgets</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=level>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=stack>
+		<a href="#_File">&#8497;</a> <a href="#_String">S</a>
+		--- <a href="#_File">&#8497;</a><br>
+		または<br>
+		<a href="#_String">S</a> <a href="#_File">&#8497;</a>
+		--- <a href="#_File">&#8497;</a><br>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+	TOS とセカンドにあるファイル情報と文字列を用いて、
+	当該ファイルの現在の読み出し位置に論理的に文字列を挿入します。
+	当ワードで挿入された文字列はファイルに保存されている情報の前に
+	ワード <a href="#fgets">fgets</a> 等により取り出されます。
+	なお、本ワードは何度も実行することができ、
+	その場合は、最後に挿入されたものから <a href="#fgets">fgets</a> 等により
+	読み出されます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		使用例はありません。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		スタック上に想定されている情報が存在しない場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+ 
 <div class=sphinxed-chunk>
 <!-- ============================== valid? ============================== -->
 <h3 class=wordHeader id=is_valid>valid?</h3>
@@ -23432,93 +24013,6 @@ DS:---------------------------------
 </tr>
 </table>
 </div>
-
-<div class=chunk>
-<!-- ============================== var ============================== -->
-<h3 class=wordHeader id=var>var</h3>
-<table>
-<tr>
-	<th class=boldLabel>実行レベル</th>
-	<td class=note>標準実行レベル</td>
-</tr>
-<tr>
-	<th class=boldLabel>スタックの変化</th>
-	<td class=note>
-		<a href="#_String">S</a> ---
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>機能</th>
-	<td class=note>
-		TOS にある文字列と同名の変数を定義します。
-		変数と言っても、その実態は変数名と同名のワードを定義するものです。
-		変数として定義されるワードでは、
-		情報の格納場所となるメモリアドレスをスタックに積む動作をします。
-		実際に変数に値を格納する場合、このアドレスに対しワード
-		<a href="#store">store</a> を実行します。
-		また、値を参照する場合にはワード
-		<a href="#fetch">fetch</a> を実行します。
-		<p>
-		変数への代入や参照のために、2 ワードも使用するのは煩雑です。
-		そのため、本ワードでは、&gt;$変数名 や $変数名&gt; というワードをあわせて
-		定義します。
-		例えば、x という変数名を "x" global として定義した場合、
-		x に代入を行う &gt;$x や、変数 x に格納されている値を取り出す
-		$x&gt; というワードも定義します。
-		もちろん、変数名が count というものであれば、
-		&gt;$count と $count&gt; というワードを定義します。
-		</p>
-		<p>
-		本ワードにて定義されるワード群は、
-		他のワード同様に辞書に格納されます。
-		そのため、並列実行している（もしくはしていない）
-		全てのコンテキストから使用可能です。
-		また、保持している値も、全てのコンテキストにて同じ値となります。
-		このことは、コンテキスト単位でローカルに変数を宣言する
-		<a href="#local">local</a> と大きく異なる部分です。
-		ワード <a href="#local">local</a> で宣言した変数の場合、
-		同名の変数であっても各コンテキスト毎に保持している値が異なりますし、
-		また、場合によってはあるコンテキストでは、
-		指定されたローカル変数が存在しない可能性もあります。
-		</p>
-		<p>
-		ローカル変数はワード内でしか宣言できませんが、
-		本ワードはそのような制限はありません。
-		なので、インタラクティブモードでも変数の定義が可能です。
-		</p>
-		<p>
-		なお、&gt;$x などのユーティリティワードはスレッドセーフです。
-		</p>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>使用例</th>
-	<td class=note>
-		次の例では、変数の使用方法を示しています。
-		<div class=example>
-			<code>
-				&gt; <u> "x" var </u>
-					<span class="rem">← x という大域変数を宣言します</span><br>
-				&nbsp; ok.<br>
-				&gt; <u> 123 &gt;$x </u>
-					<span class="rem">← x に 123 を代入します</span><br>
-				&gt; <u> $x&gt; . </u>
-					<span class="rem">← x に格納された値を取り出します</span><br>
-				&nbsp; 123 ok.
-			</code>
-		</div>
-	</td>
-</tr>
-<tr>
-	<th class=boldLabel>エラー</th>
-	<td class=note>
-		TOS が文字列でない場合はエラーとなります。
-		また、TOS の文字列と同名のワードが存在する場合もエラーとなります。
-	</td>
-</tr>
-</table>
-</div>
-
 
 <div class=chunk> 
 <!-- ============================== vmap ============================== -->
@@ -23928,7 +24422,7 @@ DS:---------------------------------
 			<code>
 				&gt; <u> `test : /* empty */ ; </u><br>
 				&nbsp; ok.<br>
-				&gt; <u> "test" &gt;word @word-name . </u><br>
+				&gt; <u> "test" &gt;word word-name . </u><br>
 				&nbsp; 'user:test' ok.<br>
 			</code>
 		</div>
@@ -23942,6 +24436,54 @@ DS:---------------------------------
 </tr>
 </table>
 </div>
+
+<div class=chunk> 
+<!-- ========================= word-short-name ========================= -->
+<h3 class=wordHeader id=word-short-name>word-short-name</h3>
+<table>
+<tr>
+	<th class=boldLabel>実行レベル</th>
+	<td class=note>標準実行レベル</td>
+</tr>
+<tr>
+	<th class=boldLabel>スタックの変化</th>
+	<td class=note>
+		<a href="#_Word">W</a>
+		---
+		<a href="#_String">S</a>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>機能</th>
+	<td class=note>
+		TOS にあるワードへのポインタを取り出し、
+		そのポインタが示すワードの短縮ワード名をスタックに積みます。
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>使用例</th>
+	<td class=note>
+		次の例では、test というワードへのポインタから
+		"test" という文字列を取得しています。
+		<div class=example>
+			<code>
+				&gt; <u> `test : /* empty */ ; </u><br>
+				&nbsp; ok.<br>
+				&gt; <u> "test" &gt;word word-short-name . </u><br>
+				&nbsp; 'test' ok.<br>
+			</code>
+		</div>
+	</td>
+</tr>
+<tr>
+	<th class=boldLabel>エラー</th>
+	<td class=note>
+		TOS にワードポインタが無い場合はエラーとなります。
+	</td>
+</tr>
+</table>
+</div>
+
 
 <div class=chunk> 
 <!-- ============================== word-type ============================== -->

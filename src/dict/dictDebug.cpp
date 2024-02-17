@@ -36,7 +36,7 @@ static bool docolForDebug(Context& inContext) NOEXCEPT {
 
 		inContext.nowDebugging=true;
 		inContext.debugCommand=DebugCommand::None;
-		OIResult result=OuterInterpreter(inContext,line);
+		OIResult result=OuterInterpreter(inContext,line,inContext.LineNo);
 		inContext.nowDebugging=true;
 		const DebugCommand debugCommand=inContext.debugCommand;
 		if(debugCommand==DebugCommand::SystemError) {

@@ -22,8 +22,8 @@ syn match   p8eNumber      /\<[+-]\{-,1}\d\+\(LL\|ll\|L\|l\)\{-,1}\>/
 syn match   p8eNumber      /\<[+-]\{-,1}0[Xx]\x\+\(LL\|ll\|L\|l\)\{-,1}\>/
 syn match   p8eNumber      /\<[+-]\{-,1}\d\+\.\d\+\([Ee][+-]\{-,1}\d\+\)\{-,1}[df]\{-,1}\>/
 
-syn region  p8eString matchgroup=p8eQuotes start=+"+ skip=+\\\"+ end=+"+
-syn region  p8eString matchgroup=p8eQuotes start=+'+ skip=+\\\'+ end=+'+
+syn region  p8eString matchgroup=p8eQuotes start=+"+ skip=+\\\\\|\\\"+ end=+"+
+syn region  p8eString matchgroup=p8eQuotes start=+'+ skip=+\\\\\|\\\'+ end=+'+
 syn match   p8eString      /\(raw\)\?<<<\_s\_.*\_s>>>\(raw\)\?/ 
 
 " starndard words
@@ -43,8 +43,8 @@ syn keyword p8eStdType      >int >long >big-int >float >double >big-float >bool
 syn keyword p8eStdType      >string >hex >symbol >array >list >assoc >word >address
 syn keyword p8eStdType      >int? >long? >float? >double?
 syn keyword p8eStdType      int? long? big-int? float? double? big-float?
-syn keyword p8eStdType      bool? string? array? list? assoc? invalid?
-syn keyword p8eStdType      @array? @list? @assoc? @invalid?
+syn keyword p8eStdType      bool? string? array? list? assoc? invalid? valid?
+syn keyword p8eStdType      @array? @list? @assoc? @invalid? @valid?
 syn keyword p8eStdType      type-name @type-name @type> >type is?
 
 syn keyword p8eStringWord   @empty-str? @not-empty-str?

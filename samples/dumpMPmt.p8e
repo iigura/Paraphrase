@@ -60,7 +60,7 @@ then
 	then
 ;
 
-`N var
+`N global-decl
 
 // check until $N
 `calc :

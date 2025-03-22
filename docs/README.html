@@ -11,8 +11,11 @@
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
     ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
       width: 0.8em;
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
@@ -20,13 +23,10 @@
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="readme.css" />
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
-<h1 id="paraphrase-ver.-0.97">Paraphrase ver. 0.97</h1>
-<p>Copyright (c) 2018-2024 Koji Iigura<br />
+<h1 id="paraphrase-ver.-0.97.1">Paraphrase ver. 0.97.1</h1>
+<p>Copyright (c) 2018-2025 Koji Iigura<br />
 Released under the MIT license<br />
 <a
 href="https://opensource.org/licenses/mit-license.php">https://opensource.org/licenses/mit-license.php</a></p>
@@ -75,9 +75,9 @@ id="すぐ使えるビルド済みパッケージを使う場合">すぐ使え�
 それぞれのプラットフォーム用のパッケージを入手して下さい。</p>
 <p><a
 href="https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ">https://drive.google.com/drive/folders/18c2NPG09uOakcBnqGM43bLHMD90hGxVZ</a></p>
-<p>Windows 版 para-0-97-win.zip<br />
-Linux 版 para-0-97-linux.tar.gz<br />
-MacOS 版 para-0-97-mac.tar.gz</p>
+<p>Windows 版 para-0-97-1-win.zip<br />
+Linux 版 para-0-97-1-linux.tar.gz<br />
+MacOS 版 para-0-97-1-mac-M1.tar.gz</p>
 <p>展開して para （Windows 版は para.exe）を実行して下さい
 （同梱されるファイルについては、 <a
 href="http://github.com/iigura/paraphrase/blob/master/FILES.txt">FILES.txt</a>

@@ -553,6 +553,11 @@ static NoParamErrorMessageDict gNoParamErrorMessageDict {
 		{ PPLang::JP,	"システムエラー。無効な MiscInt 値です。" },
 	  }
 	},
+	{ NoParamErrorID::SsInvalidThetaOnSecond, {
+		{ PPLang::EN,	"Invalid execution level value on second at SS."   },
+		{ PPLang::JP,	"SS のセカンドに格納されている実行レベル情報が異常です。" },
+	  }
+	},
 
 	{ NoParamErrorID::InvalidValue, {
 		{ PPLang::EN,	"Invalid value." },
@@ -1036,6 +1041,13 @@ static InvalidTypeErrorMessageDict gInvalidTypeErrorMessageDict {
 						"current syntax stack top is %s." },
 		{ PPLang::JP,	"このワードは loop - repeat ブロックの中で使用する必要があります。"
 						"現在のループは %s です。" },
+	  }
+	},
+	{ InvalidTypeErrorID::SsThirdWp, {
+		{ PPLang::EN,	"Third value should be newWordPtr on SS."
+						"current syntax stack Third is %s." },
+		{ PPLang::JP,	"SS の 3 番目の値はワードポインタでなければなりません。"
+						"現在の値の種類は %s です。" },
 	  }
 	},
 

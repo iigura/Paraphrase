@@ -1,0 +1,19 @@
+`NG : "NG" .cr -1 exit ;
+
+// at interpret mode
+(< 1 5 for+ i next >)
+( 1 2 3 4 )
+!= if "test1" . NG then
+
+// at symbol mode
+( dynamic list (< 1 5 for+ i next >) generation ) 
+( dynamic list ( 1 2 3 4 ) generation ) 
+!= if "test2" . NG then
+
+// at compile mode
+`test : ( dynamic list (< 1 5 for+ i next >) generation ) ;
+test 
+( dynamic list ( 1 2 3 4 ) generation ) 
+!= if "test3" . NG then
+"OK" .cr
+

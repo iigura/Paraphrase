@@ -1,5 +1,5 @@
 ==============================================================================
-Paraphrase ver. 0.97　ビルドマニュアル by 飯倉宏治 2024.2.18
+Paraphrase ver. 0.97.1　ビルドマニュアル by 飯倉宏治 2025.3.25
 ==============================================================================
 
 目次
@@ -12,7 +12,7 @@ Paraphrase ver. 0.97　ビルドマニュアル by 飯倉宏治 2024.2.18
 ------------------------------------------------------------------------------
 1. Linux でのビルド
 ------------------------------------------------------------------------------
-　ここでは、Ubuntu 22.04 を対象に Linux でのビルドの説明を行います（他のディス
+　ここでは、Ubuntu 24.04 を対象に Linux でのビルドの説明を行います（他のディス
 トリビューションでは同等の操作に適宜読み替えて下さい）。C++ コンパイラ等がイン
 ストールされていないようであれば、build-essential パッケージがインストールされ
 ているかどうかも調べて下さい。
@@ -21,15 +21,15 @@ Paraphrase ver. 0.97　ビルドマニュアル by 飯倉宏治 2024.2.18
 ールされていないのであれば、以下のコマンドを用いてそれぞれをインストールします。
 
     boost のインストール
-        sudo apt-get install libboost-all-dev
+        sudo apt install libboost-all-dev
 
     readline のインストール
-        sudo apt-get install libreadline-dev
+        sudo apt install libreadline-dev
 
 git がインストールされていない場合は、git もインストールします。
 
     git のインストール
-        sudo apt-get install git
+        sudo apt install git
 
 必要なものが揃ったら、適当なディレクトリにて git clone してソースコードを取得し
 ます。
@@ -47,13 +47,13 @@ Paraphrase というディレクトリが作成され、そのディレクトリ
 
 を実行します。g++ が無い等のエラーメッセーが表示される場合は
 
-    sudo apt-get install build-essential
+    sudo apt install build-essential
 
 とし、g++ をインストールして下さい。 
 
 　icu 関連でリンクエラーが出る場合は
 
-    sudo apt-get install pkg-config
+    sudo apt install pkg-config
 
 とし、pkg-config をインストールしてみて下さい。
 
@@ -132,8 +132,8 @@ Studio にて開きます。
 　次に、各プロジェクトに追加のパッケージを追加します。libPP プロジェクトには、
 以下の 4 つのパッケージを NuGet を用いてインストールしておきます。
 
-    1) boost (ver. 1.84.0)
-    2) boost-vc143 (ver. 1.84.0)
+    1) boost (ver. 1.87.0)
+    2) boost-vc143 (ver. 1.87.0)
     3) ICU4C_58_2 (ver. 1.0.0)
     4) libgmp_vc120 (ver. 5.1.3.2)
 
@@ -166,7 +166,7 @@ Paraphrase の言語処理系を構成するファイルとなります。動作
 　次に、並列に動作することを確認します。Ctrl-C を入力し、Paraphrase インタプリ
 タを終了させて下さい。samples ディレクトリに移動し、
 
-    ../para countPrimeMT-short.pp run
+    ../para countPrimeMT-short.p8e run
 
 として下さい（Windows の場合はスラッシュではなく円マークを記号を用いて ..\para
 として下さい）。しばらくすると、

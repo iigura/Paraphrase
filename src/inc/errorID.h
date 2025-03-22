@@ -77,6 +77,7 @@ enum class NoParamErrorID {
 	// SyntaxOpenWhile, SyntaxOpenDo,
 
 	SsMiscIntInvalid,
+	SsInvalidThetaOnSecond,
 
 	InvalidValue,
 
@@ -139,6 +140,7 @@ enum class InvalidTypeErrorID {
 
 	SsMiscInt,
 	SsTosShouldBeLoop,
+	SsThirdWp,
 
 	TosCanNotConvertToDouble,
 	TosCanNotConvertToFloat,

@@ -1,4 +1,4 @@
-Paraphrase sample programs' README (ver.0.97)  by K.Iigura 
+Paraphrase sample programs' README (ver.0.97.1)  by K.Iigura 
 
 　以下、../para という記述がありますが、Windows の場合は ..\para と読み替えて下さ
 い（\ は円マークを表します）。
@@ -86,6 +86,10 @@ dumpMPmt.p8e
 dynamic-scoping.p8e
     Paraphrase は、変数については動的スコープを採用しています。
     その動作の様子を示すサンプルプログラムです。
+
+dynamic-list.p8e
+    ワード (< と >) をコンパイルモードならびにシンボルモードでも動作するようにし、
+    Paraphrase でも Python のようなリスト内包表記を利用できるようにしました。
 
 fact-tr.p8e
     ver. 0.93.0 より導入された末尾再帰（tail recursion）における最適化を示すプログ

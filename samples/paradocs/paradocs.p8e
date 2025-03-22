@@ -253,13 +253,31 @@ false `is-ddt-in? global
 	'_' '\_' replace-str
 ;
 
+`href_forTeX :
+	@size 1 > if
+		'ERROR: invalid parameger (url tag).' error
+	then
+	expand
+;
+
+`conv-to-standard-str :
+	while dup '\n|\r\n|\r|&lcurly;|&rcurly;|&lparen;|&rparen;' search valid? do
+		'\n|\r\n|\r' ''  replace-str
+		'\\%'        '%' replace-str
+		"&lcurly;"   '{' replace-str
+		"&rcurly;"   '}' replace-str
+		'&lparen;'   '(' replace-str
+		'&rparen;'   ')' replace-str
+	repeat
+;
+
 `url_forHTML :
 	@size 1 > if
 		'ERROR: invalid parameger (url tag).' error
 	then
 	expand `linkText local
-	`linkText , ' <a href="%s" target="_blank">' sputf
-	`linkText , '%s</a> ' sputf +
+	`linkText , conv-to-standard-str ' <a href="%s" target="_blank">' sputf
+	`linkText , conv-to-standard-str '%s</a> ' sputf +
 ;
 
 // ------------------------------------
@@ -335,7 +353,7 @@ new-assoc `reference-dict global
 // code block
 //	<[code-begin]>
 //		...
-//	<[code-end]>[
+//	<[code-end]>
 // ------------------------------------
 
 `code-begin_forTeX :
@@ -355,7 +373,7 @@ new-assoc `reference-dict global
 	drop
 	// '\end{lstlisting}\par\par\vspace{-3ex}\hdashrule{\linewidth}{0.5pt}{2pt 1pt}'
 	'\end{lstlisting}\par\par'
-	'\end{minipage}\par\vspace{3ex}'
+	'\end{minipage}\par\vspace{3ex}\noindent'
 	+
 	false >$is-code-mode
 ;
@@ -717,6 +735,7 @@ then
 			"&nbsp;"   ' '  replace-str
 			"&amp;"    '&' replace-str
 		else
+			convert-greek-character-if-needed 
 			"&gt;" '\textgreater ' replace-str
 			"&lt;" '\textless ' replace-str
 			"&percnt;" '\%' replace-str
@@ -728,10 +747,12 @@ then
 			"&ast;" '$\ast$' replace-str
 		then
 		"&quest;"  '?'  replace-str
-		"&lcurly;" '\{' replace-str
-		"&rcurly;" '\}' replace-str
+		"&lcurly;" '$\lbrace$' replace-str
+		"&rcurly;" '$\rbrace$' replace-str
 		"&#92;"    '\textbackslash{}' replace-str
 		"&#95;"    '\_' replace-str
+		"&lparen;"  '(' replace-str
+		"&rparen;"  ')' replace-str
 		"%s\n" sputf $tmp.tex-file> fwrite
 	repeat
 	drop // for invalid value
@@ -801,6 +822,15 @@ then
 '</article>' : "</articlev>\n" write-to-target-html-file ;
 '</html>'    : "</html\n"      write-to-target-html-file ;
 
+`href_forHTML :
+	@size 1 > if
+		'ERROR: invalid parameger (href tag).' error
+	then
+	expand `idText local
+	`idText , '&nbsp;<a href=#%s>' sputf
+	`idText , conv-to-standard-str '%s</a>&nbsp;' sputf +
+;
+
 `convHTML : // S(=doc-src-file)
 	$contents-dir> swap + dup "HTML: processing %s ... " putf
 
@@ -817,11 +847,8 @@ then
 			`pre-line-is-blank , if <p> then
 			false `pre-line-is-blank let
 		then
-		md-to-html
-		'\n|\r\n|\r' '' replace-str
-		'\\%' '%' replace-str
-		"&lcurly;" '{' replace-str
-		"&rcurly;" '}' replace-str
+		md-to-html conv-to-standard-str
+
 		$code-mode> if
 			'%s<br>'
 		else
@@ -846,7 +873,7 @@ then
 	`index-value , '<a href=#%s>' sputf
 	write-to-target-html-file
 
-	`document-sting , '%s</a>&nbsp; ' sputf
+	`document-sting , conv-to-standard-str '%s</a>&nbsp; ' sputf
 	write-to-target-html-file
 ;
 

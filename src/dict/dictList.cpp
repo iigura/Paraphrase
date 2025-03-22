@@ -1260,26 +1260,58 @@ onExit:
 		NEXT;
 	}));
 
-	// SS: --- I
+	// SS: --- omega theta I
 	// equivalent to: depth >r
-	Install(new Word("(<",WORD_FUNC {
+	Install(new Word("(<",WordLevel::Level2,WORD_FUNC {
+		inContext.SS.emplace_back(DataType::NewWord,inContext.newWord);
+		inContext.SS.emplace_back(inContext.ExecutionThreshold);
 		inContext.SS.emplace_back((int)inContext.DS.size());
+		inContext.ExecutionThreshold=Level::Interpret;
+		inContext.newWord=NULL;
 		NEXT;
 	}));
 
-	// SS: I ---
-	Install(new Word(">)",WORD_FUNC {
-		if(inContext.SS.size()<1) { return inContext.Error(NoParamErrorID::SsBroken); }
+	// SS: omega theta I ---
+	Install(new Word(">)",WordLevel::Level2,WORD_FUNC {
+		if(inContext.SS.size()<3) { return inContext.Error(NoParamErrorID::SsBroken); }
 		TypedValue tvDepth=Pop(inContext.SS);
 		if(tvDepth.dataType!=DataType::Int) {
 			return inContext.Error(NoParamErrorID::SsBroken);
+		}
+		TypedValue tvTheta=Pop(inContext.SS);
+		if(tvTheta.dataType!=DataType::Threshold
+		  || tvTheta.intValue<(int)Level::Interpret
+		  || (int)Level::Symbol<tvTheta.intValue) {
+			return inContext.Error(NoParamErrorID::SsInvalidThetaOnSecond);
+		}
+		TypedValue tvNewWord=Pop(inContext.SS);
+		if(tvNewWord.dataType!=DataType::NewWord) {
+			return inContext.Error(InvalidTypeErrorID::SsThirdWp,tvNewWord);
 		}
 		List *result=new List();
 		int n=(int)inContext.DS.size();
 		for(int i=tvDepth.intValue; i<n; i++) {
 			result->emplace_front(Pop(inContext.DS));
 		}
-		inContext.DS.emplace_back(result);
+		inContext.ExecutionThreshold=(Level)tvTheta.intValue;
+		inContext.newWord=(Word *)tvNewWord.wordPtr;
+		switch(inContext.ExecutionThreshold) {
+			case Level::Interpret:
+				inContext.DS.emplace_back(result);
+				break;
+			case Level::Compile:
+				if(inContext.newWord==NULL) {
+					return inContext.Error(NoParamErrorID::SystemError);
+				}
+				inContext.newWord->CompileWord("_lit");
+				inContext.newWord->CompileValue(TypedValue(result));
+				break;
+			case Level::Symbol:
+				inContext.newWord->CompileValue(TypedValue(result));
+				break;
+			default:
+				return inContext.Error(NoParamErrorID::SystemError);
+		}
 		NEXT;
 	}));
 }

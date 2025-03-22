@@ -24,6 +24,11 @@ if %errorlevel% lss 0 goto FAILED
 if %errorlevel% lss 0 goto FAILED
 
 @echo on
+..\para dynamic-list.p8e test
+@echo off
+if %errorlevel% lss 0 goto FAILED
+
+@echo on
 ..\para dynamic-scoping.p8e test
 @echo off
 if %errorlevel% lss 0 goto FAILED

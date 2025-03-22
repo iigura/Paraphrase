@@ -1,32 +1,27 @@
-# Release Notes: Changes from version 0.96 to 0.97
+# Release Notes: Changes from version 0.97 to 0.97.1
 
 ## Major changes
-There are no major changes in the language system.
+There are no major changes in the language system
+(Only a few minor bug fixes have been made).
 
 ## Changes to existing Words
-* Changes to “args” are now reflected in script arguments.
+* Words (< and >) are now supported in compile and symbol mode.
 
 ### Name change
-* fgets to @fgets
-* 'var' to global-decl
+No changes.
 
 ## Newly added Words
-* global
-* caller
-* word-short-name , @word-short-name
-* fcopy , fexist? , fwrite , mkdir
+No changes.
 
 ## Obsolete Words
-* There are no obsolete Words.
+No changes.
 
 ## About Language Processing System 'para'
-* Error lines are now also displayed with script files.
-* The list pointed to by the 'args' is now identical to the arguments to the script file.
+There are no significant changes.
 
 ## About the sample programs included in the package
-* Documentation system Paradocs has been added to the samples.
-* Added caller.p8e showing how to use the Word 'caller'.
-* AOP-based user-defined warning display sample 'user-defined-deprecated.p8e' has been added.
+* List comprehension is now supported following updates to the semantics of the (< and >) Words
+* The expressiveness of the documentation system Paradocs has been slightly improved.
 
 ## Other changes
 Nothing in particular.

@@ -206,6 +206,8 @@ test:
 	../para $(SAMPLES_DIR)/countPrimeMT-short.p8e test
 	@echo dumpMPmt.p8e
 	../para $(SAMPLES_DIR)/dumpMPmt.p8e test
+	@echo dynamic-list.p8e
+	../para $(SAMPLES_DIR)/dynamic-list.p8e test
 	@echo dynamic-scoping.p8e
 	../para $(SAMPLES_DIR)/dynamic-scoping.p8e test
 	@echo fact-tr.p8e

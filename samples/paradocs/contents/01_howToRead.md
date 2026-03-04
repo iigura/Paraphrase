@@ -498,6 +498,8 @@ Paraphrase では必ずしも復帰情報を保存するとは限らない…
 <[/ddt]>
 <[dl-table-ref-item &alpha;]>
 <[ddt]>アドレスを表します。<[/ddt]>
+<[dl-table-ref-item &beta;]>
+<[ddt]>配列やリスト等のコンテナ型以外の値を表します。<[/ddt]>
 <[dl-table-ref-item &theta;]>
 <[ddt]>実行レベルの閾値を表します。<[/ddt]>
 <[dl-table-ref-item &pi;]>

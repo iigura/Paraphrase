@@ -230,6 +230,7 @@ new-assoc `doc-var global
 // S --- S
 `convert-greek-character-if-needed :
 	"&alpha;" '$\alpha$' replace-str
+	"&beta;"  '$\beta$'  replace-str
 	"&theta;" '$\theta$' replace-str
 	"&xi;"    '$\xi$'    replace-str
 	"&eta;"   '$\eta$'   replace-str
@@ -452,7 +453,7 @@ false `enable-code-mode-for-next-line global
 `dd_forTeX   : drop /* do nothing */ "" ;
 "/dd_forTeX" : drop '\vspace{1ex}' ;
 
-`dd_forHTML   :  drop '<dd>'  ;
+`dd_forHTML   : drop '<dd>'  ;
 "/dd_forHTML" : drop '</dd>' ;
 
 // ------------------------------------
@@ -560,6 +561,25 @@ false `enable-code-mode-for-next-line global
 
 `hr_forTeX  : drop '\noindent\hrule' ;
 `hr_forHTML : drop '<hr>' ;
+
+// ------------------------------------
+// ordered list
+//	<[ol]> <[/ol]>
+//	<[li]> <[/li]>
+// ------------------------------------
+
+`ol_forTeX   : drop '\begin{enumerate}' ;
+"/ol_forTeX" : drop '\end{enumerate}'   ;
+
+`ol_forHTML   : drop '<ol>'  ;
+"/ol_forHTML" : drop '</ol>' ;
+
+`li_forTeX   : drop '\item ' ;
+"/li_forTeX" : drop "\n" ;
+
+'li_forHTML'  : drop '<li>'  ;
+"/li_forHTML" : drop '</li>' ;
+
 
 // ------------------------------------
 // tex (only output TeX source file)

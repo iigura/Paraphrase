@@ -1,7 +1,7 @@
 // "Paraphrase" : a script language for parallel processing ;
 //	by Koji Iigura.
 
-#define VERSION "0.97.1"
+#define VERSION "0.97.2"
 
 #ifdef _MSVC_LANG
 	#pragma comment(lib,"libPP.lib")
@@ -407,7 +407,7 @@ static void printUsage() {
 }
 
 static void printVersion() {
-	printf("Paraphrase %s  Copyright (C) 2018-2025 Koji Iigura <@paraphrase_lang>\n",kVersion);
+	printf("Paraphrase %s  Copyright (C) 2018-2026 Koji Iigura <@paraphrase_lang>\n",kVersion);
 }
 
 static void showBuildInfo() {

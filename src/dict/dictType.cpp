@@ -753,15 +753,22 @@ next:
 		NEXT;
 	}));
 
-	Install(new Word("@type>",WORD_FUNC {
+	Install(new Word("@>type",WORD_FUNC {
 		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
 		TypedValue& tos=ReadTOS(inContext.DS);
 		inContext.DS.emplace_back((long)tos.dataType);
 		NEXT;
 	}));
 
-	// X1 J --- X2
 	Install(new Word(">type",WORD_FUNC {
+		if(inContext.DS.size()<1) { return inContext.Error(NoParamErrorID::DsIsEmpty); }
+		TypedValue tos=Pop(inContext.DS);
+		inContext.DS.emplace_back((long)tos.dataType);
+		NEXT;
+	}));
+
+	// X1 J --- X2
+	Install(new Word("type>",WORD_FUNC {
 		if(inContext.DS.size()<2) {
 			return inContext.Error(NoParamErrorID::DsAtLeast2);
 		}

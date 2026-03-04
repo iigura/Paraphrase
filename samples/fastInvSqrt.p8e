@@ -18,14 +18,17 @@
 
 ( { interactive? not } { args size 0? } ) and if help then
 
+`int-type-value : 1 >type ;
+`float-type-value : 1.0f >type ;
+
 // N --- f
 `fastInvSqrt :
 	>float
 	dup `x local
-	int-type >type
+	int-type-value type>
 	1 >>
 	0x5f3759df swap -
-	float-type >type `y local
+	float-type-value type> `y local
 	1.5f  0.5f `x , * `y , * `y , *  -  `y , *
 ;
 
@@ -33,7 +36,7 @@
 
 `test :
 	100 fastInvSqrt
-	int-type >type 1036811129 != // To examine the bit pattern strictly, cast it to int.
+	int-type-value type> 1036811129 != // To examine the bit pattern strictly, cast it to int.
 	if "NG" .cr -1 exit else "GOOD" .cr then
 ;
 

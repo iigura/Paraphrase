@@ -88,7 +88,7 @@ if %errorlevel% lss 0 goto FAILED
 @echo off
 if %errorlevel% lss 0 goto FAILED
 
-echo "===== The all test passed. ====="
+echo "===== All tests passed. ====="
 goto END
 
 :FAILED
